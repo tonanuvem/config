@@ -75,7 +75,7 @@ sudo python -m pip install ansible
 printf "\n\n xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx \n"
 printf "\n\n\tK8S:\n\n"
 # minikube
-curl -s -Lo minikube https://storage.googleapis.com/minikube/releases/latest/minikube-linux-amd64
+curl -s "https://storage.googleapis.com/minikube/releases/latest/minikube-linux-amd64" -o "minikube"
 chmod +x minikube 
 sudo mv minikube /usr/bin/
 # Variavel abaixo evita que precise executar " pelo usuario ubuntu
