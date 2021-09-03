@@ -53,10 +53,10 @@ Fontes:
 
 Pesquisa e substituição de textos em arquivos:
 > grep -Ril "config-ubuntu" .
-<br>
+
 > grep -rli 'config-ubuntu' * | xargs -i@ sed -i 's/config-ubuntu/config/g' @  
 
 Ansible
 > ansible --inventory-file ~/environment/hosts -u ec2-user --key-file ~/environment/labsuser.pem all -m ping 
-<br>
+
 > ansible-playbook ansible.yml --inventory-file ~/environment/hosts -u ec2-user --key-file ~/environment/labsuser.pem
