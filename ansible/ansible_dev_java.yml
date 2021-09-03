@@ -1,0 +1,20 @@
+---
+# https://docs.ansible.com/ansible/2.9/modules/modules_by_category.html
+# https://docs.ansible.com/ansible/latest/user_guide/playbooks_conditionals.html#playbooks-conditionals
+# https://docs.ansible.com/ansible/latest/user_guide/playbooks_loops.html#playbooks-loops
+  - name: Instalação das ferramentas DEV Java
+    hosts: all
+    tasks:
+        - name: Instalar Java e Maven
+          shell: |
+            sudo amazon-linux-extras install java-openjdk11 -y
+            sudo wget http://repos.fedorapeople.org/repos/dchen/apache-maven/epel-apache-maven.repo -O /etc/yum.repos.d/epel-apache-maven.repo
+            sudo sed -i s/\$releasever/6/g /etc/yum.repos.d/epel-apache-maven.repo
+            sudo yum install -y apache-maven
+            sudo cat >> /etc/environment <<EOL
+            export JAVA_HOME="/usr/lib/jvm/java-11-openjdk-amd64"
+            export JRE_HOME="/usr/lib/jvm/java-11-openjdk-amd64/jre"
+            export SONAR_SCANNER_OPTS="-Xmx512m"
+            EOL
+          args:
+            executable: /bin/bash

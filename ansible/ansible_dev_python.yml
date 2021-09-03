@@ -1,0 +1,34 @@
+---
+# https://docs.ansible.com/ansible/2.9/modules/modules_by_category.html
+# https://docs.ansible.com/ansible/latest/user_guide/playbooks_conditionals.html#playbooks-conditionals
+# https://docs.ansible.com/ansible/latest/user_guide/playbooks_loops.html#playbooks-loops
+  - name: Instalação das ferramentas DEV Python
+    hosts: all
+    tasks:
+        - name: Instalar Python
+          become: yes
+          yum:
+            name:
+              - python3
+              - python3-pip
+              #- python3-venv
+            state: present
+        - name: Atualizar Python
+          shell: |
+            sudo yum install -y python3-venv > /dev/null
+            python3 -m pip install --upgrade --force-reinstall pip
+            sudo ln -s /usr/bin/python3 /usr/bin/python
+            sudo ln -s /usr/bin/pip3 /usr/bin/pip
+            pip3 install --upgrade pip
+          args:
+            executable: /bin/bash
+            
+        - name: Verificar Python
+          shell: |
+            python3 --version
+            pip3 --version
+          args:
+            executable: /bin/bash
+          register: log
+        
+        - debug: msg="{{ log.stdout }}"

@@ -1,0 +1,101 @@
+---
+# https://docs.ansible.com/ansible/2.9/modules/modules_by_category.html
+# https://docs.ansible.com/ansible/latest/user_guide/playbooks_conditionals.html#playbooks-conditionals
+# https://docs.ansible.com/ansible/latest/user_guide/playbooks_loops.html#playbooks-loops
+  - name: Instalação das ferramentas do Kubernetes
+    hosts: all
+    tasks:
+        - name: Configurar memoria swap
+          shell: |
+            sudo swapoff -a
+            sudo sed -i '/ swap / s/^/#/' /etc/fstab
+            
+            # https://kubernetes.io/docs/setup/production-environment/tools/kubeadm/install-kubeadm/#configure-cgroup-driver-used-by-kubelet-on-control-plane-node
+            cat <<EOF | sudo tee /etc/modules-load.d/k8s.conf
+            br_netfilter
+            EOF
+            cat <<EOF | sudo tee /etc/sysctl.d/k8s.conf
+            net.bridge.bridge-nf-call-ip6tables = 1
+            net.bridge.bridge-nf-call-iptables = 1
+            EOF
+            sudo sysctl --system
+          args:
+            executable: /bin/bash
+            
+        - name: Instalar containerD 
+        # https://kubernetes.io/docs/setup/production-environment/container-runtimes/#containerd
+          shell: |
+            ## Install and configure prerequisites:
+            cat <<EOF | sudo tee /etc/modules-load.d/containerd.conf
+            overlay
+            br_netfilter
+            EOF
+            sudo modprobe overlay
+            sudo modprobe br_netfilter
+            # Setup required sysctl params, these persist across reboots.
+            cat <<EOF | sudo tee /etc/sysctl.d/99-kubernetes-cri.conf
+            net.bridge.bridge-nf-call-iptables  = 1
+            net.ipv4.ip_forward                 = 1
+            net.bridge.bridge-nf-call-ip6tables = 1
+            EOF
+            # Apply sysctl params without reboot
+            sudo sysctl --system
+            
+            ## Configure containerd:
+            sudo mkdir -p /etc/containerd
+            containerd config default | sudo tee /etc/containerd/config.toml
+            # Restart containerd:
+            sudo systemctl restart containerd
+          args:
+            executable: /bin/bash
+            
+        - name: Instalar minikube
+          shell: |
+            curl -s -Lo minikube https://storage.googleapis.com/minikube/releases/latest/minikube-linux-amd64
+            chmod +x minikube 
+            sudo mv minikube /usr/local/bin/
+          args:
+            executable: /bin/bash
+            
+        - name: Instalar kubelet kubeadm kubectl
+          become: yes
+          shell: |
+            cat <<EOF | sudo tee /etc/yum.repos.d/kubernetes.repo
+            [kubernetes]
+            name=Kubernetes
+            baseurl=https://packages.cloud.google.com/yum/repos/kubernetes-el7-\$basearch
+            enabled=1
+            gpgcheck=1
+            repo_gpgcheck=1
+            gpgkey=https://packages.cloud.google.com/yum/doc/yum-key.gpg https://packages.cloud.google.com/yum/doc/rpm-package-key.gpg
+            exclude=kubelet kubeadm kubectl
+            EOF
+            # Set SELinux in permissive mode (effectively disabling it)
+            sudo setenforce 0
+            sudo sed -i 's/^SELINUX=enforcing$/SELINUX=permissive/' /etc/selinux/config
+            sudo yum install -y kubelet kubeadm kubectl --disableexcludes=kubernetes
+            #sudo systemctl enable --now kubelet
+            
+            ## cgroupd
+            cat <<EOF | sudo tee ~/kubeadm-config.yaml
+            # kubeadm-config.yaml
+            kind: ClusterConfiguration
+            apiVersion: kubeadm.k8s.io/v1beta3
+            kubernetesVersion: v1.21.0
+            ---
+            kind: KubeletConfiguration
+            apiVersion: kubelet.config.k8s.io/v1beta1
+            cgroupDriver: systemd
+            EOF
+            sudo systemctl enable kubelet.service
+          args:
+            executable: /bin/bash
+            
+        - name: Instalar helm
+          shell: |
+            curl -s https://get.helm.sh/helm-v3.1.2-linux-amd64.tar.gz -o helm-linux-amd64.tar.gz
+            tar -zxvf helm-linux-amd64.tar.gz
+            sudo mv linux-amd64/helm /usr/local/bin/helm
+            rm -rf helm-linux-amd64.tar.gz linux-amd64
+          args:
+            executable: /bin/bash

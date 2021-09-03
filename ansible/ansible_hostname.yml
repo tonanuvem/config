@@ -1,0 +1,9 @@
+---
+# https://docs.ansible.com/ansible/latest/user_guide/playbooks_variables.html
+  - name: Ajustar hostname das VMs
+    hosts: all
+    become: yes
+    tasks:
+        - name: Set hostname
+          ansible.builtin.hostname:
+            name: "{{ nome | default('fiap') }}"

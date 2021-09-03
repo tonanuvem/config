@@ -1,0 +1,53 @@
+---
+# https://docs.ansible.com/ansible/2.9/modules/modules_by_category.html
+# https://docs.ansible.com/ansible/latest/user_guide/playbooks_conditionals.html#playbooks-conditionals
+# https://docs.ansible.com/ansible/latest/user_guide/playbooks_loops.html#playbooks-loops
+  - name: Docker install
+    hosts: all
+    become: yes
+    tasks:
+        - name: Install docker-ce (centos) via amazon-linux-extras packages
+          shell: "amazon-linux-extras install docker -y"
+        - name: Install dependencies
+          yum:
+            name: 
+             - docker
+            state: latest
+
+        - name: Start Docker service
+          service:
+            name: docker
+            state: restarted
+            enabled: yes
+          become: yes
+
+        - name: Add user ec2-user to docker group
+          user:
+            name: ec2-user
+            groups: docker
+            append: yes
+          become: yes
+
+# https://github.com/docker/compose/issues/7472#issuecomment-749993557
+# https://stackoverflow.com/a/65612078/2378095
+  - name: docker-compose install
+    hosts: all
+    become: yes
+    tasks:
+        - name: Install dependencies
+          yum:
+            name: 
+             - python3
+             - python3-devel 
+             - libffi-devel
+             - openssl-devel
+            state: latest
+
+        - name: install Development Tools
+          shell: yum groupinstall -y "Development Tools"
+            
+        - name: update python pip
+          shell: python3 -m pip install -U pip
+            
+        - name: install docker-compose from pip
+          shell: python3 -m pip install docker-compose 

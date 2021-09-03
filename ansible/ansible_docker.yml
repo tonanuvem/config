@@ -1,0 +1,43 @@
+---
+# https://docs.ansible.com/ansible/2.9/modules/modules_by_category.html
+# https://docs.ansible.com/ansible/latest/user_guide/playbooks_conditionals.html#playbooks-conditionals
+# https://docs.ansible.com/ansible/latest/user_guide/playbooks_loops.html#playbooks-loops
+  - name: Instalar o Docker
+    hosts: all
+    become: yes
+    tasks:
+        - name: Instalar via amazon-linux-extras
+          shell: "amazon-linux-extras install docker -y"
+          # shell: "sudo yum-config-manager --add-repo https://download.docker.com/linux/rhel/docker-ce.repo"
+        - name: Instalar dependencias
+          yum:
+            name: 
+             - docker
+            state: latest
+
+        - name: Restartar o Docker service
+          service:
+            name: docker
+            state: restarted
+            enabled: yes
+          become: yes
+
+        - name: Adicionar o usuario ec2-user ao grupo docker
+          user:
+            name: ec2-user
+            groups: docker
+            append: yes
+          become: yes
+
+# https://github.com/docker/compose/issues/7472#issuecomment-749993557
+# https://stackoverflow.com/a/65612078/2378095
+  - name: Instalar o docker-compose
+    hosts: all
+    become: yes
+    tasks:
+        - name: download docker-compose
+          shell: |
+            sudo curl -L "https://github.com/docker/compose/releases/download/1.25.4/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+            sudo chmod +x /usr/local/bin/docker-compose
+          args:
+            executable: /bin/bash
