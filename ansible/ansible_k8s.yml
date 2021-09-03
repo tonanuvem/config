@@ -49,6 +49,23 @@
           args:
             executable: /bin/bash
             
+        - name: Configurar /etc/docker/daemon.json
+          become: yes
+          # https://stackoverflow.com/questions/52119985/kubeadm-init-shows-kubelet-isnt-running-or-healthy
+          ansible.builtin.copy:
+            dest: "/etc/docker/daemon.json"
+            content: '{ "exec-opts": ["native.cgroupdriver=systemd"] }'
+            
+        - name: Restartar o daemon services
+          become: yes
+          ansible.builtin.service:
+            name: "{{ item }}"
+            state: restarted
+            enabled: yes
+          with_items:
+          - docker
+          - kubelet
+              
         - name: Instalar minikube
           shell: |
             curl -s -Lo minikube https://storage.googleapis.com/minikube/releases/latest/minikube-linux-amd64
