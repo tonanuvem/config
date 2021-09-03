@@ -1,6 +1,6 @@
 # config
 
-Scripts para preparar a VM Ubuntu para rodar os LABS no Educate.
+Scripts para preparar e rodar os LABS no AWS Academy.
 ---
 O pacote de cloud-init configura aspectos específicos de uma nova instância.
 
