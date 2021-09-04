@@ -78,7 +78,7 @@ sudo mv minikube /usr/bin/
 mkdir $HOME/.kube && mkdir $HOME/.minikube 
 sudo chown -R $USER $HOME/.kube
 sudo chown -R $USER $HOME/.minikube
-chmod -R u+wrx $HOME/.minikube
+sudo chmod -R u+wrx $HOME/.minikube
 #sudo cat >> /etc/environment <<EOL
 #export CHANGE_MINIKUBE_NONE_USER=true
 #EOL
