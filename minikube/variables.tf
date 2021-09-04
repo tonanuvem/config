@@ -1,43 +1,27 @@
-variable "instance_ami_id" {
-  type    = "string"
-  default = "ami-0c2b8ca1dad447f8a"
-}
-variable "instance_type" {
-  type    = "string"
-  default = "t2.medium"
+variable "instance_type" { # https://aws.amazon.com/pt/ec2/instance-types/
+  # default     = "t2.medium" # 2	CPUs e 4 GB
+  # default     = "t2.xlarge" # 4	CPUs e 16 GB
+  default     = "t2.2xlarge" # 8	CPUs e 32 GB
 }
 
-variable "instance_tags" {
-  type    = "map"
-  default = {}
+variable "ec2_name" {
+  type        = string
+  default     = "fiap_vm_xlarge_4cpus_16gb"
 }
 
-variable "instance_vpc_id" {
-  type    = "string"
-  default = "vpc-02f45832e96006e98"
-}
-
-variable "instance_subnet_id" {
-  type    = "string"
-  default = "subnet-064f867a2028b70b9"
-}
-
-variable "instance_key_name" {
-  type    = "string"
-  default = "fiap-chave"
-}
-
-variable "aws_profile_name" {
-  type    = "string"
-  default = "onelogin"
+variable "key_name" {
+  type        = string
+  default     = "vockey"
 }
 
 variable "aws_region" {
-  type    = "string"
-  default = "us-east-1"
+  description = "Regiao do AWS Educate padrao."
+  default     = "us-east-1"
 }
 
-variable "ec2_ingress_cidr" {
-  type    = list(string)
-  default = ["92.75.28.171/32"]
+# Ubuntu 18.04 LTS (x64)
+variable "aws_amis" {
+  default = {
+    us-east-1 = "ami-0c2b8ca1dad447f8a"
+  }
 }
