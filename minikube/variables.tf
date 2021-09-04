@@ -1,7 +1,7 @@
 variable "instance_type" { # https://aws.amazon.com/pt/ec2/instance-types/
   # default     = "t2.medium" # 2	CPUs e 4 GB
-  # default     = "t2.xlarge" # 4	CPUs e 16 GB
-  default     = "t2.2xlarge" # 8	CPUs e 32 GB
+  default     = "t2.xlarge" # 4	CPUs e 16 GB
+  #default     = "t2.2xlarge" # 8	CPUs e 32 GB
 }
 
 variable "ec2_name" {
