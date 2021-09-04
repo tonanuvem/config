@@ -10,13 +10,13 @@ NODE2=$(~/environment/ip | awk -Fv '{ if ( !($1 ~  "None") && (/vm_2/) ) { print
 NODE3=$(~/environment/ip | awk -Fv '{ if ( !($1 ~  "None") && (/vm_3/) ) { print $1} }')
 
 # configurar hostnames
-MASTER > hosts &&
+$MASTER > hosts &&
 ansible-playbook ~/environment/config/ansible/ansible_hostname.yml --extra-vars "nome=master" --inventory hosts -u ec2-user --key-file ~/environment/labsuser.pem
-NODE1 > hosts &&
+$NODE1 > hosts &&
 ansible-playbook ~/environment/config/ansible/ansible_hostname.yml --extra-vars "nome=node1" --inventory hosts -u ec2-user --key-file ~/environment/labsuser.pem
-NODE2 > hosts && 
+$NODE2 > hosts && 
 ansible-playbook ~/environment/config/ansible/ansible_hostname.yml --extra-vars "nome=node2" --inventory hosts -u ec2-user --key-file ~/environment/labsuser.pem
-NODE3 > hosts &&
+$NODE3 > hosts &&
 ansible-playbook ~/environment/config/ansible/ansible_hostname.yml --extra-vars "nome=node3" --inventory hosts -u ec2-user --key-file ~/environment/labsuser.pem
 
 # aplicar configurações
