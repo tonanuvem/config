@@ -65,9 +65,9 @@ resource "aws_security_group" "default" {
 }
 
 # Para verificar o resultado do script: cat /var/log/cloud-init-output.log
-data "template_file" "init" {
-  template = file("${path.module}/../preparar.sh")
-}
+#data "template_file" "init" {
+#  template = file("${path.module}/../preparar.sh")
+#}
 
 resource "aws_instance" "web" {
   # The connection block tells our provisioner how to
@@ -80,7 +80,7 @@ resource "aws_instance" "web" {
   }
   
   # Define o script de inicialização do EC2:
-  user_data = data.template_file.init.rendered
+  #user_data = data.template_file.init.rendered
   
   # Define a chave
   key_name  = var.key_name
