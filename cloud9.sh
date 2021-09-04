@@ -16,11 +16,6 @@ aws ec2 describe-instances --query "Reservations[*].Instances[*].[PublicIpAddres
 EOL
 chmod +x ~/environment/ip
 
-# aumentando o disco para 100G e 
-sh ~/environment/config/resize.sh 100 > /dev/null
-#sh ~/environment/config/firewall_allow.sh
-sh ~/environment/config/resize.sh 100 > /dev/null
-
 # --- DEV TOOLS
 # Instalacão do Maven Java:
 export DEBIAN_FRONTEND=noninteractive
@@ -145,7 +140,7 @@ printf "\n\tAPLICANDO ULTIMAS CONFIGURAÇÕES:\n"
 sh ~/environment/config/pacotes.sh
 printf "\n\tMAVEN:\n"
 mvn -version
-printf "\n\tCONFIGURANDO FIREWALL:\n"
+printf "\n\tCONFIGURANDO FIREWALL E DISCO:\n"
 if [ $(aws ec2 describe-security-groups | jq '.SecurityGroups[] | select(.GroupName | contains("cloud9")) | .GroupName' | wc -l) = "1" ]
 then
   # liberar firewall automaticamente se só existe 1 security group
@@ -155,6 +150,12 @@ else
   # escolher manualmente dentre os securty groups existentes
   sh ~/environment/config/firewall_allow.sh
 fi
+
+# aumentando o disco para 100G e 
+sh ~/environment/config/resize.sh 100 > /dev/null
+#sh ~/environment/config/firewall_allow.sh
+sh ~/environment/config/resize.sh 100 > /dev/null
+
 #liberando acesso externo
 printf "\n\tEXIBE SE AMBIENTE CLOUD9 ESTÁ COM FIREWALL LIBERADO (em caso de erro, executar: \"sh ~/environment/config/firewall_alow.sh\") :\n"
 aws ec2 describe-security-groups --query 'SecurityGroups[?IpPermissions[?contains(IpRanges[].CidrIp, `0.0.0.0/0`)]].{GroupName: GroupName}'                                                       
