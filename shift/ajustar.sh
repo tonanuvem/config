@@ -1,5 +1,7 @@
 # Aguardando:
 echo ""
+export ANSIBLE_PYTHON_INTERPRETER=auto_silent
+export ANSIBLE_DEPRECATION_WARNINGS=false
 #sleep 10
 
 MASTER=$(~/environment/ip | awk -Fv '{ if ( !($1 ~  "None") && (/vm_0/) ) { print $1} }')
