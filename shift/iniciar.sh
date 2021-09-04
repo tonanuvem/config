@@ -1,3 +1,4 @@
+terraform init; terraform plan; terraform apply -auto-approve
 echo ""
 echo " Iniciando configurações: "
 MASTER=$(~/environment/ip | awk -Fv '{ if ( !($1 ~  "None") && (/vm_0/) ) { print $1} }')
