@@ -10,6 +10,7 @@ echo "MASTER = $MASTER"
 echo "NODE1 = $NODE1"
 echo "NODE2 = $NODE2"
 echo "NODE3 = $NODE3"
+
 # Aguardando Master
 export IP=$MASTER
 echo "   Aguardando Node1 com $IP: "
@@ -30,9 +31,8 @@ export IP=$NODE3
 echo "   Aguardando Node3 com $IP: "
 while [ $(ssh -q -oStrictHostKeyChecking=no -i ~/environment/labsuser.pem ec2-user@$IP "echo CONECTADO3" | grep CONECTADO3 | wc -l) != '1' ]; do { printf .; sleep 1; } done
 echo "   Conectado ao $IP, verificando ajustes: "
+
 sh ajustar.sh
-#sh config-node1.sh
-#sh config-node2.sh
-#sh config-node3.sh
+
 echo ""
 echo " Cluster iniciado e configurado"
