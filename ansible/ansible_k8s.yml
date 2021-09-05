@@ -55,16 +55,6 @@
           ansible.builtin.copy:
             dest: "/etc/docker/daemon.json"
             content: '{ "exec-opts": ["native.cgroupdriver=systemd"] }'
-            
-        - name: Restartar o daemon services
-          become: yes
-          ansible.builtin.service:
-            name: "{{ item }}"
-            state: restarted
-            enabled: yes
-          with_items:
-          - docker
-          - kubelet
               
         - name: Instalar minikube
           shell: |
@@ -116,3 +106,13 @@
             rm -rf helm-linux-amd64.tar.gz linux-amd64
           args:
             executable: /bin/bash
+            
+        - name: Restartar o daemon services
+          become: yes
+          ansible.builtin.service:
+            name: "{{ item }}"
+            state: restarted
+            enabled: yes
+          with_items:
+          - docker
+          - kubelet
