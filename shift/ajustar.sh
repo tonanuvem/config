@@ -24,7 +24,7 @@ echo $NODE3 > hosts &&
 ansible-playbook ~/environment/config/ansible/ansible_hostname.yml --extra-vars "nome=node3" --inventory hosts -u ec2-user --key-file ~/environment/labsuser.pem
 
 # aplicar configurações
-echo  "$MASTER,$NODE1,$NODE2,$NODE3" > hosts
+printf  "$MASTER\n$NODE1\n$NODE2\n$NODE3" > hosts
 ansible-playbook ~/environment/config/ansible/ansible_utils.yml --inventory hosts -u ec2-user --key-file ~/environment/labsuser.pem &&
 ansible-playbook ~/environment/config/ansible/ansible_docker.yml --inventory hosts -u ec2-user --key-file ~/environment/labsuser.pem &&
 ansible-playbook ~/environment/config/ansible/ansible_k8s.yml --inventory hosts -u ec2-user --key-file ~/environment/labsuser.pem
