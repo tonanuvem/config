@@ -25,8 +25,8 @@ echo "NODE3 = $NODE3"
 # CONFIGURANDO O MASTER utilizando o KUBEADM INIT:
 #echo "sudo hostnamectl set-hostname master" >> master.sh
 echo "Aguardando instalação do KUBEADM."
-ssh -oStrictHostKeyChecking=no -i ~/environment/labsuser.pem ec2-user@$MASTER "sudo hostnamectl set-hostname master"
-ssh -oStrictHostKeyChecking=no -i ~/environment/labsuser.pem ec2-user@$MASTER "while [ \$(dpkg -l | grep kubeadm | wc -l) != '1' ]; do { printf .; sleep 1; } done"
+#ssh -oStrictHostKeyChecking=no -i ~/environment/labsuser.pem ec2-user@$MASTER "sudo hostnamectl set-hostname master"
+#ssh -oStrictHostKeyChecking=no -i ~/environment/labsuser.pem ec2-user@$MASTER "while [ \$(dpkg -l | grep kubeadm | wc -l) != '1' ]; do { printf .; sleep 1; } done"
 #echo "while [ \$(dpkg -l | grep kubeadm | wc -l) != '1' ]; do { printf .; sleep 1; } done" >> master.sh
 echo "kubeadm version" >> master.sh
 echo "sudo kubeadm config images pull" >> master.sh
