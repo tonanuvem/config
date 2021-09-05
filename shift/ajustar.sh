@@ -17,11 +17,11 @@ NODE3=$(terraform output -json ip_externo | jq .[] | jq .[3])
 echo $MASTER > hosts &&
 ansible-playbook ~/environment/config/ansible/ansible_hostname.yml --extra-vars "nome=master" --inventory hosts -u ec2-user --key-file ~/environment/labsuser.pem
 echo $NODE1 > hosts &&
-ansible-playbook ~/environment/config/ansible/ansible_hostname.yml --extra-vars "nome=node1" --inventory hosts -u ec2-user --key-file ~/environment/labsuser.pem
+ansible-playbook ~/environment/config/ansible/ansible_hostname.yml --extra-vars "nome=worker1" --inventory hosts -u ec2-user --key-file ~/environment/labsuser.pem
 echo $NODE2 > hosts && 
-ansible-playbook ~/environment/config/ansible/ansible_hostname.yml --extra-vars "nome=node2" --inventory hosts -u ec2-user --key-file ~/environment/labsuser.pem
+ansible-playbook ~/environment/config/ansible/ansible_hostname.yml --extra-vars "nome=worker2" --inventory hosts -u ec2-user --key-file ~/environment/labsuser.pem
 echo $NODE3 > hosts &&
-ansible-playbook ~/environment/config/ansible/ansible_hostname.yml --extra-vars "nome=node3" --inventory hosts -u ec2-user --key-file ~/environment/labsuser.pem
+ansible-playbook ~/environment/config/ansible/ansible_hostname.yml --extra-vars "nome=worker3" --inventory hosts -u ec2-user --key-file ~/environment/labsuser.pem
 
 # aplicar configurações
 printf  "$MASTER\n$NODE1\n$NODE2\n$NODE3" > hosts
