@@ -6,6 +6,7 @@ export ANSIBLE_DEPRECATION_WARNINGS=false
 
 MASTER=$(terraform output -json ip_externo | jq .[] | jq .[0])
 QTD_NODES=$(terraform output -json ip_externo | jq '.[] | length')
+WORKER_NODES=$(expr $QTD_NODES - 1)
 #NODE1=$(terraform output -json ip_externo | jq .[] | jq .[1])
 #NODE2=$(terraform output -json ip_externo | jq .[] | jq .[2])
 #NODE3=$(terraform output -json ip_externo | jq .[] | jq .[3])
@@ -18,7 +19,7 @@ QTD_NODES=$(terraform output -json ip_externo | jq '.[] | length')
 echo $MASTER > hosts &&
 echo " Ajustando hostname do "
 ansible-playbook ~/environment/config/ansible/ansible_hostname.yml --extra-vars "nome=master" --inventory hosts -u ec2-user --key-file ~/environment/labsuser.pem
-for N in $(seq 1 $QTD_NODES); do
+for N in $(seq 1 $WORKER_NODES); do
     echo " Ajustando hostname do NODE $N"
     NODE=$(terraform output -json ip_externo | jq .[] | jq .[$N]) > hosts
     ansible-playbook ~/environment/config/ansible/ansible_hostname.yml --extra-vars "nome=worker$N" --inventory hosts -u ec2-user --key-file ~/environment/labsuser.pem
