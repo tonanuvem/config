@@ -2,7 +2,13 @@
 # Will include all hosts the playbook is run on.
 # Inspired from http://xmeblog.blogspot.com/2013/06/ansible-dynamicaly-update-etchosts.html
 
-- name: "Atualizar arquivos /etc/hosts"
-  lineinfile: dest=/etc/hosts regexp='.*{{ item }}$' line="{{ hostvars[item].ansible_default_ipv4.address }} {{item}}" state=present
-  when: hostvars[item].ansible_default_ipv4.address is defined
-  with_items: groups['all']
+---
+# https://docs.ansible.com/ansible/latest/user_guide/playbooks_variables.html
+  - name: Atualizar arquivos /etc/hosts em todos os nodes
+    hosts: all
+    become: yes
+    tasks:
+        - name: Atualizar arquivos /etc/hosts
+          ansible.builtin.lineinfile: dest=/etc/hosts regexp='.*{{ item }}$' line="{{ hostvars[item].ansible_default_ipv4.address }} {{item}}" state=present
+          when: hostvars[item].ansible_default_ipv4.address is defined
+          with_items: groups['all']
