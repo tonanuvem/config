@@ -4,9 +4,9 @@ export ANSIBLE_PYTHON_INTERPRETER=auto_silent
 export ANSIBLE_DEPRECATION_WARNINGS=false
 #sleep 10
 
-MASTER=$(terraform output -json ip_externo | jq .[] | jq .[0])
-QTD_NODES=$(terraform output -json ip_externo | jq '.[] | length')
-WORKER_NODES=$(expr $QTD_NODES - 1)
+export MASTER=$(terraform output -json ip_externo | jq .[] | jq .[0])
+export QTD_NODES=$(terraform output -json ip_externo | jq '.[] | length')
+export WORKER_NODES=$(expr $QTD_NODES - 1)
 #NODE1=$(terraform output -json ip_externo | jq .[] | jq .[1])
 #NODE2=$(terraform output -json ip_externo | jq .[] | jq .[2])
 #NODE3=$(terraform output -json ip_externo | jq .[] | jq .[3])

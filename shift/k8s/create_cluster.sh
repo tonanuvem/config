@@ -3,9 +3,10 @@
 export DIRETORIO='/home/ec2-user'
 # ~/environment/ip | awk -Fv '{ if ( !($1 ~  "None") ) { print } }'
 
-MASTER=$(terraform output -json ip_externo | jq .[] | jq .[0])
-QTD_NODES=$(terraform output -json ip_externo | jq '.[] | length')
-WORKER_NODES=$(expr $QTD_NODES - 1)
+#MASTER=$(terraform output -json ip_externo | jq .[] | jq .[0])
+#QTD_NODES=$(terraform output -json ip_externo | jq '.[] | length')
+#WORKER_NODES=$(expr $QTD_NODES - 1)
+
 #MASTER=$(~/environment/ip | awk -Fv '{ if ( !($1 ~  "None") && (/vm_0/) ) { print $1} }')
 #NODE1=$(~/environment/ip | awk -Fv '{ if ( !($1 ~  "None") && (/vm_1/) ) { print $1} }')
 #NODE2=$(~/environment/ip | awk -Fv '{ if ( !($1 ~  "None") && (/vm_2/) ) { print $1} }')
