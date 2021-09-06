@@ -1,7 +1,8 @@
 #!/bin/sh
 
 # script para colocar o node que falhou/retornou como CORDON / UNCORDON
-cat >> /home/ubuntu/config_nodes_drain.sh << EOL
+export DIRETORIO='/home/ec2-user'
+cat >> $DIRETORIO/config_nodes_drain.sh << EOL
 NOT_READY_NODES=\$(kubectl get nodes | grep -P 'NotReady(?!,SchedulingDisabled)' | awk '{print \$1}' | xargs echo)
 READY_NODES=\$(kubectl get nodes | grep '\sReady,SchedulingDisabled' | awk '{print \$1}' | xargs echo)
 echo "   CRON: \$(date)"
@@ -21,8 +22,8 @@ EOL
 
 # cron no MASTER
 #wget https://tonanuvem.github.io/k8s-exemplos/config_nodes_drain.sh
-croncmd="/home/ubuntu/config_nodes_drain.sh"
-cronlog="/home/ubuntu/log_config_nodes_drain.log"
+croncmd="$DIRETORIO/config_nodes_drain.sh"
+cronlog="$DIRETORIO/log_config_nodes_drain.log"
 echo $croncmd
 chmod +x $croncmd
 cronjob="*/1 * * * * $croncmd >> $cronlog 2>&1"
