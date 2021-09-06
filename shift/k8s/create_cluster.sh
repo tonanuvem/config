@@ -3,15 +3,18 @@
 export DIRETORIO='/home/ec2-user'
 # ~/environment/ip | awk -Fv '{ if ( !($1 ~  "None") ) { print } }'
 
-MASTER=$(~/environment/ip | awk -Fv '{ if ( !($1 ~  "None") && (/vm_0/) ) { print $1} }')
-NODE1=$(~/environment/ip | awk -Fv '{ if ( !($1 ~  "None") && (/vm_1/) ) { print $1} }')
-NODE2=$(~/environment/ip | awk -Fv '{ if ( !($1 ~  "None") && (/vm_2/) ) { print $1} }')
-NODE3=$(~/environment/ip | awk -Fv '{ if ( !($1 ~  "None") && (/vm_3/) ) { print $1} }')
+MASTER=$(terraform output -json ip_externo | jq .[] | jq .[0])
+QTD_NODES=$(terraform output -json ip_externo | jq '.[] | length')
+WORKER_NODES=$(expr $QTD_NODES - 1)
+#MASTER=$(~/environment/ip | awk -Fv '{ if ( !($1 ~  "None") && (/vm_0/) ) { print $1} }')
+#NODE1=$(~/environment/ip | awk -Fv '{ if ( !($1 ~  "None") && (/vm_1/) ) { print $1} }')
+#NODE2=$(~/environment/ip | awk -Fv '{ if ( !($1 ~  "None") && (/vm_2/) ) { print $1} }')
+#NODE3=$(~/environment/ip | awk -Fv '{ if ( !($1 ~  "None") && (/vm_3/) ) { print $1} }')
 echo "IPs configurados :"
 echo "MASTER = $MASTER"
-echo "NODE1 = $NODE1"
-echo "NODE2 = $NODE2"
-echo "NODE3 = $NODE3"
+#echo "NODE1 = $NODE1"
+#echo "NODE2 = $NODE2"
+#echo "NODE3 = $NODE3"
 #MASTER=$(~/environment/ip | awk -Fv '/vm_0/{print $1}')
 #NODE1=$(~/environment/ip | awk -Fv '/vm_1/{print $1}')
 #NODE2=$(~/environment/ip | awk -Fv '/vm_2/{print $1}')
@@ -19,9 +22,9 @@ echo "NODE3 = $NODE3"
 
 # reset arquivos vazios dos scripts:
 > master.sh
-> worker1.sh
-> worker2.sh
-> worker3.sh
+#> worker1.sh
+#> worker2.sh
+#> worker3.sh
 
 # CONFIGURANDO O MASTER utilizando o KUBEADM INIT:
 #echo "sudo hostnamectl set-hostname master" >> master.sh
@@ -79,21 +82,28 @@ echo "sudo $TOKEN" >> worker1.sh
 echo "sudo $TOKEN" >> worker2.sh
 echo "sudo $TOKEN" >> worker3.sh
 
+for N in $(seq 1 $WORKER_NODES); do
+    printf "\n\n"
+    NODE=$(terraform output -json ip_externo | jq .[] | jq .[$N])
+    echo "   CONFIGURANDO NODE $N ($NODE): KUBEADM JOIN"
+    ssh -oStrictHostKeyChecking=no -i ~/environment/labsuser.pem ec2-user@$NODE 'bash -s' < "sudo $TOKEN"
+done
+
 # validar
 #cat worker1.sh
-printf "\n\n"
-echo "   CONFIGURANDO NODE 1: KUBEADM JOIN"
-printf "\n\n"
-ssh -oStrictHostKeyChecking=no -i ~/environment/labsuser.pem ec2-user@$NODE1 'bash -s' < worker1.sh
-printf "\n\n"
-echo "   CONFIGURANDO NODE 2: KUBEADM JOIN"
-printf "\n\n"
-ssh -oStrictHostKeyChecking=no -i ~/environment/labsuser.pem ec2-user@$NODE2 'bash -s' < worker2.sh
-printf "\n\n"
-echo "   CONFIGURANDO NODE 3: KUBEADM JOIN"
-printf "\n\n"
-ssh -oStrictHostKeyChecking=no -i ~/environment/labsuser.pem ec2-user@$NODE3 'bash -s' < worker3.sh
-printf "\n\n"
+#printf "\n\n"
+#echo "   CONFIGURANDO NODE 1: KUBEADM JOIN"
+#printf "\n\n"
+#ssh -oStrictHostKeyChecking=no -i ~/environment/labsuser.pem ec2-user@$NODE1 'bash -s' < worker1.sh
+#printf "\n\n"
+#echo "   CONFIGURANDO NODE 2: KUBEADM JOIN"
+#printf "\n\n"
+#ssh -oStrictHostKeyChecking=no -i ~/environment/labsuser.pem ec2-user@$NODE2 'bash -s' < worker2.sh
+#printf "\n\n"
+#echo "   CONFIGURANDO NODE 3: KUBEADM JOIN"
+#printf "\n\n"
+#ssh -oStrictHostKeyChecking=no -i ~/environment/labsuser.pem ec2-user@$NODE3 'bash -s' < worker3.sh
+#printf "\n\n"
 echo "   VERIFICANDO NODES NO MASTER :"
 printf "\n\n"
 ssh -oStrictHostKeyChecking=no -i ~/environment/labsuser.pem ec2-user@$MASTER 'kubectl get nodes'
