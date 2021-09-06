@@ -1,6 +1,6 @@
 # conectar no master e configurar
 
-HOME = "/home/ec2-user"
+DIR = "/home/ec2-user"
 # ~/environment/ip | awk -Fv '{ if ( !($1 ~  "None") ) { print } }'
 
 MASTER=$(~/environment/ip | awk -Fv '{ if ( !($1 ~  "None") && (/vm_0/) ) { print $1} }')
@@ -36,9 +36,9 @@ echo "sudo kubeadm init --control-plane-endpoint \$(curl checkip.amazonaws.com):
 ssh -oStrictHostKeyChecking=no -i ~/environment/labsuser.pem ec2-user@$MASTER 'bash -s' < master.sh
 
 #	Configurar o cliente kubectl:
-echo "mkdir -p $HOME/.kube" > master.sh
-echo "sudo cp -i /etc/kubernetes/admin.conf $HOME/.kube/config" >> master.sh
-echo "sudo chown $(id -u):$(id -g) $HOME/.kube/config" >> master.sh
+echo "mkdir -p $DIR/.kube" > master.sh
+echo "sudo cp -i /etc/kubernetes/admin.conf $DIR/.kube/config" >> master.sh
+echo "sudo chown $(id -u):$(id -g) $DIR/.kube/config" >> master.sh
 #echo "source <(kubectl completion bash)" >> master.sh
 
 # validar
