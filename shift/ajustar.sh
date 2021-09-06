@@ -17,7 +17,7 @@ export WORKER_NODES=$(expr $QTD_NODES - 1)
 #NODE3=$(~/environment/ip | awk -Fv '{ if ( !($1 ~  "None") && (/vm_3/) ) { print $1} }')
 
 # configurar inventario ansible
-echo '[master]' > inv.hosts
+echo '[masters]' > inv.hosts
 echo "master ansible_ssh_host=$MASTER" >> inv.hosts
 echo '' >> inv.hosts
 echo '[nodes]' >> inv.hosts
