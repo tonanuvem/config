@@ -9,3 +9,4 @@
             #name: "{{ nome | default('fiap') }}"
             name: "{{ hostvars[item]['ansible_hostname']}}"
           with_items: "{{groups['nodes']}}"
+          when: inventory_hostname == "{{ item }}"
