@@ -1,6 +1,6 @@
 # conectar no master e configurar
 
-DIR = "/home/ec2-user"
+export DIR = "/home/ec2-user"
 # ~/environment/ip | awk -Fv '{ if ( !($1 ~  "None") ) { print } }'
 
 MASTER=$(~/environment/ip | awk -Fv '{ if ( !($1 ~  "None") && (/vm_0/) ) { print $1} }')
