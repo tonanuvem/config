@@ -59,7 +59,7 @@ echo "   TOKEN ACIMA : KUBEADM JOIN"
 printf "\n\n"
 echo "Master do Cluster foi inicializado. Agora vamos configurar a rede do cluster."
 # Configurar a rede do cluster:
-ssh -oStrictHostKeyChecking=no -i ~/environment/labsuser.pem ec2-user@$MASTER 'bash -s' < config_network_weave.sh
+ssh -oStrictHostKeyChecking=no -i ~/environment/labsuser.pem ec2-user@$MASTER 'bash -s' < k8s_config_network_weave.sh
 
 ### CONFIGURANDO OS NODES utilizando o KUBEADM JOIN:
 
