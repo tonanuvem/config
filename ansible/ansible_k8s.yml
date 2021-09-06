@@ -106,6 +106,14 @@
             rm -rf helm-linux-amd64.tar.gz linux-amd64
           args:
             executable: /bin/bash
+
+        - name: Instalar lista de pacotes
+          become: yes
+          yum:
+            name:
+              - iproute-tc
+            state: present
+            lock_timeout: 180
             
         - name: Restartar o daemon services
           become: yes
