@@ -16,23 +16,25 @@ export WORKER_NODES=$(expr $QTD_NODES - 1)
 #NODE3=$(~/environment/ip | awk -Fv '{ if ( !($1 ~  "None") && (/vm_3/) ) { print $1} }')
 
 # configurar inventario ansible
-echo '[nodes]' > inv.hosts
+echo '[master]' > inv.hosts
 echo "master ansible_host=$MASTER" >> inv.hosts
-for N in $(seq 1 $WORKER_NODES); do
+echo '' > inv.hosts
+echo '[nodes]' > inv.hosts
+for N in $(seq 0 $WORKER_NODES); do
     NODE=$(terraform output -json ip_externo | jq .[] | jq .[$N] | sed 's/"//g')
     echo "node$N ansible_host=$NODE" >> inv.hosts
 done
 
 # configurar hostnames
-echo $MASTER > hosts &&
-echo " Ajustando hostname do "
-ansible-playbook ~/environment/config/ansible/ansible_hostname.yml --extra-vars "nome=master" --inventory hosts -u ec2-user --key-file ~/environment/labsuser.pem
-for N in $(seq 1 $WORKER_NODES); do
-    echo " Ajustando hostname do NODE $N"
-    NODE=$(terraform output -json ip_externo | jq .[] | jq .[$N]) 
-    echo $NODE > hosts
-    ansible-playbook ~/environment/config/ansible/ansible_hostname.yml --extra-vars "nome=worker$N" --inventory hosts -u ec2-user --key-file ~/environment/labsuser.pem
-done
+#echo $MASTER > hosts &&
+#echo " Ajustando hostname do "
+#ansible-playbook ~/environment/config/ansible/ansible_hostname.yml --extra-vars "nome=master" --inventory hosts -u ec2-user --key-file ~/environment/labsuser.pem
+#for N in $(seq 1 $WORKER_NODES); do
+#    echo " Ajustando hostname do NODE $N"
+#    NODE=$(terraform output -json ip_externo | jq .[] | jq .[$N]) 
+#    echo $NODE > hosts
+#    ansible-playbook ~/environment/config/ansible/ansible_hostname.yml --extra-vars "nome=worker$N" --inventory hosts -u ec2-user --key-file ~/environment/labsuser.pem
+#done
 
 #echo $NODE1 > hosts &&
 #ansible-playbook ~/environment/config/ansible/ansible_hostname.yml --extra-vars "nome=worker1" --inventory hosts -u ec2-user --key-file ~/environment/labsuser.pem
@@ -45,7 +47,7 @@ done
 #printf  "$MASTER\n$NODE1\n$NODE2\n$NODE3" > hosts
 terraform output -json ip_externo | jq .[0] | jq .[] > hosts
 ansible-playbook ~/environment/config/ansible/ansible_hosts.yml --inventory inv.hosts -u ec2-user --key-file ~/environment/labsuser.pem
-#ansible-playbook ~/environment/config/ansible/ansible_hostname.yml --inventory inv.hosts -u ec2-user --key-file ~/environment/labsuser.pem
+ansible-playbook ~/environment/config/ansible/ansible_hostname.yml --inventory inv.hosts -u ec2-user --key-file ~/environment/labsuser.pem
 ansible-playbook ~/environment/config/ansible/ansible_utils.yml --inventory hosts -u ec2-user --key-file ~/environment/labsuser.pem &&
 ansible-playbook ~/environment/config/ansible/ansible_docker.yml --inventory hosts -u ec2-user --key-file ~/environment/labsuser.pem &&
 ansible-playbook ~/environment/config/ansible/ansible_k8s.yml --inventory hosts -u ec2-user --key-file ~/environment/labsuser.pem

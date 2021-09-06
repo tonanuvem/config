@@ -1,0 +1,28 @@
+---
+  # https://www.ktexperts.com/how-to-configure-ssh-password-authentication-for-amazon-ec2-instance/
+  # https://docs.ansible.com/ansible/latest/reference_appendices/faq.html#how-do-i-generate-encrypted-passwords-for-the-user-module
+  # https://stackoverflow.com/questions/19292899/creating-a-new-user-and-password-with-ansible
+  - name: Criar usuario para uso dos alunos
+  - hosts: all
+    tasks:
+    - name: Criar usuario 'fiap' e anexar ao grupo 'root'
+      become: yes
+      ansible.builtin.user:
+        name: fiap
+        password: "fi7qgu63oQxIU"
+        shell: /bin/bash
+        groups: adm,wheel
+        append: yes
+    - name: Liberar o acesso SSH por autenticacao simples
+      become: yes
+      ansible.builtin.shell: |
+        sed -i 's|PasswordAuthentication no|PasswordAuthentication yes|' /etc/ssh/sshd_config
+        echo 'ClientAliveInterval 60' | sudo tee --append /etc/ssh/sshd_config
+      args:
+        executable: /bin/bash
+    - name: Restartar o daemon SSH service
+      service:
+        name: sshd
+        state: restarted
+        enabled: yes
+      become: yes
