@@ -21,7 +21,8 @@ echo " Ajustando hostname do "
 ansible-playbook ~/environment/config/ansible/ansible_hostname.yml --extra-vars "nome=master" --inventory hosts -u ec2-user --key-file ~/environment/labsuser.pem
 for N in $(seq 1 $WORKER_NODES); do
     echo " Ajustando hostname do NODE $N"
-    NODE=$(terraform output -json ip_externo | jq .[] | jq .[$N]) > hosts
+    NODE=$(terraform output -json ip_externo | jq .[] | jq .[$N]) 
+    echo $NODE > hosts
     ansible-playbook ~/environment/config/ansible/ansible_hostname.yml --extra-vars "nome=worker$N" --inventory hosts -u ec2-user --key-file ~/environment/labsuser.pem
 done
 
