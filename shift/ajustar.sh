@@ -18,7 +18,7 @@ export WORKER_NODES=$(expr $QTD_NODES - 1)
 
 # configurar inventario ansible
 #echo '[master]' > inv.hosts
-echo "master ansible_host=$MASTER" > inv.hosts
+echo "master ansible_ssh_host=$MASTER" > inv.hosts
 echo '' >> inv.hosts
 echo '[nodes]' >> inv.hosts
 #for N in $(seq 0 $WORKER_NODES); do
