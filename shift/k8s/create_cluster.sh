@@ -109,14 +109,7 @@ printf "\n\n"
 ssh -oStrictHostKeyChecking=no -i ~/environment/labsuser.pem ec2-user@$MASTER 'kubectl get nodes'
 
 ### CONFIGURANDO OS VOLUMES 
-printf "\n\n"
-echo "   CONFIGURANDO OS VOLUMES: PORTWORX"
-printf "\n\n"
-ssh -oStrictHostKeyChecking=no -i ~/environment/labsuser.pem ec2-user@$MASTER 'bash -s' < config_volume_portworx.sh
-# Cron para detectar rapidamente falha nos nodes
-ssh -oStrictHostKeyChecking=no -i ~/environment/labsuser.pem ec2-user@$MASTER 'bash -s' < config_cron.sh
-# configurar um Storage Class default no cluster
-ssh -oStrictHostKeyChecking=no -i ~/environment/labsuser.pem ec2-user@$MASTER 'kubectl create -f https://tonanuvem.github.io/k8s-exemplos/storageclass_default_portworx.yaml'
+#sh config_volume_portworx.sh
 
 printf "\n\n"
 echo "   CONFIGURAÇÕES REALIZADAS. FIM."
