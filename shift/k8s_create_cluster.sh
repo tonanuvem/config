@@ -3,7 +3,7 @@
 export DIRETORIO='/home/ec2-user'
 # ~/environment/ip | awk -Fv '{ if ( !($1 ~  "None") ) { print } }'
 
-MASTER=$(terraform output -json ip_externo | jq .[] | jq .[0])
+MASTER=$(terraform output -json ip_externo | jq .[] | jq .[0]) | sed 's/\"//'
 QTD_NODES=$(terraform output -json ip_externo | jq '.[] | length')
 WORKER_NODES=$(expr $QTD_NODES - 1)
 
@@ -85,9 +85,9 @@ echo "sudo $TOKEN" >> worker3.sh
 
 for N in $(seq 1 $WORKER_NODES); do
     printf "\n\n"
-    NODE=$(terraform output -json ip_externo | jq .[] | jq .[$N])
+    NODE=$(terraform output -json ip_externo | jq .[] | jq .[$N]) | sed 's/\"//'
     echo "   CONFIGURANDO NODE $N ($NODE): KUBEADM JOIN"
-    ssh -oStrictHostKeyChecking=no -i ~/environment/labsuser.pem ec2-user@$NODE 'bash -s' < "sudo $TOKEN"
+    ssh -oStrictHostKeyChecking=no -i ~/environment/labsuser.pem ec2-user@$NODE 'bash sudo $TOKEN'
 done
 
 # validar
