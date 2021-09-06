@@ -2,6 +2,7 @@
 echo ""
 export ANSIBLE_PYTHON_INTERPRETER=auto_silent
 export ANSIBLE_DEPRECATION_WARNINGS=false
+export ANSIBLE_DISPLAY_SKIPPED_HOSTS=false
 #sleep 10
 
 export MASTER=$(terraform output -json ip_externo | jq .[] | jq .[0] | sed 's/"//g')
