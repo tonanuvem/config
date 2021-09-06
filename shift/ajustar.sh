@@ -16,11 +16,11 @@ export WORKER_NODES=$(expr $QTD_NODES - 1)
 #NODE3=$(~/environment/ip | awk -Fv '{ if ( !($1 ~  "None") && (/vm_3/) ) { print $1} }')
 
 # configurar inventario ansible
-echo '[nodes]' > inv_hosts
-echo "master ansible_host=$MASTER" >> inv_hosts
-for N in $(seq 0 $WORKER_NODES); do
+echo '[nodes]' > inv.hosts
+echo "master ansible_host=$MASTER" >> inv.hosts
+for N in $(seq 1 $WORKER_NODES); do
     NODE=$(terraform output -json ip_externo | jq .[] | jq .[$N] | sed 's/"//g')
-    echo "node$N ansible_host=$NODE" >> inv_hosts
+    echo "node$N ansible_host=$NODE" >> inv.hosts
 done
 
 # configurar hostnames
