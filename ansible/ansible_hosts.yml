@@ -9,6 +9,12 @@
     become: yes
     tasks:
         - name: Atualizar arquivos /etc/hosts
-          ansible.builtin.lineinfile: dest=/etc/hosts regexp='.*{{ item }}$' line="{{ hostvars[item].ansible_default_ipv4.address }} {{item}}" state=present
-          when: hostvars[item].ansible_default_ipv4.address is defined
-          with_items: groups['all']
+          ansible.builtin.lineinfile: 
+            dest: "/etc/hosts"
+            regexp: ".*\t{{ hostvars[item]['ansible_hostname']}}\t{{ hostvars[item]['ansible_hostname']}}"
+            line: "{{ hostvars[item]['ansible_ssh_host'] }}\t{{ hostvars[item]['ansible_hostname']}}\t{{ hostvars[item]['ansible_hostname']}}"
+            state: present
+            backup: yes
+          #register: etchostsupdate
+          #when: inventory_hostname != "{{ item }}" or inventory_hostname == "{{ item }}"
+          with_items: "{{groups['nodes']}}"

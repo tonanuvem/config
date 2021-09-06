@@ -4,7 +4,7 @@ export ANSIBLE_PYTHON_INTERPRETER=auto_silent
 export ANSIBLE_DEPRECATION_WARNINGS=false
 #sleep 10
 
-export MASTER=$(terraform output -json ip_externo | jq .[] | jq .[0])
+export MASTER=$(terraform output -json ip_externo | jq .[] | jq .[0] | sed 's/"//g')
 export QTD_NODES=$(terraform output -json ip_externo | jq '.[] | length')
 export WORKER_NODES=$(expr $QTD_NODES - 1)
 #NODE1=$(terraform output -json ip_externo | jq .[] | jq .[1])
@@ -14,6 +14,14 @@ export WORKER_NODES=$(expr $QTD_NODES - 1)
 #NODE1=$(~/environment/ip | awk -Fv '{ if ( !($1 ~  "None") && (/vm_1/) ) { print $1} }')
 #NODE2=$(~/environment/ip | awk -Fv '{ if ( !($1 ~  "None") && (/vm_2/) ) { print $1} }')
 #NODE3=$(~/environment/ip | awk -Fv '{ if ( !($1 ~  "None") && (/vm_3/) ) { print $1} }')
+
+# configurar inventario ansible
+echo '[nodes]' > inv_hosts
+echo "master ansible_host=$MASTER" >> inv_hosts
+for N in $(seq 0 $WORKER_NODES); do
+    NODE=$(terraform output -json ip_externo | jq .[] | jq .[$N] | sed 's/"//g')
+    echo "node$N ansible_host=$NODE" >> inv_hosts
+done
 
 # configurar hostnames
 echo $MASTER > hosts &&
