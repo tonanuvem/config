@@ -6,9 +6,7 @@
     tasks:
         - name: Set hostname
           ansible.builtin.hostname:
-            name: ansible_host
-            #name: {{ ansible_hostname }}
-            #name: {{ inventory_hostname }}
+            #name: "{{ inventory_hostname }}
             #name: "{{ nome | default('fiap') }}"
             #name: "{{ hostvars[item]['ansible_hostname']}}"
           #with_items: "{{groups['nodes']}}"
