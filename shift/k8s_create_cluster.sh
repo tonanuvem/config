@@ -79,15 +79,15 @@ echo "CONFIGURANDO OS NODES utilizando o KUBEADM JOIN:"
 #echo "sudo hostnamectl set-hostname worker2" >> worker2.sh
 #echo "sudo hostnamectl set-hostname worker3" >> worker3.sh
 
-echo "sudo $TOKEN" >> worker1.sh
-echo "sudo $TOKEN" >> worker2.sh
-echo "sudo $TOKEN" >> worker3.sh
+#echo "sudo $TOKEN" >> worker1.sh
+#echo "sudo $TOKEN" >> worker2.sh
+#echo "sudo $TOKEN" >> worker3.sh
 
 for N in $(seq 1 $WORKER_NODES); do
     printf "\n\n"
     NODE=$(terraform output -json ip_externo | jq .[] | jq .[$N] | sed 's/"//g')
     echo "   CONFIGURANDO NODE $N ($NODE): KUBEADM JOIN"
-    ssh -oStrictHostKeyChecking=no -i ~/environment/labsuser.pem ec2-user@$NODE 'bash sudo $TOKEN'
+    ssh -oStrictHostKeyChecking=no -i ~/environment/labsuser.pem ec2-user@$NODE 'sudo $TOKEN'
 done
 
 # validar
