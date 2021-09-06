@@ -111,7 +111,7 @@ printf "\n\n"
 ssh -oStrictHostKeyChecking=no -i ~/environment/labsuser.pem ec2-user@$MASTER 'kubectl get nodes'
 
 ### CONFIGURANDO OS VOLUMES 
-#sh config_volume_portworx.sh
+#sh k8s_criar_volume_portworx.sh
 
 printf "\n\n"
 echo "   CONFIGURAÇÕES REALIZADAS. FIM."

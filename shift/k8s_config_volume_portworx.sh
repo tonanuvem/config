@@ -1,14 +1,5 @@
 # Cada Worker possui um disco extra (/dev/xvdb) criado pelo Terraform:
 
-printf "\n\n"
-echo "   CONFIGURANDO OS VOLUMES: PORTWORX"
-printf "\n\n"
-ssh -oStrictHostKeyChecking=no -i ~/environment/labsuser.pem ec2-user@$MASTER 'bash -s' < config_volume_portworx.sh
-# Cron para detectar rapidamente falha nos nodes
-ssh -oStrictHostKeyChecking=no -i ~/environment/labsuser.pem ec2-user@$MASTER 'bash -s' < config_cron.sh
-# configurar um Storage Class default no cluster
-ssh -oStrictHostKeyChecking=no -i ~/environment/labsuser.pem ec2-user@$MASTER 'kubectl create -f https://tonanuvem.github.io/k8s-exemplos/storageclass_default_portworx.yaml'
-
 echo "Configuraçoes de disco: "
 lsblk
 VER=$(kubectl version --short | awk -Fv '/Server Version: /{print $3}')
