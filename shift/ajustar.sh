@@ -23,7 +23,7 @@ echo '' >> inv.hosts
 echo '[nodes]' >> inv.hosts
 for N in $(seq 0 $WORKER_NODES); do
     NODE=$(terraform output -json ip_externo | jq .[] | jq .[$N] | sed 's/"//g')
-    echo "node$N ansible_host=$NODE" >> inv.hosts
+    echo "node$N ansible_ssh_host=$NODE" >> inv.hosts
 done
 
 # configurar hostnames
