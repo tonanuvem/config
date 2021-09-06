@@ -31,8 +31,11 @@ echo "Aguardando instalação do KUBEADM."
 echo "kubeadm version" >> master.sh
 echo "sudo kubeadm config images pull" >> master.sh
 echo "sudo kubeadm init --control-plane-endpoint \$(curl checkip.amazonaws.com):6443" >> master.sh
+### INICIANDO O MASTER via SSH
+ssh -oStrictHostKeyChecking=no -i ~/environment/labsuser.pem ec2-user@$MASTER 'bash -s' < master.sh
+
 #	Configurar o cliente kubectl:
-echo "mkdir -p $HOME/.kube" >> master.sh
+echo "mkdir -p $HOME/.kube" > master.sh
 echo "sudo cp -i /etc/kubernetes/admin.conf $HOME/.kube/config" >> master.sh
 echo "sudo chown $(id -u):$(id -g) $HOME/.kube/config" >> master.sh
 #echo "source <(kubectl completion bash)" >> master.sh

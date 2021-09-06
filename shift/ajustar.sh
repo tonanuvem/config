@@ -5,9 +5,10 @@ export ANSIBLE_DEPRECATION_WARNINGS=false
 #sleep 10
 
 MASTER=$(terraform output -json ip_externo | jq .[] | jq .[0])
-NODE1=$(terraform output -json ip_externo | jq .[] | jq .[1])
-NODE2=$(terraform output -json ip_externo | jq .[] | jq .[2])
-NODE3=$(terraform output -json ip_externo | jq .[] | jq .[3])
+QTD_NODES=$(terraform output -json ip_externo | jq '.[] | length')
+#NODE1=$(terraform output -json ip_externo | jq .[] | jq .[1])
+#NODE2=$(terraform output -json ip_externo | jq .[] | jq .[2])
+#NODE3=$(terraform output -json ip_externo | jq .[] | jq .[3])
 #MASTER=$(~/environment/ip | awk -Fv '{ if ( !($1 ~  "None") && (/vm_0/) ) { print $1} }')
 #NODE1=$(~/environment/ip | awk -Fv '{ if ( !($1 ~  "None") && (/vm_1/) ) { print $1} }')
 #NODE2=$(~/environment/ip | awk -Fv '{ if ( !($1 ~  "None") && (/vm_2/) ) { print $1} }')
@@ -15,13 +16,19 @@ NODE3=$(terraform output -json ip_externo | jq .[] | jq .[3])
 
 # configurar hostnames
 echo $MASTER > hosts &&
+echo " Ajustando hostname do "
 ansible-playbook ~/environment/config/ansible/ansible_hostname.yml --extra-vars "nome=master" --inventory hosts -u ec2-user --key-file ~/environment/labsuser.pem
-echo $NODE1 > hosts &&
-ansible-playbook ~/environment/config/ansible/ansible_hostname.yml --extra-vars "nome=worker1" --inventory hosts -u ec2-user --key-file ~/environment/labsuser.pem
-echo $NODE2 > hosts && 
-ansible-playbook ~/environment/config/ansible/ansible_hostname.yml --extra-vars "nome=worker2" --inventory hosts -u ec2-user --key-file ~/environment/labsuser.pem
-echo $NODE3 > hosts &&
-ansible-playbook ~/environment/config/ansible/ansible_hostname.yml --extra-vars "nome=worker3" --inventory hosts -u ec2-user --key-file ~/environment/labsuser.pem
+for N in $(seq 1 $QTD_NODES); do
+    echo " Ajustando hostname do NODE $N"
+    ansible-playbook ~/environment/config/ansible/ansible_hostname.yml --extra-vars "nome=worker$N" --inventory hosts -u ec2-user --key-file ~/environment/labsuser.pem
+done
+
+#echo $NODE1 > hosts &&
+#ansible-playbook ~/environment/config/ansible/ansible_hostname.yml --extra-vars "nome=worker1" --inventory hosts -u ec2-user --key-file ~/environment/labsuser.pem
+#echo $NODE2 > hosts && 
+#ansible-playbook ~/environment/config/ansible/ansible_hostname.yml --extra-vars "nome=worker2" --inventory hosts -u ec2-user --key-file ~/environment/labsuser.pem
+#echo $NODE3 > hosts &&
+#ansible-playbook ~/environment/config/ansible/ansible_hostname.yml --extra-vars "nome=worker3" --inventory hosts -u ec2-user --key-file ~/environment/labsuser.pem
 
 # aplicar configurações
 #printf  "$MASTER\n$NODE1\n$NODE2\n$NODE3" > hosts
