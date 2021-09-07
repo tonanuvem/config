@@ -1,24 +1,22 @@
 #!/bin/bash
-docker run -d -p 80:80 -p 443:443 --restart=unless-stopped --privileged --name rancher-server rancher/rancher:latest
+sudo docker run -d -p 80:80 -p 443:443 --restart=unless-stopped --privileged --name rancher-server rancher/rancher:latest
 
 while ! curl -ks https://localhost/ping; do printf . && sleep 3; done
 
 # Descobrir senha
 SENHA=$(docker logs  rancher-server  2>&1 | grep -oP '(?<=Bootstrap Password: ).*')
+echo "TEMPORARIA SENHA = $SENHA"
 
 # Login
-LOGINRESPONSE=$(curl -s 'https://127.0.0.1/v3-public/localProviders/local?action=login' -H 'content-type: application/json' --data-binary '{"username":"admin","password":"'${SENHA}'"}' --insecure) 
-LOGINTOKEN=`echo $LOGINRESPONSE | jq -r .token`
+curl -s 'https://127.0.0.1/v3-public/localProviders/local?action=login' -H 'content-type: application/json' --data-binary '{"username":"admin","password":"'${SENHA}'"}' --insecure | jq -r .token > LOGINTOKEN
+LOGINTOKEN=$(cat LOGINTOKEN)
 echo "LOGINTOKEN = $LOGINTOKEN"
 
-# Change password
-curl -s 'https://127.0.0.1/v3/users?action=changepassword' -H 'content-type: application/json' -H "Authorization: Bearer $LOGINTOKEN" --data-binary '{"currentPassword":"admin","newPassword":"fiap"}' --insecure
-
 # Create API key
-APIRESPONSE=$(curl -s 'https://127.0.0.1/v3/token' -H 'content-type: application/json' -H "Authorization: Bearer "'$LOGINTOKEN'"" --data-binary '{"type":"token","description":"automation"}' --insecure)
-# Extract and store token
-APITOKEN=$(echo $APIRESPONSE | jq -r .token)
-echo "APIRESPONSE = $APIRESPONSE"
+curl -s 'https://127.0.0.1/v3/token' -H 'content-type: application/json' -H "Authorization: Bearer "'$LOGINTOKEN'"" --data-binary '{"type":"token","description":"automation"}' --insecure | jq -r .token > APITOKEN
+cat APITOKEN
+APITOKEN=$(cat APITOKEN)
+echo "APITOKEN = $APITOKEN"
 
 # Set server-url
 HOST_IP=$(curl checkip.amazonaws.com)
@@ -45,3 +43,6 @@ DOCKERRUNCMD="$AGENTCMD $ROLEFLAGS"
 
 # Echo command
 echo $DOCKERRUNCMD
+
+# Change password
+curl -s 'https://127.0.0.1/v3/users?action=changepassword' -H 'content-type: application/json' -H "Authorization: Bearer $LOGINTOKEN" --data-binary '{"currentPassword":"'${SENHA}'","newPassword":"fiap"}' --insecure
