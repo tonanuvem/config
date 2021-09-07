@@ -1,5 +1,5 @@
 #!/bin/bash
-docker run -d -p 80:80 -p 443:443 --name rancher-server rancher/rancher:latest
+docker run -d -p 80:80 -p 443:443 --restart=unless-stopped --privileged --name rancher-server rancher/rancher:latest
 
 while ! curl -k https://localhost/ping; do printf . && sleep 3; done
 
