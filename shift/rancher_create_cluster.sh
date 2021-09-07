@@ -1,27 +1,11 @@
 # conectar no master e configurar
-
-# ~/environment/ip | awk -Fv '{ if ( !($1 ~  "None") ) { print } }'
-# ~/environment/ip | awk -Fv '{ if ( !($1 ~  "None") ) { print } }'
+# https://rancher.com/adding-custom-nodes-kubernetes-cluster-rancher-2-0-tech-preview-2
 
 MASTER=$(terraform output -json ip_externo | jq .[] | jq .[0] | sed 's/"//g')
 QTD_NODES=$(terraform output -json ip_externo | jq '.[] | length')
 WORKER_NODES=$(expr $QTD_NODES - 1)
 
-#MASTER=$(~/environment/ip | awk -Fv '{ if ( !($1 ~  "None") && (/vm_0/) ) { print $1} }')
-#NODE1=$(~/environment/ip | awk -Fv '{ if ( !($1 ~  "None") && (/vm_1/) ) { print $1} }')
-#NODE2=$(~/environment/ip | awk -Fv '{ if ( !($1 ~  "None") && (/vm_2/) ) { print $1} }')
-#NODE3=$(~/environment/ip | awk -Fv '{ if ( !($1 ~  "None") && (/vm_3/) ) { print $1} }')
-#echo "IPs configurados :"
-#echo "MASTER = $MASTER"
-#echo "NODE1 = $NODE1"
-#echo "NODE2 = $NODE2"
-#echo "NODE3 = $NODE3"
-
-# reset arquivos vazios dos scripts:
 > master.sh
-#> worker1.sh
-#> worker2.sh
-#> worker3.sh
 
 # CONFIGURANDO O MASTER utilizando o DOCKER SWARM INIT:"
 ### CONFIGURANDO O MASTER via SSH
@@ -30,9 +14,7 @@ printf "\n\n\tMASTER:\n"
 echo ""
 echo "   Aguardando configurações: "
 
-#echo "while [ \$(ls /usr/local/bin/ | grep docker-compose | wc -l) != '1' ]; do { printf .; sleep 1; } done" >> master.sh
-#echo "sudo hostnamectl set-hostname master" >> master.sh
-echo "sudo docker swarm init" >> master.sh
+echo "sudo docker run --privileged -d --restart=unless-stopped -p 80:80 -p 443:443 rancher/rancher" >> master.sh
 
 ssh -o LogLevel=error -oStrictHostKeyChecking=no -i ~/environment/labsuser.pem ec2-user@$MASTER 'bash -s' < master.sh
 
