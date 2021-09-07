@@ -45,7 +45,7 @@ printf "\n\n"
 #echo "sudo $TOKEN" >> worker1.sh
 #echo "sudo $TOKEN" >> worker2.sh
 #echo "sudo $TOKEN" >> worker3.sh
-echo "sudo $TOKEN" >> workers.sh
+echo "sudo $TOKEN" > workers.sh
 
 # Exemplo:
 # docker swarm join --token SWMTKN-1-28amdt0x5r4mbc5092t1w016392emlqv67lyhasph200d6tdhl-41rxupxdsjg9zo00xtdlwon5p 10.1.1.97:2377
