@@ -19,15 +19,16 @@ cat APITOKEN
 APITOKEN=$(cat APITOKEN)
 echo "APITOKEN = $APITOKEN"
 
+# Change password
+echo "Alterando a senha para fiap"
+curl -s 'https://127.0.0.1/v3/users?action=changepassword' -H 'content-type: application/json' -H "Authorization: Bearer $LOGINTOKEN" --data-binary '{"currentPassword":"'${SENHA}'","newPassword":"fiap"}' --insecure
+SENHA=fiap
+
 # Set server-url
 HOST_IP=$(curl checkip.amazonaws.com)
 RANCHER_SERVER="fiap.${HOST_IP}.nip.io"
 echo "Configurando o endereço do Rancher: $RANCHER_SERVER"
 curl -s 'https://127.0.0.1/v3/settings/server-url' -H 'content-type: application/json' -H "Authorization: Bearer $APITOKEN" -X PUT --data-binary '{"name":"server-url","value":"'$RANCHER_SERVER'"}' --insecure
-
-# Change password
-curl -s 'https://127.0.0.1/v3/users?action=changepassword' -H 'content-type: application/json' -H "Authorization: Bearer $LOGINTOKEN" --data-binary '{"currentPassword":"'${SENHA}'","newPassword":"fiap"}' --insecure
-SENHA=fiap
 
 # Create cluster
 curl -s 'https://127.0.0.1/v3/cluster' -H 'content-type: application/json' -H "Authorization: Bearer $APITOKEN" --data-binary '{"dockerRootDir":"/var/lib/docker","enableNetworkPolicy":false,"type":"cluster","rancherKubernetesEngineConfig":{"addonJobTimeout":30,"ignoreDockerVersion":true,"sshAgentAuth":false,"type":"rancherKubernetesEngineConfig","authentication":{"type":"authnConfig","strategy":"x509"},"network":{"type":"networkConfig","plugin":"canal"},"ingress":{"type":"ingressConfig","provider":"nginx"},"monitoring":{"type":"monitoringConfig","provider":"metrics-server"},"services":{"type":"rkeConfigServices","kubeApi":{"podSecurityPolicy":false,"type":"kubeAPIService"},"etcd":{"snapshot":false,"type":"etcdService","extraArgs":{"heartbeat-interval":500,"election-timeout":5000}}}},"name":"fiap"}' --insecure | jq -r .id > CLUSTERID
