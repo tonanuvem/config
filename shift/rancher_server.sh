@@ -9,11 +9,12 @@ echo "TEMPORARIA SENHA = $SENHA"
 
 # Login
 curl -s 'https://127.0.0.1/v3-public/localProviders/local?action=login' -H 'content-type: application/json' --data-binary '{"username":"admin","password":"'${SENHA}'"}' --insecure | jq -r .token > LOGINTOKEN
+cat LOGINTOKEN
 LOGINTOKEN=$(cat LOGINTOKEN)
 echo "LOGINTOKEN = $LOGINTOKEN"
 
 # Create API key
-curl -s 'https://127.0.0.1/v3/token' -H 'content-type: application/json' -H "Authorization: Bearer "'$LOGINTOKEN'"" --data-binary '{"type":"token","description":"automation"}' --insecure | jq -r .token > APITOKEN
+curl -s 'https://127.0.0.1/v3/token' -H 'content-type: application/json' -H "Authorization: Bearer ${LOGINTOKEN}" --data-binary '{"type":"token","description":"automation"}' --insecure | jq -r .token > APITOKEN
 cat APITOKEN
 APITOKEN=$(cat APITOKEN)
 echo "APITOKEN = $APITOKEN"
@@ -22,21 +23,23 @@ echo "APITOKEN = $APITOKEN"
 HOST_IP=$(curl checkip.amazonaws.com)
 RANCHER_SERVER="fiap.${HOST_IP}.nip.io"
 echo "Configurando o endereço do Rancher: $RANCHER_SERVER"
-curl -s 'https://127.0.0.1/v3/settings/server-url' -H 'content-type: application/json' -H "Authorization: Bearer $APITOKEN" -X PUT --data-binary '{"name":"server-url","value":"'$RANCHER_SERVER'"}' --insecure > /dev/null
+curl -s 'https://127.0.0.1/v3/settings/server-url' -H 'content-type: application/json' -H "Authorization: Bearer $APITOKEN" -X PUT --data-binary '{"name":"server-url","value":"'$RANCHER_SERVER'"}' --insecure
 
 # Create cluster
-CLUSTERRESPONSE=$(curl -s 'https://127.0.0.1/v3/cluster' -H 'content-type: application/json' -H "Authorization: Bearer $APITOKEN" --data-binary '{"dockerRootDir":"/var/lib/docker","enableNetworkPolicy":false,"type":"cluster","rancherKubernetesEngineConfig":{"addonJobTimeout":30,"ignoreDockerVersion":true,"sshAgentAuth":false,"type":"rancherKubernetesEngineConfig","authentication":{"type":"authnConfig","strategy":"x509"},"network":{"type":"networkConfig","plugin":"canal"},"ingress":{"type":"ingressConfig","provider":"nginx"},"monitoring":{"type":"monitoringConfig","provider":"metrics-server"},"services":{"type":"rkeConfigServices","kubeApi":{"podSecurityPolicy":false,"type":"kubeAPIService"},"etcd":{"snapshot":false,"type":"etcdService","extraArgs":{"heartbeat-interval":500,"election-timeout":5000}}}},"name":"yournewcluster"}' --insecure)
-# Extract clusterid to use for generating the docker run command
-CLUSTERID=$(echo $CLUSTERRESPONSE | jq -r .id)
+curl -s 'https://127.0.0.1/v3/cluster' -H 'content-type: application/json' -H "Authorization: Bearer $APITOKEN" --data-binary '{"dockerRootDir":"/var/lib/docker","enableNetworkPolicy":false,"type":"cluster","rancherKubernetesEngineConfig":{"addonJobTimeout":30,"ignoreDockerVersion":true,"sshAgentAuth":false,"type":"rancherKubernetesEngineConfig","authentication":{"type":"authnConfig","strategy":"x509"},"network":{"type":"networkConfig","plugin":"canal"},"ingress":{"type":"ingressConfig","provider":"nginx"},"monitoring":{"type":"monitoringConfig","provider":"metrics-server"},"services":{"type":"rkeConfigServices","kubeApi":{"podSecurityPolicy":false,"type":"kubeAPIService"},"etcd":{"snapshot":false,"type":"etcdService","extraArgs":{"heartbeat-interval":500,"election-timeout":5000}}}},"name":"fiap"}' --insecure | jq -r .id > CLUSTERID
+cat CLUSTERID
+CLUSTERID=$(cat CLUSTERID)
+echo "CLUSTERID = $CLUSTERID"
 
 # Create token
-curl -s 'https://127.0.0.1/v3/clusterregistrationtoken' -H 'content-type: application/json' -H "Authorization: Bearer $APITOKEN" --data-binary '{"type":"clusterRegistrationToken","clusterId":"'$CLUSTERID'"}' --insecure > /dev/null
+curl -s 'https://127.0.0.1/v3/clusterregistrationtoken' -H 'content-type: application/json' -H "Authorization: Bearer $APITOKEN" --data-binary '{"type":"clusterRegistrationToken","clusterId":"'$CLUSTERID'"}' --insecure
 
 # Set role flags
 ROLEFLAGS="--etcd --controlplane --worker"
 
 # Generate nodecommand
 AGENTCMD=$(curl -s 'https://127.0.0.1/v3/clusterregistrationtoken?id="'$CLUSTERID'"' -H 'content-type: application/json' -H "Authorization: Bearer $APITOKEN" --insecure | jq -r '.data[].nodeCommand' | head -1)
+echo "AGENTCMD = $AGENTCMD"
 
 # Concat commands
 DOCKERRUNCMD="$AGENTCMD $ROLEFLAGS"
