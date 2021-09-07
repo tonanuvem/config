@@ -14,12 +14,23 @@ printf "\n\n\tMASTER:\n"
 echo ""
 echo "   Aguardando configurações: "
 
-echo "sudo docker run --privileged -d --restart=unless-stopped -p 80:80 -p 443:443 rancher/rancher" >> master.sh
+#echo "sudo docker run --privileged -d --restart=unless-stopped -p 80:80 -p 443:443 rancher/rancher" >> master.sh
 
-ssh -o LogLevel=error -oStrictHostKeyChecking=no -i ~/environment/labsuser.pem ec2-user@$MASTER 'bash -s' < master.sh
+ssh -o LogLevel=error -oStrictHostKeyChecking=no -i ~/environment/labsuser.pem ec2-user@$MASTER 'bash -s' < rancher_server.sh
 
 # Get Token
-TOKEN=$(ssh -o LogLevel=error -oStrictHostKeyChecking=no -i ~/environment/labsuser.pem ec2-user@$MASTER 'docker swarm join-token manager | grep docker')
+# Set role flags
+ROLEFLAGS="--etcd --controlplane --worker"
+# Generate nodecommand
+AGENTCMD=`curl -s 'https://127.0.0.1/v3/clusterregistrationtoken?id="'$CLUSTERID'"' -H 'content-type: application/json' -H "Authorization: Bearer $APITOKEN" --insecure | jq -r '.data[].nodeCommand' | head -1`
+# Concat commands
+DOCKERRUNCMD="$AGENTCMD $ROLEFLAGS"
+# Echo command
+echo $DOCKERRUNCMD
+
+TOKEN = $DOCKERRUNCMD
+
+#TOKEN=$(ssh -o LogLevel=error -oStrictHostKeyChecking=no -i ~/environment/labsuser.pem ec2-user@$MASTER 'docker swarm join-token manager | grep docker')
 # Remover espacos
 TOKEN=`echo $TOKEN | sed 's/ *$//g'`
 printf "\n\n"
@@ -66,10 +77,10 @@ done
 #printf "\n\n"
 #ssh -o LogLevel=error -oStrictHostKeyChecking=no -i ~/environment/labsuser.pem ec2-user@$NODE3 'bash -s' < worker3.sh
 
-printf "\n\n"
-echo "   VERIFICANDO NODES NO MASTER :"
-printf "\n\n"
-ssh -o LogLevel=error -oStrictHostKeyChecking=no -i ~/environment/labsuser.pem ec2-user@$MASTER 'docker node ls'
+#printf "\n\n"
+#echo "   VERIFICANDO NODES NO MASTER :"
+#printf "\n\n"
+#ssh -o LogLevel=error -oStrictHostKeyChecking=no -i ~/environment/labsuser.pem ec2-user@$MASTER 'docker node ls'
 
 ### CONFIGURANDO OS VOLUMES 
 #printf "\n\n"

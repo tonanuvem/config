@@ -18,6 +18,7 @@ APITOKEN=`echo $APIRESPONSE | jq -r .token`
 # Set server-url
 HOST_IP=$(curl checkip.amazonaws.com)
 RANCHER_SERVER="fiap.${HOST_IP}.nip.io"
+echo "Configurando o endereço do Rancher: $RANCHER_SERVER"
 curl -s 'https://127.0.0.1/v3/settings/server-url' -H 'content-type: application/json' -H "Authorization: Bearer $APITOKEN" -X PUT --data-binary '{"name":"server-url","value":"'$RANCHER_SERVER'"}' --insecure > /dev/null
 
 # Create cluster
