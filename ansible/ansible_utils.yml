@@ -18,6 +18,7 @@
         #- python3-venv
         - wget
         - git
+        - jq
       state: present
       lock_timeout: 180
   - name: Preparar utilitário ccat
