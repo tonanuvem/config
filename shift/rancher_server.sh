@@ -1,7 +1,7 @@
 #!/bin/bash
 docker run -d -p 80:80 -p 443:443 --name rancher-server rancher/rancher:latest
 
-while ! curl -k https://localhost/ping; do sleep 3; done
+while ! curl -k https://localhost/ping; do printf . && sleep 3; done
 
 # Login
 LOGINRESPONSE=`curl -s 'https://127.0.0.1/v3-public/localProviders/local?action=login' -H 'content-type: application/json' --data-binary '{"username":"admin","password":"admin"}' --insecure`
