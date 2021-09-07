@@ -92,5 +92,6 @@ done
 
 printf "\n\n"
 echo "   CONFIGURAÇÕES REALIZADAS. FIM."
+echo "   Acessar Rancher URL = http://fiap.${MASTER}.nip.io"
 #ssh -o LogLevel=error -oStrictHostKeyChecking=no -i ~/environment/labsuser.pem ec2-user@$MASTER 'docker node ls'
 printf "\n\n"
