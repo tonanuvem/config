@@ -7,16 +7,18 @@ while ! curl -ks https://localhost/ping; do printf . && sleep 3; done
 SENHA=$(docker logs  rancher-server  2>&1 | grep -oP '(?<=Bootstrap Password: ).*')
 
 # Login
-LOGINRESPONSE=$(curl -s 'https://127.0.0.1/v3-public/localProviders/local?action=login' -H 'content-type: application/json' --data-binary '{"username":"admin","password":"$SENHA"}' --insecure)
+LOGINRESPONSE=$(curl -s 'https://127.0.0.1/v3-public/localProviders/local?action=login' -H 'content-type: application/json' --data-binary '{"username":"admin","password":"'${SENHA}'"}' --insecure) 
 LOGINTOKEN=`echo $LOGINRESPONSE | jq -r .token`
+echo "LOGINTOKEN = $LOGINTOKEN"
 
 # Change password
 curl -s 'https://127.0.0.1/v3/users?action=changepassword' -H 'content-type: application/json' -H "Authorization: Bearer $LOGINTOKEN" --data-binary '{"currentPassword":"admin","newPassword":"fiap"}' --insecure
 
 # Create API key
-APIRESPONSE=$(curl -s 'https://127.0.0.1/v3/token' -H 'content-type: application/json' -H "Authorization: Bearer $LOGINTOKEN" --data-binary '{"type":"token","description":"automation"}' --insecure)
+APIRESPONSE=$(curl -s 'https://127.0.0.1/v3/token' -H 'content-type: application/json' -H "Authorization: Bearer "'$LOGINTOKEN'"" --data-binary '{"type":"token","description":"automation"}' --insecure)
 # Extract and store token
 APITOKEN=$(echo $APIRESPONSE | jq -r .token)
+echo "APIRESPONSE = $APIRESPONSE"
 
 # Set server-url
 HOST_IP=$(curl checkip.amazonaws.com)
