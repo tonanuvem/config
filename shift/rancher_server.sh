@@ -2,6 +2,7 @@
 sudo docker run -d -p 80:80 -p 443:443 --restart=unless-stopped --privileged --name rancher-server rancher/rancher:latest
 
 # https://gist.githubusercontent.com/superseb/c363247c879e96c982495daea1125276/raw/bd907d2a98b7ad48c8ae96aa8335d183f433dde6/rancher2customnodecmd.sh
+echo "  Aguardando componentes do Rancher"
 while ! curl -ks https://localhost/ping; do printf . && sleep 3; done
 
 # Descobrir senha
