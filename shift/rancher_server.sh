@@ -43,9 +43,10 @@ echo "AGENTCMD = $AGENTCMD"
 
 # Concat commands
 DOCKERRUNCMD="$AGENTCMD $ROLEFLAGS"
+echo "$DOCKERRUNCMD" > DOCKERRUNCMD
 
 # Echo command
-echo $DOCKERRUNCMD
+cat DOCKERRUNCMD
 
 # Change password
 curl -s 'https://127.0.0.1/v3/users?action=changepassword' -H 'content-type: application/json' -H "Authorization: Bearer $LOGINTOKEN" --data-binary '{"currentPassword":"'${SENHA}'","newPassword":"fiap"}' --insecure

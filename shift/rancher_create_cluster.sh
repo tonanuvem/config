@@ -19,12 +19,7 @@ echo "   Aguardando configurações: "
 ssh -o LogLevel=error -oStrictHostKeyChecking=no -i ~/environment/labsuser.pem ec2-user@$MASTER 'bash -s' < rancher_server.sh
 
 # Get Token
-# Set role flags
-ROLEFLAGS="--etcd --controlplane --worker"
-# Generate nodecommand
-AGENTCMD=`curl -s 'https://127.0.0.1/v3/clusterregistrationtoken?id="'$CLUSTERID'"' -H 'content-type: application/json' -H "Authorization: Bearer $APITOKEN" --insecure | jq -r '.data[].nodeCommand' | head -1`
-# Concat commands
-DOCKERRUNCMD="$AGENTCMD $ROLEFLAGS"
+DOCKERRUNCMD=ssh -o LogLevel=error -oStrictHostKeyChecking=no -i ~/environment/labsuser.pem ec2-user@$MASTER 'cat DOCKERRUNCMD'
 # Echo command
 echo $DOCKERRUNCMD
 
