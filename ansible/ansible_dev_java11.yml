@@ -6,7 +6,7 @@
     hosts: all
     tasks:
         - name: Instalar Java e Maven
-          becomes: yes
+          become: yes
           shell: |
             sudo amazon-linux-extras install java-openjdk11 -y
             wget https://www-eu.apache.org/dist/maven/maven-3/3.8.1/binaries/apache-maven-3.8.1-bin.tar.gz
