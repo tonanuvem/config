@@ -8,13 +8,16 @@
         - name: Instalar Java e Maven
           shell: |
             sudo amazon-linux-extras install java-openjdk11 -y
-            sudo wget http://repos.fedorapeople.org/repos/dchen/apache-maven/epel-apache-maven.repo -O /etc/yum.repos.d/epel-apache-maven.repo
-            sudo sed -i s/\$releasever/6/g /etc/yum.repos.d/epel-apache-maven.repo
-            sudo yum install -y apache-maven
+            wget https://www-eu.apache.org/dist/maven/maven-3/3.8.1/binaries/apache-maven-3.8.1-bin.tar.gz
+            tar xf /tmp/apache-maven-*.tar.gz -C /opt
+            rm -f apache-maven-3.8.1-bin.tar.gz
+            sudo ln -s /opt/apache-maven-3.8.1 /opt/maven
             sudo cat >> /etc/environment <<EOL
-            export JAVA_HOME="/usr/lib/jvm/java-11-openjdk-amd64"
-            export JRE_HOME="/usr/lib/jvm/java-11-openjdk-amd64/jre"
+            export JAVA_HOME=/usr/lib/jvm/jre-11-openjdk
+            export M2_HOME=/opt/maven
+            export MAVEN_HOME=/opt/maven
             export SONAR_SCANNER_OPTS="-Xmx512m"
+            export PATH=${M2_HOME}/bin:${PATH}
             EOL
           args:
             executable: /bin/bash
