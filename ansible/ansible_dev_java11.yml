@@ -22,7 +22,6 @@
           args:
             executable: /bin/bash
 
-            
         - name: Verificar Java e Maven
           shell: |
             java --version
