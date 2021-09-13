@@ -1,4 +1,3 @@
-terraform output ip_externo > hosts
 export VM=$(terraform output ip_externo)
 
 # configurar inventario ansible
