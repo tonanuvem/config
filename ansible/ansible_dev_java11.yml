@@ -18,8 +18,8 @@
             export M2_HOME=/opt/maven
             export MAVEN_HOME=/opt/maven
             export SONAR_SCANNER_OPTS="-Xmx512m"
-            export PATH=${M2_HOME}/bin:${PATH}
             EOL
+            echo 'export PATH=/opt/maven/bin:${PATH}' | sudo tee -a /etc/profile
           args:
             executable: /bin/bash
 
