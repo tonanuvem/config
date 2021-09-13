@@ -1,5 +1,5 @@
 terraform output ip_externo > hosts
-export VM=$(terraform output -json ip_externo | jq .[] | jq .[0] | sed 's/"//g')
+export VM=$(terraform output ip_externo)
 
 # configurar inventario ansible
 echo '[nodes]' > inv.hosts
