@@ -63,8 +63,8 @@ unzip terraform_linux_amd64.zip
 sudo mv terraform /usr/bin/
 rm -rf terraform_linux_amd64.zip
 
-# Instalação do Ansible:
-sudo python -m pip install ansible
+# Instalação do Ansible: 
+#sudo python -m pip install ansible
 
 # Instalação das ferramentas K8S:
 printf "\n\n xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx \n"
@@ -124,8 +124,8 @@ export PATH=/home/ubuntu/.pyenv/versions/3.7.2/bin:$PATH
 eb --version
 printf "\n\tTERRAFORM:\n"
 terraform --version
-printf "\n\tANSIBLE:\n"
-ansible --version
+#printf "\n\tANSIBLE:\n"
+#ansible --version
 printf "\n\tMINIKUBE:\n"
 minikube version
 printf "\n\tKUBECTL:\n"
