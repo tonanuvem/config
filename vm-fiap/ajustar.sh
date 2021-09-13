@@ -1,9 +1,9 @@
 export VM=$(terraform output ip_externo)
 
 # configurar inventario ansible
-echo '[nodes]' > inv.hosts
-echo "vm-fiap ansible_ssh_host=$VM" >> inv.hosts
-echo '' >> inv.hosts
+echo '[nodes]' > hosts
+echo "vm-fiap ansible_ssh_host=$VM" >> hosts
+echo '' >> hosts
 
 export ANSIBLE_PYTHON_INTERPRETER=auto_silent
 export ANSIBLE_DEPRECATION_WARNINGS=false
