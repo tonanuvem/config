@@ -4,9 +4,9 @@
 # https://docs.ansible.com/ansible/latest/user_guide/playbooks_loops.html#playbooks-loops
   - name: Instalação das ferramentas DEV Java
     hosts: all
-    becomes: yes
     tasks:
         - name: Instalar Java e Maven
+          becomes: yes
           shell: |
             sudo amazon-linux-extras install java-openjdk11 -y
             wget https://www-eu.apache.org/dist/maven/maven-3/3.8.1/binaries/apache-maven-3.8.1-bin.tar.gz
