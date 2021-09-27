@@ -8,12 +8,12 @@ export ANSIBLE_DISPLAY_SKIPPED_HOSTS=false
 # configurar inventario ansible
 echo '' > inv.hosts
 echo '[nodes]' >> inv.hosts
-NODE=$(terraform output Node_1_ip_externo)
-echo "node1 ansible_ssh_host=$NODE" >> inv.hosts
-terraform output Node_2_ip_externo > hosts
-echo "node2 ansible_ssh_host=$NODE" >> inv.hosts
-terraform output Node_3_ip_externo > hosts
-echo "node3 ansible_ssh_host=$NODE" >> inv.hosts
+NODE1=$(terraform output Node_1_ip_externo)
+echo "node1 ansible_ssh_host=$NODE1" >> inv.hosts
+NODE2=$(terraform output Node_2_ip_externo)
+echo "node2 ansible_ssh_host=$NODE2" >> inv.hosts
+NODE3=$(terraform output Node_3_ip_externo)
+echo "node3 ansible_ssh_host=$NODE3" >> inv.hosts
 
 # aplicar configurações
 ansible-playbook ~/environment/config/ansible/ansible_hostname.yml --inventory inv.hosts -u ec2-user --key-file ~/environment/labsuser.pem
