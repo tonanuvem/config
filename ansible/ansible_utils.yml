@@ -10,7 +10,7 @@
       path: ~/ip
       mode: u+rwx,g+rwx,o+rx
       
-  - name: Instalar lista de pacotes
+  - name: Instalar lista de pacotes (amazon linux 2)
     become: yes
     yum:
     #ansible.builtin.package:
@@ -25,7 +25,7 @@
       lock_timeout: 180
     when: ansible_os_family == "RedHat"
     
-  - name: Instalar lista de pacotes
+  - name: Instalar lista de pacotes (ubuntu)
     become: yes
     apt:
     #ansible.builtin.package:
