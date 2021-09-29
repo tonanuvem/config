@@ -1,17 +1,18 @@
 ---
-# https://docs.ansible.com/ansible/2.9/modules/modules_by_category.html
-# https://docs.ansible.com/ansible/latest/user_guide/playbooks_conditionals.html#playbooks-conditionals
-# https://docs.ansible.com/ansible/latest/user_guide/playbooks_loops.html#playbooks-loops
+# https://docs.ansible.com/ansible/latest/collections/ansible/builtin/package_module.html
+# https://docs.ansible.com/ansible/latest/collections/community/general/snap_module.html
   - name: Instalação das ferramentas do Kubernetes
     hosts: all
     tasks:
     
         - name: Instalar pacote microk8s pelo snap
           become: yes
-          snap:
+          community.general.snap:
+          #ansible.builtin.package
             name: microk8s
             classic: yes
             channel: 1.21
+            #use: snap
             #state: present
             #lock_timeout: 180
             
