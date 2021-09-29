@@ -23,11 +23,11 @@
             append: yes
           become: yes
         
-#        - name: Mudar a permissao .kube
-#          ansible.builtin.file:
-#            path: ~/.kube
-#            mode: u+rwx,g+rwx,o+rx
-
+        - name: Ajustar o .bashrc (ubuntu)
+          shell: |
+            cp /etc/skel/.bashrc ~/
+          args:
+            executable: /bin/bash
 
         - name: Configurar microk8s
           shell: |
