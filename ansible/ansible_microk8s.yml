@@ -1,0 +1,47 @@
+---
+# https://docs.ansible.com/ansible/2.9/modules/modules_by_category.html
+# https://docs.ansible.com/ansible/latest/user_guide/playbooks_conditionals.html#playbooks-conditionals
+# https://docs.ansible.com/ansible/latest/user_guide/playbooks_loops.html#playbooks-loops
+  - name: Instalação das ferramentas do Kubernetes
+    hosts: all
+    tasks:
+    
+        - name: Instalar pacote microk8s pelo snap
+          become: yes
+          snap:
+            name: microk8s
+            classic: yes
+            channel: 1.21
+            #state: present
+            #lock_timeout: 180
+            
+        - name: Adicionar o usuario ubuntu ao grupo microk8s
+          user:
+            name: ubuntu
+            groups: microk8s
+            append: yes
+          become: yes
+        
+#        - name: Mudar a permissao .kube
+#          ansible.builtin.file:
+#            path: ~/.kube
+#            mode: u+rwx,g+rwx,o+rx
+
+
+        - name: Configurar microk8s
+          shell: |
+            sudo chown -f -R $USER ~/.kube
+            microk8s status --wait-ready
+            echo "alias kubectl='microk8s kubectl'" | sudo tee -a /etc/profile
+          args:
+            executable: /bin/bash
+
+            
+        - name: Instalar helm
+          shell: |
+            curl -s https://get.helm.sh/helm-v3.1.2-linux-amd64.tar.gz -o helm-linux-amd64.tar.gz
+            tar -zxvf helm-linux-amd64.tar.gz
+            sudo mv linux-amd64/helm /usr/local/bin/helm
+            rm -rf helm-linux-amd64.tar.gz linux-amd64
+          args:
+            executable: /bin/bash
