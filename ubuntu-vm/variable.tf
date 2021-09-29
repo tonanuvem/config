@@ -33,6 +33,6 @@ variable "aws_region" {
 # Ubuntu
 variable "aws_amis" {
   default = {
-    us-east-1 = "ami-0c2b8ca1dad447f8a"
+    us-east-1 = "ami-00bd2fe1439631665"
   }
 }
