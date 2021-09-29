@@ -9,8 +9,10 @@
         - name: Instalar via amazon-linux-extras
           shell: "amazon-linux-extras install docker -y"
           # shell: "sudo yum-config-manager --add-repo https://download.docker.com/linux/rhel/docker-ce.repo"
+          when: ansible_os_family == "RedHat"
         - name: Instalar dependencias
-          yum:
+          ansible.builtin.package:
+          #yum:
             name: 
              - docker
             state: latest
