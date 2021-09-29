@@ -12,6 +12,7 @@
   - name: Instalar lista de pacotes
     become: yes
     yum:
+    #ansible.builtin.package:
       name:
         - python3
         - python3-pip
