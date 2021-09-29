@@ -30,7 +30,16 @@
             groups: docker
             append: yes
           become: yes
+          when: ansible_os_family == "RedHat"
 
+        - name: Adicionar o usuario ubuntu ao grupo docker
+          user:
+            name: ubuntu
+            groups: docker
+            append: yes
+          become: yes
+          when: ansible_os_family == "Debian"
+          
 # https://github.com/docker/compose/issues/7472#issuecomment-749993557
 # https://stackoverflow.com/a/65612078/2378095
   - name: Instalar o docker-compose
