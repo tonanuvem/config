@@ -15,3 +15,9 @@ for N in $(seq 0 $QTD_NODES); do
     NODE=$(terraform output -json ip_externo | jq .[] | jq .[$N] | sed 's/"//g')
     echo "node$N ansible_ssh_host=$NODE" >> inv.hosts
 done
+
+ansible-playbook ~/environment/config/ansible/ansible_hostname.yml --inventory inv.hosts -u ubuntu --key-file ~/environment/labsuser.pem
+ansible-playbook ~/environment/config/ansible/ansible_hosts.yml --inventory inv.hosts -u ubuntu --key-file ~/environment/labsuser.pem
+ansible-playbook ~/environment/config/ansible/ansible_utils.yml --inventory inv.hosts -u ubuntu --key-file ~/environment/labsuser.pem &&
+ansible-playbook ~/environment/config/ansible/ansible_docker.yml --inventory inv.hosts -u ubuntu --key-file ~/environment/labsuser.pem &&
+ansible-playbook ~/environment/config/ansible/ansible_microk8s.yml --inventory inv.hosts -u ubuntu --key-file ~/environment/labsuser.pem
