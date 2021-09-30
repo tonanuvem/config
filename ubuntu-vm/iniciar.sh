@@ -17,4 +17,4 @@ done
 sh ajustar.sh
 
 echo ""
-echo " Cluster iniciado e configurado"
+echo " Ambiente iniciado e configurado"
