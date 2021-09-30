@@ -67,3 +67,10 @@
       path: ~/.aws/credentials
       state: touch
       mode: u+rw,g+rw,o+rw
+
+  - name: Ajustar o .bashrc (ubuntu)
+    shell: |
+      cp /etc/skel/.bashrc ~/
+    args:
+      executable: /bin/bash
+    when: ansible_os_family == "Debian"
