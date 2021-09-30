@@ -21,4 +21,5 @@ ansible-playbook ~/environment/config/ansible/ansible_hosts.yml --inventory inv.
 ansible-playbook ~/environment/config/ansible/ansible_utils.yml --inventory inv.hosts -u ubuntu --key-file ~/environment/labsuser.pem
 ansible-playbook ~/environment/config/ansible/ansible_docker.yml --inventory inv.hosts -u ubuntu --key-file ~/environment/labsuser.pem
 ansible-galaxy collection install community.general
-ansible-playbook ~/environment/config/ansible/ansible_microk8s.yml --inventory inv.hosts -u ubuntu --key-file ~/environment/labsuser.pem
+ansible-playbook ~/environment/config/ansible/ansible_k8s.yml --inventory inv.hosts -u ubuntu --key-file ~/environment/labsuser.pem
+#ansible-playbook ~/environment/config/ansible/ansible_microk8s.yml --inventory inv.hosts -u ubuntu --key-file ~/environment/labsuser.pem
