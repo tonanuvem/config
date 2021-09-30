@@ -71,6 +71,7 @@
   - name: Ajustar o .bashrc (ubuntu)
     shell: |
       cp /etc/skel/.bashrc ~/
+      systemctl stop apache2.service
     args:
       executable: /bin/bash
     when: ansible_os_family == "Debian"
