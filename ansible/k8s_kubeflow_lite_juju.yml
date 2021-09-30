@@ -1,0 +1,24 @@
+---
+# https://longhorn.io/docs/1.2.0/deploy/install/
+
+  - name: Instalação Kubeflow no Kubernetes (ubuntu)
+    hosts: all
+    tasks:
+        - name: Configurar storageclass usando longhorn.io
+          shell: |
+            # pre-reqs
+            snap install juju --classic
+            # config
+            juju add-k8s fiapk8s
+            juju bootstrap fiapk8s ctl
+            # kubeflow
+            juju add-model kubeflow
+            juju deploy cs:kubeflow-lite
+            # urls
+            juju config dex-auth public-url=http://$(curl checkip.amazonaws.com)
+            juju config oidc-gatekeeper public-url=http://<URL>
+            # rbac
+            kubectl patch role -n kubeflow istio-ingressgateway-operator -p '{"apiVersion":"rbac.authorization.k8s.io/v1","kind":"Role","metadata":{"name":"istio-ingressgateway-operator"},"rules":[{"apiGroups":["*"],"resources":["*"],"verbs":["*"]}]}'            
+          args:
+            executable: /bin/bash
+          when: ansible_os_family == "Debian"
