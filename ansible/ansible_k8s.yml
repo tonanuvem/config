@@ -101,7 +101,7 @@
             executable: /bin/bash
           when: ansible_os_family == "RedHat"
 
-        - name: Instalar kubelet kubeadm kubectl (amazon linux 2)
+        - name: Instalar kubelet kubeadm kubectl (ubuntu)
           become: yes
           shell: |
             #Install CNI plugins (required for most pod network):
@@ -158,11 +158,12 @@
 
         - name: Instalar lista de pacotes
           become: yes
-          yum:
+          ansible.builtin.package:
+          #yum:
             name:
               - iproute-tc
             state: present
-            lock_timeout: 180
+            #lock_timeout: 180
             
         - name: Restartar o daemon services
           become: yes
