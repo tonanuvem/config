@@ -158,12 +158,13 @@
 
         - name: Instalar lista de pacotes
           become: yes
-          ansible.builtin.package:
-          #yum:
+          #ansible.builtin.package:
+          yum:
             name:
               - iproute-tc
             state: present
-            #lock_timeout: 180
+            lock_timeout: 180
+          when: ansible_os_family == "RedHat"
             
         - name: Restartar o daemon services
           become: yes
