@@ -64,7 +64,7 @@
           args:
             executable: /bin/bash
             
-        - name: Instalar kubelet kubeadm kubectl
+        - name: Instalar kubelet kubeadm kubectl (amazon linux 2)
           become: yes
           shell: |
             cat <<EOF | sudo tee /etc/yum.repos.d/kubernetes.repo
@@ -99,7 +99,54 @@
             sudo systemctl enable kubelet.service
           args:
             executable: /bin/bash
+          when: ansible_os_family == "RedHat"
+
+        - name: Instalar kubelet kubeadm kubectl (amazon linux 2)
+          become: yes
+          shell: |
+            #Install CNI plugins (required for most pod network):
+            CNI_VERSION="v0.8.2"
+            ARCH="amd64"
+            sudo mkdir -p /opt/cni/bin
+            curl -L "https://github.com/containernetworking/plugins/releases/download/${CNI_VERSION}/cni-plugins-linux-${ARCH}-${CNI_VERSION}.tgz" | sudo tar -C /opt/cni/bin -xz
+            DOWNLOAD_DIR=/usr/local/bin
+            sudo mkdir -p $DOWNLOAD_DIR
+            CRICTL_VERSION="v1.17.0"
+            ARCH="amd64"
+            curl -L "https://github.com/kubernetes-sigs/cri-tools/releases/download/${CRICTL_VERSION}/crictl-${CRICTL_VERSION}-linux-${ARCH}.tar.gz" | sudo tar -C $DOWNLOAD_DIR -xz
             
+            #Install kubeadm, kubelet, kubectl and add a kubelet systemd service:
+            # DEFINIR A VERSÃO
+            RELEASE="v1.21.0"
+            #RELEASE="$(curl -sSL https://dl.k8s.io/release/stable.txt)"
+            ARCH="amd64"
+            cd $DOWNLOAD_DIR
+            sudo curl -L --remote-name-all https://storage.googleapis.com/kubernetes-release/release/${RELEASE}/bin/linux/${ARCH}/{kubeadm,kubelet,kubectl}
+            sudo chmod +x {kubeadm,kubelet,kubectl}
+
+            RELEASE_VERSION="v0.4.0"
+            curl -sSL "https://raw.githubusercontent.com/kubernetes/release/${RELEASE_VERSION}/cmd/kubepkg/templates/latest/deb/kubelet/lib/systemd/system/kubelet.service" | sed "s:/usr/bin:${DOWNLOAD_DIR}:g" | sudo tee /etc/systemd/system/kubelet.service
+            sudo mkdir -p /etc/systemd/system/kubelet.service.d
+            curl -sSL "https://raw.githubusercontent.com/kubernetes/release/${RELEASE_VERSION}/cmd/kubepkg/templates/latest/deb/kubeadm/10-kubeadm.conf" | sed "s:/usr/bin:${DOWNLOAD_DIR}:g" | sudo tee /etc/systemd/system/kubelet.service.d/10-kubeadm.conf
+            
+            systemctl enable --now kubelet
+
+            ## cgroupd
+            cat <<EOF | sudo tee ~/kubeadm-config.yaml
+            # kubeadm-config.yaml
+            kind: ClusterConfiguration
+            apiVersion: kubeadm.k8s.io/v1beta3
+            kubernetesVersion: v1.21.0
+            ---
+            kind: KubeletConfiguration
+            apiVersion: kubelet.config.k8s.io/v1beta1
+            cgroupDriver: systemd
+            EOF
+            sudo systemctl enable kubelet.service
+          args:
+            executable: /bin/bash
+          when: ansible_os_family == "Debian"
+          
         - name: Instalar helm
           shell: |
             curl -s https://get.helm.sh/helm-v3.1.2-linux-amd64.tar.gz -o helm-linux-amd64.tar.gz
