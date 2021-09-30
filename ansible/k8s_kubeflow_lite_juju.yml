@@ -2,7 +2,8 @@
 # https://longhorn.io/docs/1.2.0/deploy/install/
 
   - name: Instalação Kubeflow no Kubernetes (ubuntu)
-    hosts: all
+    hosts: node0
+    become: yes
     tasks:
         - name: Configurar storageclass usando longhorn.io
           shell: |
