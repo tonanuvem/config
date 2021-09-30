@@ -22,12 +22,6 @@
             groups: microk8s
             append: yes
           become: yes
-        
-        - name: Ajustar o .bashrc (ubuntu)
-          shell: |
-            cp /etc/skel/.bashrc ~/
-          args:
-            executable: /bin/bash
 
         - name: Configurar microk8s
           shell: |
