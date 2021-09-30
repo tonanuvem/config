@@ -1,0 +1,45 @@
+---
+# https://longhorn.io/docs/1.2.0/deploy/install/
+
+  - name: Instalação StorageClass do Kubernetes
+    hosts: all
+    tasks:
+        - name: Configurar storageclass usando longhorn.io
+          shell: |
+            # pre-reqs
+            kubectl apply -f https://raw.githubusercontent.com/longhorn/longhorn/v1.2.0/deploy/prerequisite/longhorn-iscsi-installation.yaml
+            kubectl apply -f https://raw.githubusercontent.com/longhorn/longhorn/v1.2.0/deploy/prerequisite/longhorn-nfs-installation.yaml
+            # install
+            kubectl apply -f https://raw.githubusercontent.com/longhorn/longhorn/v1.2.0/deploy/longhorn.yaml
+            # ingresss
+            USER=admin; PASSWORD=admin; echo "${USER}:$(openssl passwd -stdin -apr1 <<< ${PASSWORD})" >> auth
+            kubectl -n longhorn-system create secret generic basic-auth --from-file=auth
+            echo "
+              apiVersion: networking.k8s.io/v1
+              kind: Ingress
+              metadata:
+                name: longhorn-ingress
+                namespace: longhorn-system
+                annotations:
+                  # type of authentication
+                  nginx.ingress.kubernetes.io/auth-type: basic
+                  # prevent the controller from redirecting (308) to HTTPS
+                  nginx.ingress.kubernetes.io/ssl-redirect: 'false'
+                  # name of the secret that contains the user/password definitions
+                  nginx.ingress.kubernetes.io/auth-secret: basic-auth
+                  # message to display with an appropriate context why the authentication is required
+                  nginx.ingress.kubernetes.io/auth-realm: 'Authentication Required '
+              spec:
+                rules:
+                - http:
+                    paths:
+                    - pathType: Prefix
+                      path: "/"
+                      backend:
+                        service:
+                          name: longhorn-frontend
+                          port:
+                            number: 80
+             " | kubectl -n longhorn-system create -f -
+          args:
+            executable: /bin/bash
