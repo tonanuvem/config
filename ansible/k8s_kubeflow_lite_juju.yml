@@ -16,7 +16,7 @@
             juju deploy cs:kubeflow-lite
             # urls
             juju config dex-auth public-url=http://$(curl checkip.amazonaws.com)
-            juju config oidc-gatekeeper public-url=http://<URL>
+            juju config oidc-gatekeeper public-url=http://$(curl checkip.amazonaws.com)
             # rbac
             kubectl patch role -n kubeflow istio-ingressgateway-operator -p '{"apiVersion":"rbac.authorization.k8s.io/v1","kind":"Role","metadata":{"name":"istio-ingressgateway-operator"},"rules":[{"apiGroups":["*"],"resources":["*"],"verbs":["*"]}]}'            
           args:
