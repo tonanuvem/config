@@ -2,7 +2,7 @@
 # https://longhorn.io/docs/1.2.0/deploy/install/
 
   - name: Instalação StorageClass do Kubernetes
-    hosts: all
+    hosts: node0
     tasks:
         - name: Configurar storageclass usando longhorn.io
           shell: |
