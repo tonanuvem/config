@@ -2,7 +2,7 @@ export VM=$(terraform output ip_externo)
 
 # configurar inventario ansible
 echo '[nodes]' > hosts
-echo "vm-fiap ansible_ssh_host=$VM" >> hosts
+echo "minikube ansible_ssh_host=$VM" >> hosts
 echo '' >> hosts
 
 export ANSIBLE_PYTHON_INTERPRETER=auto_silent
