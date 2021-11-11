@@ -4,7 +4,7 @@
     ansible.builtin.copy:
       dest: "~/minikube_run.sh"
       content: |
-        minikube start --vm-driver=none --kubernetes-version=v1.18.2 --apiserver-ips=$(curl checkip.amazonaws.com)
+        minikube start --vm-driver=none --apiserver-ips=$(curl checkip.amazonaws.com)
         minikube addons enable metrics-server
         minikube dashboard --url &
         kubectl get pod -n kubernetes-dashboard
