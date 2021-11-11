@@ -33,18 +33,18 @@ while [ \
 sleep 1
 done
 
-if [ $(readlink -f /dev/xvda) = "/dev/xvda" ]
-then
-  # Rewrite the partition table so that the partition takes up all the space that it can.
-  sudo growpart /dev/xvda 1
- 
-  # Expand the size of the file system.
-  sudo resize2fs /dev/xvda1
+sudo growpart /dev/nvme0n1 1
+sudo resize2fs /dev/nvme0n1p1
 
-else
+#if [ $(readlink -f /dev/xvda) = "/dev/xvda" ]
+#then
   # Rewrite the partition table so that the partition takes up all the space that it can.
-  sudo growpart /dev/nvme0n1 1
-
+  #sudo growpart /dev/xvda 1
   # Expand the size of the file system.
-  sudo resize2fs /dev/nvme0n1p1
-fi
+  #sudo resize2fs /dev/xvda1
+#else
+  # Rewrite the partition table so that the partition takes up all the space that it can.
+  #sudo growpart /dev/nvme0n1 1
+  # Expand the size of the file system.
+  #sudo resize2fs /dev/nvme0n1p1
+#fi
