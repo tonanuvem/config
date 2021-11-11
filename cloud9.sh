@@ -70,9 +70,9 @@ rm -rf terraform_linux_amd64.zip
 printf "\n\n xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx \n"
 printf "\n\n\tK8S:\n\n"
 # minikube
-curl -s "https://storage.googleapis.com/minikube/releases/latest/minikube-linux-amd64" -o "minikube"
-chmod +x minikube 
-sudo mv minikube /usr/bin/
+curl -s "https://storage.googleapis.com/minikube/releases/latest/minikube-linux-amd64" -o "minikube-linux"
+chmod +x minikube-linux 
+sudo mv minikube-linux /usr/bin/minikube
 # Variavel abaixo evita que precise executar " pelo usuario ubuntu
 #sudo chown -R $USER $HOME/.kube $HOME/.minikube
 mkdir $HOME/.kube && mkdir $HOME/.minikube 
