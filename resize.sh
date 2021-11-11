@@ -29,7 +29,7 @@ while [ \
     --volume-id $VOLUMEID \
     --filters Name=modification-state,Values="optimizing","completed" \
     --query "length(VolumesModifications)"\
-    --output text)" != "1" \ ]; do
+    --output text)" != "1" ]; do
 sleep 1
 done
 
