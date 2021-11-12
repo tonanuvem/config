@@ -2,10 +2,9 @@
   tasks:
   - name: Instalar versao especifica do kubeadm, kubectl e kubelet
     ansible.builtin.shell: |
-      VERSAO = {{ versao | default('1.17.11') }}
-      wget https://storage.googleapis.com/kubernetes-release/release/v$VERSAO/bin/linux/amd64/kubectl
-      wget https://storage.googleapis.com/kubernetes-release/release/v$VERSAO/bin/linux/amd64/kubeadm
-      wget https://storage.googleapis.com/kubernetes-release/release/v$VERSAO/bin/linux/amd64/kubelet
+      wget https://storage.googleapis.com/kubernetes-release/release/v"{{ versao | default('1.17.11') }}"/bin/linux/amd64/kubectl
+      wget https://storage.googleapis.com/kubernetes-release/release/v"{{ versao | default('1.17.11') }}"/bin/linux/amd64/kubeadm
+      wget https://storage.googleapis.com/kubernetes-release/release/v"{{ versao | default('1.17.11') }}"/bin/linux/amd64/kubelet
 
       chmod +x kubectl
       chmod +x kubeadm
