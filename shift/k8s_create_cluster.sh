@@ -79,7 +79,7 @@ echo "CONFIGURANDO OS NODES utilizando o KUBEADM JOIN:"
 #echo "sudo hostnamectl set-hostname worker2" >> worker2.sh
 #echo "sudo hostnamectl set-hostname worker3" >> worker3.sh
 
-echo "sudo $TOKEN" >> workers.sh
+echo "sudo $TOKEN" > workers.sh
 #echo "sudo $TOKEN" >> worker1.sh
 #echo "sudo $TOKEN" >> worker2.sh
 #echo "sudo $TOKEN" >> worker3.sh
