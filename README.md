@@ -60,3 +60,7 @@ Ansible
 > ansible --inventory-file ~/environment/hosts -u ec2-user --key-file ~/environment/labsuser.pem all -m ping 
 
 > ansible-playbook ansible.yml --inventory-file ~/environment/hosts -u ec2-user --key-file ~/environment/labsuser.pem
+
+# Definir uma versao especifica: kubectl kubeadm kubelet
+
+> ansible-playbook ~/environment/config/ansible/k8s_version_install.yaml  --extra-vars "versao=1.20.1" --inventory hosts -u ec2-user --key-file ~/environment/labsuser.pem
