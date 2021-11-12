@@ -1,7 +1,7 @@
 #!/bin/bash
 # verificar o tamanho do disco
 
-if [ $(df -mh | grep 97G | wc -l = "97G" ]
+if [ $(df -mh | grep 97G | wc -l) = "97G" ]
 then
   sudo python3 -m pip install ansible
 
