@@ -158,6 +158,16 @@ sh ~/environment/config/resize.sh 100 > /dev/null
 
 #liberando acesso externo
 printf "\n\tEXIBE SE AMBIENTE CLOUD9 ESTÁ COM FIREWALL LIBERADO (em caso de erro, executar: \"sh ~/environment/config/firewall_alow.sh\") :\n"
-aws ec2 describe-security-groups --query 'SecurityGroups[?IpPermissions[?contains(IpRanges[].CidrIp, `0.0.0.0/0`)]].{GroupName: GroupName}'                                                       
+aws ec2 describe-security-groups --query 'SecurityGroups[?IpPermissions[?contains(IpRanges[].CidrIp, `0.0.0.0/0`)]].{GroupName: GroupName}'   
+
+# verificar o tamanho do disco
+printf "\n\VERIFICA O TAMANHO DO DISCO :\n"
+if [ $(df -mh | grep 97G | wc -l) = "1" ]
+then
+  printf "\n\DISCO OK!\n"
+else
+  echo "Tamanho do disco talvez seja insuficiente."
+  exit
+fi
 
 source ~/.bash_profile
