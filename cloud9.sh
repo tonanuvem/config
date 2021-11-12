@@ -161,12 +161,12 @@ printf "\n\tEXIBE SE AMBIENTE CLOUD9 ESTÁ COM FIREWALL LIBERADO (em caso de err
 aws ec2 describe-security-groups --query 'SecurityGroups[?IpPermissions[?contains(IpRanges[].CidrIp, `0.0.0.0/0`)]].{GroupName: GroupName}'   
 
 # verificar o tamanho do disco
-printf "\n\VERIFICA O TAMANHO DO DISCO :\n"
+printf "\n\tVERIFICA O TAMANHO DO DISCO :\n"
 if [ $(df -mh | grep 97G | wc -l) = "1" ]
 then
-  printf "\n\DISCO OK!\n"
+  printf "\t\tDISCO OK!\n"
 else
-  echo "Tamanho do disco talvez seja insuficiente."
+  echo "\t\tTamanho do disco talvez seja insuficiente."
   exit
 fi
 
