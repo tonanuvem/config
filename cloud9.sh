@@ -132,8 +132,8 @@ printf "\n\tKUBECTL:\n"
 kubectl version --client
 printf "\n\tHELM:\n"
 helm version -c
-printf "\n\tEXIBE SE DISCO = 20G:\n"
-df -h | grep /dev/xvda1
+printf "\n\tEXIBE DISCO :\n"
+df -mh | grep dev
 #liberando acesso externo
 printf "\n\tAPLICANDO ULTIMAS CONFIGURAÇÕES:\n"
 #sudo apt-get -y install jq > /dev/null
