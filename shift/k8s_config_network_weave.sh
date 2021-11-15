@@ -6,4 +6,7 @@ kubectl apply -f "https://cloud.weave.works/k8s/net?k8s-version=$(kubectl versio
 
 kubectl apply -f "https://cloud.weave.works/k8s/scope.yaml?k8s-service-type=NodePort&k8s-version=$(kubectl version | base64 | tr -d '\n')"
 
+kubectl patch svc weave-scope-app -n weave -p \
+  '{"spec": { "type": "NodePort", "ports": [ { "nodePort": 32040, "port": 80, "protocol": "TCP", "targetPort": 4040 } ] } }'
+  
 kubectl get svc -n weave
