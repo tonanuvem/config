@@ -3,7 +3,7 @@ export COLOR_RESET='\e[0m'
 export COLOR_LIGHT_GREEN='\e[0;49;32m' 
 
 export INGRESS_HOST=$(curl -s checkip.amazonaws.com)
-kubectl apply -f https://raw.githubusercontent.com/kubernetes/dashboard/v2.0.0/aio/deploy/recommended.yaml
+kubectl apply -f https://raw.githubusercontent.com/kubernetes/dashboard/v2.4.0/aio/deploy/recommended.yaml
 kubectl apply -f https://raw.githubusercontent.com/tonanuvem/k8s-exemplos/master/dashboard_permission.yml
 kubectl patch svc kubernetes-dashboard -n kubernetes-dashboard -p '{"spec": {"type": "NodePort"}}'
 kubectl get svc kubernetes-dashboard -n kubernetes-dashboard
