@@ -8,7 +8,7 @@ kubectl patch svc kubernetes-dashboard -n kubernetes-dashboard -p '{"spec": {"ty
 kubectl get svc kubernetes-dashboard -n kubernetes-dashboard
 export INGRESS_PORT=$(kubectl -n kubernetes-dashboard get service kubernetes-dashboard -o jsonpath='{.spec.ports[?()].nodePort}')
 echo ""
-echo "Acessar K8S Dashboard: http://$INGRESS_HOST:$INGRESS_PORT"
+echo "Acessar K8S Dashboard: https://$INGRESS_HOST:$INGRESS_PORT"
     
 # Kubernetes dashboard access token.
 
