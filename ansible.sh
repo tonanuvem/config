@@ -3,6 +3,7 @@
 
 if [ $(df -mh | grep 97G | wc -l) = "1" ]
 then
+  pip3 install --upgrade pip
   sudo python3 -m pip install ansible
 
   printf "\n\tANSIBLE:\n"
