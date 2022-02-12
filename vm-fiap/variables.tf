@@ -22,7 +22,6 @@ variable "aws_region" {
   default     = "us-east-1"
 }
 
-# Ubuntu 18.04 LTS (x64)
 variable "aws_amis" {
   default = {
     us-east-1 = "ami-0c2b8ca1dad447f8a"
