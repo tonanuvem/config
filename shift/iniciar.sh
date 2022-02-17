@@ -35,4 +35,4 @@ echo "   Conectado ao $IP, verificando ajustes: "
 sh ajustar.sh
 
 echo ""
-echo " Cluster iniciado e configurado"
+echo " Nodes (VMs) iniciados e configurados"
