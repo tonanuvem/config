@@ -7,8 +7,9 @@
     become: yes
     tasks:
         - name: Instalar via amazon-linux-extras
-          shell: "amazon-linux-extras install docker -y"
+          # shell: "yum-config-manager --disable kubernetes"
           # shell: "sudo yum-config-manager --add-repo https://download.docker.com/linux/rhel/docker-ce.repo"
+          shell: "amazon-linux-extras install docker -y"
           when: ansible_os_family == "RedHat"
         - name: Instalar dependencias
           ansible.builtin.package:
