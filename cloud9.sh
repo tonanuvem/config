@@ -52,7 +52,8 @@ sudo chmod +x /usr/local/bin/docker-compose
 #echo 'export PATH=/home/ubuntu/.pyenv/versions/3.7.2/bin:$PATH' >> /home/ubuntu/.bash_profile && source /home/ubuntu/.bash_profile
 #rm -rf aws-elastic-beanstalk-cli-setup
 # workaround
-pip3 install awsebcli cryptography==3.3.1 
+# nao usando no momento:
+#pip3 install awsebcli cryptography==3.3.1 
 
 # Instalação do Terraform:
 printf "\n\n xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx \n"
@@ -118,10 +119,11 @@ sudo docker version
 docker-compose --version
 printf "\n\tAWSCLI:\n"
 aws --version
-printf "\n\tElastic Beanstalker CLI:\n"
-export PATH="/home/ubuntu/.ebcli-virtual-env/executables:$PATH"
-export PATH=/home/ubuntu/.pyenv/versions/3.7.2/bin:$PATH
-eb --version
+# nao usando no momento:
+#printf "\n\tElastic Beanstalker CLI:\n"
+#export PATH="/home/ubuntu/.ebcli-virtual-env/executables:$PATH"
+#export PATH=/home/ubuntu/.pyenv/versions/3.7.2/bin:$PATH
+#eb --version
 printf "\n\tTERRAFORM:\n"
 terraform --version
 #printf "\n\tANSIBLE:\n"
