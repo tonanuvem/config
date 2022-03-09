@@ -2,6 +2,7 @@
 # https://docs.ansible.com/ansible/2.9/modules/modules_by_category.html
 # https://docs.ansible.com/ansible/latest/user_guide/playbooks_conditionals.html#playbooks-conditionals
 # https://docs.ansible.com/ansible/latest/user_guide/playbooks_loops.html#playbooks-loops
+# https://kubernetes.io/docs/tasks/tools/included/optional-kubectl-configs-bash-linux/
   - name: Instalação das ferramentas do Kubernetes
     hosts: all
     tasks:
