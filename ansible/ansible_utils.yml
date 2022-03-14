@@ -9,12 +9,6 @@
     ansible.builtin.file:
       path: ~/ip
       mode: u+rwx,g+rwx,o+rx
-      
-  - name: Desabilitar GPGCheck certs em amzn2-core.repo
-    become: yes
-      # yum repo configuration file, the line gpgcheck=1 indicates that GPG checking should be done for all packages in this repository
-      shell: "sed -i 's|gpgcheck = 1|gpgcheck = 0|' /etc/yum.repos.d/amzn2-core.repo"
-      when: ansible_os_family == "RedHat"
 
   - name: Instalar utilitarios via yum
     become: yes
