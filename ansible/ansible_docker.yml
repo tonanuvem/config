@@ -6,10 +6,10 @@
     hosts: all
     become: yes
     tasks:
-        - name: Desabilitar GPGCheck certs em amzn2-extras.repo
-          # yum repo configuration file, the line gpgcheck=1 indicates that GPG checking should be done for all packages in this repository
-          shell: "sed -i 's|gpgcheck = 1|gpgcheck = 0|' /etc/yum.repos.d/amzn2-extras.repo"
-          when: ansible_os_family == "RedHat"
+        #- name: Desabilitar GPGCheck certs em amzn2-extras.repo
+        #  # yum repo configuration file, the line gpgcheck=1 indicates that GPG checking should be done for all packages in this repository
+        #  shell: "sed -i 's|gpgcheck = 1|gpgcheck = 0|' /etc/yum.repos.d/amzn2-extras.repo"
+        #  when: ansible_os_family == "RedHat"
         - name: Instalar via amazon-linux-extras
           #shell: "sudo yum-config-manager --add-repo https://download.docker.com/linux/rhel/docker-ce.repo"
           #shell: "yum-config-manager --disable kubernetes"
