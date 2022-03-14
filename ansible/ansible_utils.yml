@@ -28,6 +28,7 @@
         - git
         - jq
       state: present
+      disable_gpg_check: yes
       lock_timeout: 180
     when: ansible_os_family == "RedHat"
     
