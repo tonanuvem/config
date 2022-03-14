@@ -13,7 +13,7 @@
   - name: Instalar lista de pacotes (amazon linux 2)
     become: yes
     tasks:
-        - name: Desabilitar GPGCheck certs
+        - name: Desabilitar GPGCheck certs em amzn2-core.repo
           # yum repo configuration file, the line gpgcheck=1 indicates that GPG checking should be done for all packages in this repository
           shell: "sed -i 's|gpgcheck = 1|gpgcheck = 0|' /etc/yum.repos.d/amzn2-core.repo"
           when: ansible_os_family == "RedHat"
