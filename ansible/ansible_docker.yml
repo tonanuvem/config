@@ -15,6 +15,9 @@
             state: present
             disable_gpg_check: yes
             lock_timeout: 180
+            
+        - name: Adicionar repositorio para Docker
+          become: yes
           yum_repository:
             name: dockerrepo
             description: DOCKER YUM repo
