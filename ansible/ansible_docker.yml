@@ -27,8 +27,8 @@
           
         - name: Desabilitar GPGCheck certs
           # yum repo configuration file, the line gpgcheck=1 indicates that GPG checking should be done for all packages in this repository
-        #  shell: "sed -i 's|gpgcheck = 1|gpgcheck = 0|' /etc/yum.repos.d/amzn2-extras.repo"
-          shell: "sed -i 's|gpgcheck = 1|gpgcheck = 0|' /etc/yum.repos.d/kubernetes.repo"
+        #  shell: "sed -i 's|gpgcheck=1|gpgcheck=0|' /etc/yum.repos.d/amzn2-extras.repo"
+          shell: "sed -i 's|gpgcheck=1|gpgcheck=0|' /etc/yum.repos.d/kubernetes.repo"
           when: ansible_os_family == "RedHat"
         
         #- name: Instalar o Docker via Yum
