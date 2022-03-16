@@ -7,7 +7,7 @@
     become: yes
     tasks:
         # https://docs.docker.com/engine/install/rhel/
-        - name: Preparando o yum para instalar o Docker
+        - name: Preparando o yum-utils para instalar o Docker
           become: yes
           yum:
             name:
@@ -16,14 +16,14 @@
             disable_gpg_check: yes
             lock_timeout: 180
             
-        - name: Adicionar repositorio para Docker
-          become: yes
-          yum_repository:
-            name: dockerrepo
-            description: DOCKER YUM repo
-            baseurl: https://download.docker.com/linux/rhel/docker-ce.repo
-            gpgcheck: no
-          when: ansible_os_family == "RedHat"
+        #- name: Adicionar repositorio para Docker
+        #  become: yes
+        #  yum_repository:
+        #    name: dockerrepo
+        #    description: DOCKER YUM repo
+        #    baseurl: https://download.docker.com/linux/rhel/docker-ce.repo
+        #    gpgcheck: no
+        #  when: ansible_os_family == "RedHat"
           
         - name: Desabilitar GPGCheck certs
           # yum repo configuration file, the line gpgcheck=1 indicates that GPG checking should be done for all packages in this repository
