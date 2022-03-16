@@ -7,14 +7,14 @@
     become: yes
     tasks:
         # https://docs.docker.com/engine/install/rhel/
-        - name: Preparando o yum-utils para instalar o Docker
-          become: yes
-          yum:
-            name:
-              - yum-utils
-            state: present
-            disable_gpg_check: yes
-            lock_timeout: 180
+        #- name: Preparando o yum-utils para instalar o Docker
+        #  become: yes
+        #  yum:
+        #    name:
+        #      - yum-utils
+        #    state: present
+        #    disable_gpg_check: yes
+        #    lock_timeout: 180
             
         #- name: Adicionar repositorio para Docker
         #  become: yes
