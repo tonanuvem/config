@@ -17,6 +17,7 @@
   #  when: ansible_os_family == "RedHat"
 
   - name: Configurar /etc/yum.repos.d/kubernetes.repo com GPG desabilitado
+    become: yes
     shell: |
       cat <<EOF | sudo tee /etc/yum.repos.d/kubernetes.repo
       [kubernetes]
