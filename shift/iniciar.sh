@@ -13,9 +13,10 @@ echo "NODE3 = $NODE3"
 
 # Aguardando Master
 #export IP=$MASTER
-echo "   Aguardando Node1 com $MASTER: "
-while [ $(ssh -q -oStrictHostKeyChecking=no -i ~/environment/labsuser.pem ec2-user@$MASTER "echo CONECTADO0" | grep CONECTADO0 | wc -l) != '1' ]; do { echo .; sleep 1; } done
-echo "   Conectado ao $MASTER, verificando ajustes: "
+IP=$(echo $MASTER)
+echo "   Aguardando Node1 com $IP: "
+while [ $(ssh -q -oStrictHostKeyChecking=no -i ~/environment/labsuser.pem ec2-user@$IP "echo CONECTADO0" | grep CONECTADO0 | wc -l) != '1' ]; do { echo .; sleep 1; } done
+echo "   Conectado ao $IP, verificando ajustes: "
 # Aguardando Node1
 #export IP=$NODE1
 echo "   Aguardando Node1 com $NODE1: "
