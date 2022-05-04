@@ -1,37 +1,25 @@
 terraform init; terraform plan; terraform apply -auto-approve
 echo ""
 echo " Iniciando configurações: "
-MASTER=$(~/environment/ip | awk -Fv '{ if ( !($1 ~  "None") && (/vm_0/) ) { print $1} }')
-NODE1=$(~/environment/ip | awk -Fv '{ if ( !($1 ~  "None") && (/vm_1/) ) { print $1} }')
-NODE2=$(~/environment/ip | awk -Fv '{ if ( !($1 ~  "None") && (/vm_2/) ) { print $1} }')
-NODE3=$(~/environment/ip | awk -Fv '{ if ( !($1 ~  "None") && (/vm_3/) ) { print $1} }')
-echo "IPs configurados :"
-echo "MASTER = $MASTER"
-echo "NODE1 = $NODE1"
-echo "NODE2 = $NODE2"
-echo "NODE3 = $NODE3"
+MASTER=$(terraform output -json ip_externo | jq .[] | jq .[0] | sed 's/"//g')
+QTD_NODES=$(terraform output -json ip_externo | jq '.[] | length')
+WORKER_NODES=$(expr $QTD_NODES - 1)
 
 # Aguardando Master
 export IP=$MASTER
-echo "   Aguardando Node1 com $IP: "
-while [ $(ssh -q -oStrictHostKeyChecking=no -i ~/environment/labsuser.pem ec2-user@$IP "echo CONECTADO1" | grep CONECTADO1 | wc -l) != '1' ]; do { echo .; sleep 1; } done
-echo "   Conectado ao $IP, verificando ajustes: "
-# Aguardando Node1
-export IP=$NODE1
-echo "   Aguardando Node1 com $IP: "
-while [ $(ssh -q -oStrictHostKeyChecking=no -i ~/environment/labsuser.pem ec2-user@$IP "echo CONECTADO1" | grep CONECTADO1 | wc -l) != '1' ]; do { echo .; sleep 1; } done
-echo "   Conectado ao $IP, verificando ajustes: "
-# Aguardando Node2
-export IP=$NODE2
-echo "   Aguardando Node2 com $IP: "
-while [ $(ssh -q -oStrictHostKeyChecking=no -i ~/environment/labsuser.pem ec2-user@$IP "echo CONECTADO2" | grep CONECTADO2 | wc -l) != '1' ]; do { echo .; sleep 1; } done
-echo "   Conectado ao $IP, verificando ajustes: "
-# Aguardando Node3
-export IP=$NODE3
-echo "   Aguardando Node3 com $IP: "
-while [ $(ssh -q -oStrictHostKeyChecking=no -i ~/environment/labsuser.pem ec2-user@$IP "echo CONECTADO3" | grep CONECTADO3 | wc -l) != '1' ]; do { echo .; sleep 1; } done
-echo "   Conectado ao $IP, verificando ajustes: "
+echo "   Aguardando Master com $MASTER: "
+while [ $(ssh -q -oStrictHostKeyChecking=no -i ~/environment/labsuser.pem ec2-user@$MASTER "echo CONECTADO1" | grep CONECTADO1 | wc -l) != '1' ]; do { echo .; sleep 1; } done
+echo "   Conectado ao MASTER com IP = $MASTER"
 
+# Aguardando Nodes
+for N in $(seq 1 $WORKER_NODES); do
+    NODE=$(terraform output -json ip_externo | jq .[] | jq .[$N] | sed 's/"//g')
+    echo "   Aguardando Node $N: "
+    while [ $(ssh -q -oStrictHostKeyChecking=no -i ~/environment/labsuser.pem ec2-user@$NODE "echo CONECTADONODE" | grep CONECTADONODE | wc -l) != '1' ]; do { echo .; sleep 1; } done
+    echo "   Conectado ao Node $N com IP = $NODE"
+done
+
+echo "   Realizando ajustes (usando o Ansible): "
 sh ajustar.sh
 
 echo ""
