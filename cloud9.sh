@@ -14,7 +14,7 @@ EOL
 sudo cat >> ~/environment/ip <<EOL
 for region in us-east-1 us-west-2
 do
-     aws ec2 describe-instances --region $region  --query "Reservations[*].Instances[*].[PublicIpAddress, Tags[?Key=='Name'].Value|[0]]" --output text | grep -v None
+  aws ec2 describe-instances --region \$region --query "Reservations[*].Instances[*].[PublicIpAddress, Tags[?Key=='Name'].Value|[0]]" --output text | grep -v None
 done
 EOL
 chmod +x ~/environment/ip
