@@ -22,7 +22,8 @@ wget https://raw.githubusercontent.com/kubernetes/dashboard/v2.5.0/aio/deploy/re
 #echo "$INSERIR"
 
 # Replaces all occurrences of the regular expression $RETIRAR in the file with the contents of $INSERIR:
-sed -i 's|            - --auto-generate-certificates|            - --enable-skip-login\n            - --disable-settings-authorizer\n            - --enable-insecure-login\n            - --insecure-bind-address=0.0.0.0\n|' recommended.yaml
+#sed -i 's|            - --auto-generate-certificates|            - --enable-skip-login\n            - --disable-settings-authorizer\n            - --enable-insecure-login\n            - --insecure-bind-address=0.0.0.0\n|' recommended.yaml
+sed -i 's|            - --auto-generate-certificates|            - --auto-generate-certificates\n            - --enable-skip-login\n|' recommended.yaml
 
 kubectl apply -f recommended.yaml
 
