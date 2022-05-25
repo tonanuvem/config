@@ -3,10 +3,28 @@ export COLOR_RESET='\e[0m'
 export COLOR_LIGHT_GREEN='\e[0;49;32m' 
 
 export INGRESS_HOST=$(curl -s checkip.amazonaws.com)
-#kubectl apply -f https://raw.githubusercontent.com/kubernetes/dashboard/v2.4.0/aio/deploy/recommended.yaml
-kubectl apply -f https://raw.githubusercontent.com/kubernetes/dashboard/v2.5.0/aio/deploy/recommended.yaml
-kubectl apply -f https://raw.githubusercontent.com/tonanuvem/k8s-exemplos/master/dashboard_permission.yml
 
+wget https://raw.githubusercontent.com/kubernetes/dashboard/v2.5.0/aio/deploy/recommended.yaml
+
+# Ajustar para acessar de maneira insegura (somente para LAB):
+# Substituir a linha:
+#            - --auto-generate-certificates
+#RETIRAR=$(cat recommended.yaml | grep auto-generate-certificates)
+# pelas linhas abaixo:
+#INSERIR="$(cat <<-EOF
+#            - --enable-skip-login
+#            - --disable-settings-authorizer
+#            - --enable-insecure-login
+#            - --insecure-bind-address=0.0.0.0
+#EOF
+#)"
+#echo "$RETIRAR"
+#echo "$INSERIR"
+
+# Replaces all occurrences of the regular expression $RETIRAR in the file with the contents of $INSERIR:
+sed -i 's|            - --auto-generate-certificates|            - --enable-skip-login\n            - --disable-settings-authorizer\n            - --enable-insecure-login\n            - --insecure-bind-address=0.0.0.0\n|' recommended.yaml
+
+kubectl apply -f recommended.yaml
 
 cat <<EOF | kubectl apply -f -
 apiVersion: v1
@@ -20,6 +38,8 @@ metadata:
   labels:
     k8s-app: kubernetes-dashboard
 EOF
+
+kubectl apply -f https://raw.githubusercontent.com/tonanuvem/k8s-exemplos/master/dashboard_permission.yml
 
 kubectl patch svc kubernetes-dashboard -n kubernetes-dashboard -p '{"spec": {"type": "NodePort"}}'
 kubectl get svc kubernetes-dashboard -n kubernetes-dashboard
