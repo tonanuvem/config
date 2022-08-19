@@ -7,6 +7,8 @@ while [ $(ssh -q -oStrictHostKeyChecking=no -i ~/environment/labsuser.pem ec2-us
 echo "   Conectado ao $IP, verificando ajustes: "
 sh ajustar.sh
 echo "   Configuração OK."
+echo ""
+echo "   OBS: Caso alguma das tarefas anteriores tenha obtido FAILED, executar: sh ajustar.sh"
 
 #ssh -oStrictHostKeyChecking=no -i ~/environment/labsuser.pem ec2-user@$IP 'bash -s' < ../preparar.sh
 #ssh  -o LogLevel=error -oStrictHostKeyChecking=no -i ~/environment/labsuser.pem ec2-user@$IP "while [ \$(ls /usr/local/bin/ | grep docker-compose | wc -l) != '1' ]; do { printf .; sleep 1; } done"
