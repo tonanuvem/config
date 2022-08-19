@@ -9,3 +9,5 @@ Links:
 <li> https://docs.ansible.com/ansible/latest/user_guide/playbooks_loops.html#playbooks-loops
 
 <li> https://github.com/MiteshSharma/InfraTerraformAnsible/tree/master/ansible
+
+<li> https://dev.to/email2vimalraj/collect-failed-task-details-in-ansible-4hcf
