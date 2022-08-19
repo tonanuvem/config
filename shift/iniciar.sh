@@ -26,3 +26,6 @@ sh ajustar.sh
 
 echo ""
 echo " Nodes (VMs) iniciados e configurados"
+echo ""
+echo "   OBS: Caso alguma das tarefas anteriores tenha obtido FAILED, executar: sh ajustar.sh"
+echo ""
