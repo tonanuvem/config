@@ -14,7 +14,9 @@ printf "\n\n\tMASTER:\n"
 echo ""
 echo "   Aguardando configurações: "
 
-echo "sudo docker swarm init --advertise-addr \$(curl checkip.amazonaws.com):2377" >> master.sh
+echo "sudo docker swarm init" >> master.sh
+# echo "sudo docker swarm init --advertise-addr eth0:2377" >> master.sh
+# echo "sudo docker swarm init --advertise-addr \$(curl checkip.amazonaws.com):2377" >> master.sh
 
 ssh -o LogLevel=error -oStrictHostKeyChecking=no -i ~/environment/labsuser.pem ec2-user@$MASTER 'bash -s' < master.sh
 
