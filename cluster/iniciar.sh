@@ -22,3 +22,6 @@ sh ajustar.sh
 #sh config-node3.sh
 echo ""
 echo " Nodes iniciados e configurados"
+echo ""
+echo "   OBS: Caso alguma das tarefas anteriores tenha obtido FAILED, executar: sh ajustar.sh"
+echo ""
