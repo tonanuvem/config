@@ -43,7 +43,7 @@ echo "CONFIGURANDO OS NODES - JOIN:"
 for N in $(seq 1 $WORKER_NODES); do
     printf "\n\n"
     NODE=$(terraform output -json ip_externo | jq .[] | jq .[$N] | sed 's/"//g')
-    echo "   CONFIGURANDO NODE $N ($NODE): KUBEADM JOIN"
+    echo "   CONFIGURANDO NODE $N ($NODE): JOIN"
     ssh -oStrictHostKeyChecking=no -i ~/environment/labsuser.pem ec2-user@$NODE 'bash -s' < workers.sh
 done
 
