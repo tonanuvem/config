@@ -10,7 +10,7 @@ NODE3=$(terraform output Node_3_ip_externo)
 # CONFIGURANDO O MASTER utilizando o DOCKER SWARM INIT:"
 ### CONFIGURANDO O MASTER via SSH
 printf "\n\n xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx \n"
-printf "\n\n\NODE 1:\n"
+printf "\n\nNODE 1:\n"
 echo ""
 echo "   Aguardando configurações: "
 
