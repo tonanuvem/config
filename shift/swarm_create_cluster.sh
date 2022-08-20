@@ -4,8 +4,9 @@ MASTER=$(terraform output -json ip_externo | jq .[] | jq .[0] | sed 's/"//g')
 QTD_NODES=$(terraform output -json ip_externo | jq '.[] | length')
 WORKER_NODES=$(expr $QTD_NODES - 1)
 
-# reset arquivos vazios dos scripts:
+# Criando arquivos vazios para receber os comandos
 > master.sh
+> workers.sh
 
 # CONFIGURANDO O MASTER utilizando o DOCKER SWARM INIT:"
 ### CONFIGURANDO O MASTER via SSH
