@@ -11,7 +11,8 @@ curl -L -s -o px-spec.yaml "https://install.portworx.com/2.7?mc=false&kbver=${VE
 QTD_NODES=$(terraform output -json ip_externo | jq '.[] | length')
 WORKER_NODES=$(expr $QTD_NODES - 1)
 echo "Verificando se todos os nodes estao com status Ready: "
-while [ "$(kubectl get node | grep Ready | wc -l)" != "$QTD_NODES" ]; do
+#while [ "$(kubectl get node | grep Ready | wc -l)" != "$QTD_NODES" ]; do
+while [ "$(kubectl get node | grep Ready | wc -l)" != "4" ]; do
   printf "."
   sleep 1
 done
@@ -24,7 +25,8 @@ kubectl get pods -o wide -n kube-system -l name=portworx
 
 # Aguadar até: Ready 1/1 (Demora uns 4 min) --> Para sair, CTRL + C
 echo "Aguardando PORTWORX: GERENCIAMENTO DE VOLUMES (geralmente 4 min): "
-while [ "$(kubectl get pods -o wide -n kube-system -l name=portworx | grep 1/1 | wc -l)" != "$WORKER_NODES" ]; do
+#while [ "$(kubectl get pods -o wide -n kube-system -l name=portworx | grep 1/1 | wc -l)" != "$WORKER_NODES" ]; do
+while [ "$(kubectl get pods -o wide -n kube-system -l name=portworx | grep 1/1 | wc -l)" != "3" ]; do
   printf "."
   sleep 1
 done
