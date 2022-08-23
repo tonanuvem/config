@@ -8,8 +8,10 @@ curl -L -s -o px-spec.yaml "https://install.portworx.com/2.7?mc=false&kbver=${VE
 #curl -L -s -o px-spec.yaml "https://install.portworx.com/2.9?mc=false&kbver=${VER}b=true&s=%2Fdev%2Fxvdb&c=px-fiap&stork=true&st=k8s"
 
 # Aguardando cluster:
+QTD_NODES=$(terraform output -json ip_externo | jq '.[] | length')
+WORKER_NODES=$(expr $QTD_NODES - 1)
 echo "Verificando se todos os nodes estao com status Ready: "
-while [ "$(kubectl get node | grep Ready | wc -l)" != "4" ]; do
+while [ "$(kubectl get node | grep Ready | wc -l)" != $WORKER_NODES ]; do
   printf "."
   sleep 1
 done
