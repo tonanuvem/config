@@ -100,7 +100,8 @@ resource "aws_security_group" "eksfiap" {
 
 resource "aws_eks_cluster" "eksfiap" {
   name     = var.cluster-name
-  role_arn = "arn:aws:iam::497573848553:role/eksFiapClusterRole"
+  role_arn = "arn:aws:iam::497573848553:role/LabRole"
+  #role_arn = "arn:aws:iam::497573848553:role/eksFiapClusterRole"
 
   vpc_config {
     security_group_ids = [aws_security_group.eksfiap.id]
@@ -118,7 +119,8 @@ resource "aws_eks_cluster" "eksfiap" {
 resource "aws_eks_node_group" "demo" {
   cluster_name    = aws_eks_cluster.eksfiap.name
   node_group_name = "demo"
-  node_role_arn   = "arn:aws:iam::497573848553:role/eksFiapWorker"
+  node_role_arn   = "arn:aws:iam::497573848553:role/LabRole"
+  #node_role_arn   = "arn:aws:iam::497573848553:role/eksFiapWorker"
   subnet_ids      = aws_subnet.demo[*].id
   tags = {
     Name = "eksfiap-workers"
