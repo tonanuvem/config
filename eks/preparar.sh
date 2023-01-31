@@ -4,7 +4,10 @@ aws sts get-caller-identity
 # antes de iniciar, deve ser criada pela console a função "eksFiapClusterRole" e inserir a política "AmazonEKSClusterPolicy"
 #aws iam create-role --role-name eksFiapClusterRole
 #aws iam attach-role-policy --policy-arn arn:aws:iam::aws:policy/AmazonEKSClusterPolicy --role-name eksFiapClusterRole
-aws iam get-role --role-name eksFiapClusterRole
+
+# usando credencial LabRole
+#aws iam get-role --role-name eksFiapClusterRole
+aws iam get-role --role-name LabRole
 
 # antes de iniciar, deve ser criada pela console a função "eksFiapWoker" e inserir as políticas "AmazonEKSWorkerNodePolicy, AmazonEKS_CNI_Policy e AmazonEC2ContainerRegistryReadOnly"
 #aws iam create-role --role-name eksFiapWoker --assume-role-policy-document file://eksFiapWorker.json
@@ -12,7 +15,7 @@ aws iam get-role --role-name eksFiapClusterRole
 #aws iam attach-role-policy --policy-arn arn:aws:iam::aws:policy/AmazonEKSWorkerNodePolicy --role-name eksFiapWoker
 #aws iam attach-role-policy --policy-arn arn:aws:iam::aws:policy/AmazonEKS_CNI_Policy --role-name eksFiapWoker
 #aws iam attach-role-policy --policy-arn arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly --role-name eksFiapWoker
-aws iam get-role --role-name eksFiapWorker
+#aws iam get-role --role-name eksFiapWorker
 
 ACCOUNT=$(aws sts get-caller-identity --query Account --output text)
 echo $ACCOUNT
