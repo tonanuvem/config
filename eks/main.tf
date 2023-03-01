@@ -134,3 +134,9 @@ resource "aws_eks_node_group" "demo" {
     min_size     = 1
   }
 }
+
+resource "aws_network_interface" "eni_eksfiap" {
+  count = 2
+
+  subnet_id      = aws_subnet.demo.*.id[count.index]
+}
