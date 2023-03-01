@@ -135,8 +135,19 @@ resource "aws_eks_node_group" "demo" {
   }
 }
 
-resource "aws_network_interface" "eni_eksfiap" {
+resource "aws_network_interface" "eni_eks" {
   count = 2
 
   subnet_id      = aws_subnet.demo.*.id[count.index]
+}
+
+resource "aws_lb" "lb_eks" {
+  count = 2
+
+  name               = "lb-eks"
+  internal           = false
+  load_balancer_type = "network"
+  subnets            = [for subnet in aws_subnet.demo : subnet.id]
+
+  enable_deletion_protection = false
 }
