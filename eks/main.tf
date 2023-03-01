@@ -142,8 +142,6 @@ resource "aws_network_interface" "eni_eks" {
 }
 
 resource "aws_lb" "lb_eks" {
-  count = 2
-
   name               = "lb-eks"
   internal           = false
   load_balancer_type = "network"
