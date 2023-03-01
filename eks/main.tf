@@ -14,7 +14,8 @@ provider "aws" {
 #  * Subnets
 #  * Internet Gateway
 #  * Route Table
-#
+#  * Elastic Network Interface (ENI)
+#  * Elastic Load Balancer
 
 data "aws_availability_zones" "available" {}
 
