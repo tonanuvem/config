@@ -57,7 +57,7 @@ aws eks create-cluster --name eksfiap --role-arn $ROLE_ARN --resources-vpc-confi
 
 # aws eks describe-cluster --name eksfiap
 echo ""
-echo "Aguardando a criação do Cluster EKS (Tempo estimado = 8 minutos)"
+echo "Aguardando a criação do Cluster EKS (Tempo estimado = 9 minutos)"
 aws eks describe-cluster --name eksfiap --query 'cluster.status' --output text
 echo ""
 for tempo in $(seq 1 100); do { echo -ne "$tempo%\033[0K\r"; sleep 5; } done
