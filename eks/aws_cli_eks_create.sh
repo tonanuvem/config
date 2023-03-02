@@ -1,6 +1,12 @@
 # https://blog.devgenius.io/how-to-create-eks-cluster-using-aws-cli-60e41111940b
 
-mkdir ./awscli
+# Configurando as variaveis
+if [[ -f "./awscli/" && -s "./awscli/" ]]; then 
+    echo "Configuração anterior encontrada"
+    echo "Primeiro destrua o ambiente antigo:  sh aws_cli_eks_delete.sh"
+else 
+    mkdir ./awscli
+fi
 
 # Criar o VPC
 
