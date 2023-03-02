@@ -17,6 +17,10 @@ echo $SUBNET_1_ID
 SUBNET_2_ID=$(cat ./awscli/SUBNET_2_ID.txt)
 echo $SUBNET_2_ID
 
+SECURITYGROUP_ID=$(cat ./awscli/SECURITYGROUP_ID.txt)
+echo $SECURITYGROUP_ID
+
+ROLE_ARN=$(aws iam get-role --role-name LabRole --query 'Role.Arn' --output text)
 
 # Removendo
 
