@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Configurando as variaveis
-if [[ -f "./awscli/VPC_ID.txt" && -s "./awscli/VPC_ID.txt" ]]; then 
+if [ -f "./awscli/VPC_ID.txt" ]; then 
     echo "Arquivo VPC_ID.txt encontrado"
 else 
     echo "VPC_ID.txt nao encontrado"; 
