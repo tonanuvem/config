@@ -33,5 +33,5 @@ aws ec2 delete-vpc --vpc-id $VPC_ID
 
 # Movendo a pasta com as configurações antigas:
 
-mv "./awscli" "./bkp_awscli_$(date "+%Y.%m.%d-%H.%M.%S").csv"
+mv "./awscli" "./bkp_awscli_$(date "+%Y_%m_%d_%Hh%Mm%S")"
 
