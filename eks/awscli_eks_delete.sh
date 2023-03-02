@@ -36,5 +36,15 @@ aws ec2 delete-vpc --vpc-id $VPC_ID
 
 # Movendo a pasta com as configurações antigas:
 
-mv "./awscli" "./bkp_awscli_$(date "+%Y_%m_%d_%Hh%Mm%S")"
+echo "Todos os comandos anteriores foram executados com SUCESSO ? Se sim: digitar 0 e apertar ENTER"
+read ERRO
+
+if [ $ERRO -eq 0 ]; 
+then 
+    echo "Ambiente EKS excluido" 
+    mv "./awscli" "./bkp_awscli_$(date "+%Y_%m_%d_%Hh%Mm%S")"
+else 
+    echo "Tente rodar novamente o comando: sh awscli_eks_delete.sh" 
+fi
+
 
