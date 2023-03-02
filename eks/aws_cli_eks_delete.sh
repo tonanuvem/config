@@ -27,6 +27,7 @@ aws ec2 delete-subnet --subnet-id $SUBNET_1_ID
 aws ec2 delete-subnet --subnet-id $SUBNET_2_ID
 aws ec2 delete-vpc --vpc-id $VPC_ID
 
-# Apagando a pasta com as configurações:
+# Movendo a pasta com as configurações antigas:
 
-rm -rf ./awscli
+mv "./awscli" "./bkp_awscli_$(date "+%Y.%m.%d-%H.%M.%S").csv"
+
