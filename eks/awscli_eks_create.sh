@@ -55,11 +55,11 @@ aws eks create-cluster --name eksfiap --role-arn $ROLE_ARN --resources-vpc-confi
 
 # Aguardando
 
-aws eks describe-cluster --name eksfiap
+# aws eks describe-cluster --name eksfiap
 echo ""
 echo "Aguardando a criação do Cluster EKS (Tempo estimado = 7 minutos)"
 aws eks describe-cluster --name eksfiap --query 'cluster.status' --output text
-
+echo ""
 for tempo in $(seq 1 100); do { echo -ne "$tempo%\033[0K\r"; sleep 4; } done
 while [ $(aws eks describe-cluster --name eksfiap --query 'cluster.status' --output text | grep ACTIVE | wc -l) != '1' ]; do { printf .; sleep 1; } done
 echo "   Cluster criado!"
@@ -73,11 +73,11 @@ echo ""
 
 aws eks create-nodegroup --cluster-name eksfiap --nodegroup-name workers_eksfiap --scaling-config minSize=1,maxSize=4,desiredSize=2 --subnets $SUBNET_1_ID $SUBNET_2_ID --remote-access ec2SshKey=vockey,sourceSecurityGroups=$SECURITYGROUP_ID --instance-types t3.medium --node-role $ROLE_ARN
 
-aws eks describe-nodegroup --cluster-name eksfiap --nodegroup-name workers_eksfiap
+# aws eks describe-nodegroup --cluster-name eksfiap --nodegroup-name workers_eksfiap
 echo ""
 echo "Aguardando a criação dos Workers (Tempo estimado = 5 minutos)"
 aws eks describe-nodegroup --cluster-name eksfiap --nodegroup-name workers_eksfiap --query 'nodegroup.status' --output text
-
+echo ""
 for tempo in $(seq 1 100); do { echo -ne "$tempo%\033[0K\r"; sleep 3; } done
 while [ $(aws eks describe-nodegroup --cluster-name eksfiap --nodegroup-name workers_eksfiap --query 'nodegroup.status' --output text | grep ACTIVE | wc -l) != '1' ]; do { printf .; sleep 1; } done
 echo "   Nodes Workers criados!"
