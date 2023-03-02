@@ -25,6 +25,7 @@ ROLE_ARN=$(aws iam get-role --role-name LabRole --query 'Role.Arn' --output text
 # Removendo
 
 aws eks delete-nodegroup --cluster-name eksfiap --nodegroup-name workers_eksfiap
+while [ $(aws eks describe-nodegroup --cluster-name eksfiap --nodegroup-name workers_eksfiap --query 'nodegroup.status' --output text | grep DELETING | wc -l) != '0' ]; do { printf .; sleep 1; } done
 aws eks delete-cluster --name eksfiap
 aws ec2 delete-security-group --group-id $SECURITYGROUP_ID
 aws ec2 delete-subnet --subnet-id $SUBNET_1_ID
