@@ -1,3 +1,5 @@
+#!/bin/bash
+
 # https://blog.devgenius.io/how-to-create-eks-cluster-using-aws-cli-60e41111940b
 
 # Configurando as variaveis
