@@ -8,7 +8,7 @@ else
     exit
 fi
 
-VPC_ID=$(cat ./awscli/VPC_ID_EKS.txt)
+VPC_ID=$(cat ./awscli/VPC_ID.txt)
 echo $VPC_ID
 
 SUBNET_1_ID=$(cat ./awscli/SUBNET_1_ID.txt)
