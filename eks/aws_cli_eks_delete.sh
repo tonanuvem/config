@@ -26,3 +26,7 @@ aws ec2 delete-security-group --group-id $SECURITYGROUP_ID
 aws ec2 delete-subnet --subnet-id $SUBNET_1_ID
 aws ec2 delete-subnet --subnet-id $SUBNET_2_ID
 aws ec2 delete-vpc --vpc-id $VPC_ID
+
+# Apagando a pasta com as configurações:
+
+rm -rf ./awscli
