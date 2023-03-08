@@ -29,6 +29,7 @@ printf "\n\n\tMaven (Java):\n\n"
 # Instalação do SPRING:
 curl -s "https://get.sdkman.io" | bash > /dev/null
 source "$HOME/.sdkman/bin/sdkman-init.sh"
+# sdk install java
 sdk install springboot
 spring version
 
