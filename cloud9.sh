@@ -30,7 +30,8 @@ printf "\n\n\tMaven (Java):\n\n"
 curl -s "https://get.sdkman.io" | bash > /dev/null
 source "$HOME/.sdkman/bin/sdkman-init.sh"
 # sdk install java
-sdk install springboot
+# Spring Boot 3.0 will require Java 17. O ambiente Ubuntu Cloud9 tem atualmente o Java 11 (usar springboot versao 2).
+sdk install springboot 2.7.10
 spring version
 
 # Instalação do Python:
