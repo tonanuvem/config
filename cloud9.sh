@@ -9,6 +9,9 @@ Host *
    UserKnownHostsFile=/dev/null
 EOL
 
+# atualizar index page
+sudo curl -s "https://tonanuvem.github.io/page/docs/hero.html" -o "/var/www/html/index.html" 
+
 # utils: cria script para verificar ip publico.
 > ~/environment/ip
 sudo cat >> ~/environment/ip <<EOL
