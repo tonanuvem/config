@@ -13,6 +13,8 @@ echo "   Aguardando configurações: "
 
 ssh -o LogLevel=error -oStrictHostKeyChecking=no -i ~/environment/labsuser.pem ec2-user@$RANCHER_SERVER 'bash -s' < rancher_config_server.sh
 
+ssh -o LogLevel=error -oStrictHostKeyChecking=no -i ~/environment/labsuser.pem ec2-user@$RANCHER_SERVER 'bash -s' < rancher_join_token.sh
+
 # Get Token
 DOCKERRUNCMD=$(ssh -o LogLevel=error -oStrictHostKeyChecking=no -i ~/environment/labsuser.pem ec2-user@$RANCHER_SERVER 'cat DOCKERRUNCMD')
 # Echo command
