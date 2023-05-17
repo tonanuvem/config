@@ -23,8 +23,6 @@ echo $DOCKERRUNCMD
 # TOKEN=`echo $TOKEN | sed 's/ *$//g'`
 # echo $TOKEN > workers.sh
 printf "\n\n"
-echo $DOCKERRUNCMD
-printf "\n\n"
 echo "   TOKEN ACIMA : CLUSTER JOIN"
 printf "\n\n"
 
