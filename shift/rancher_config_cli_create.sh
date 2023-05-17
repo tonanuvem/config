@@ -10,6 +10,5 @@ APITOKEN=$(cat APITOKEN)
 CLUSTERID=$(cat APITOKEN)
 
 rancher login https://localhost -t $APITOKEN --skip-verify
-rancher clusters create exemplo
-rancher clusters add-node --etcd --controlplane --worker exemplo > JOINTOKEN
-#rancher clusters add-node --etcd --controlplane --worker $$APITOKEN fiap
+rancher clusters create fiap
+rancher clusters add-node --etcd --controlplane --worker fiap > JOINTOKEN
