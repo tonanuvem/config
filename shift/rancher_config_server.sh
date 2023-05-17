@@ -48,7 +48,7 @@ echo "CLUSTERID = $CLUSTERID"
 CLUSTERID=$(cat CLUSTERID)
 APITOKEN=$(cat APITOKEN)
 echo "  Aguardando Token para o Cluster "
-while [ "$(curl -s 'https://127.0.0.1/v3/clusterregistrationtoken/$CLUSTERID:default-token' -H 'content-type: application/json' -H "Authorization: Bearer $APITOKEN" --insecure | jq -r '.nodeCommand' | wc -l))" != "1" ]; do
+while [ "$(curl -s 'https://127.0.0.1/v3/clusterregistrationtoken/' -H 'content-type: application/json' -H "Authorization: Bearer $APITOKEN" --insecure | grep nodeCommand | wc -l)" != "1" ]; do
   printf "."
   sleep 1
 done
