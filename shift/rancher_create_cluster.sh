@@ -17,19 +17,18 @@ ssh -o LogLevel=error -oStrictHostKeyChecking=no -i ~/environment/labsuser.pem e
 DOCKERRUNCMD=$(ssh -o LogLevel=error -oStrictHostKeyChecking=no -i ~/environment/labsuser.pem ec2-user@$RANCHER_SERVER 'cat DOCKERRUNCMD')
 # Echo command
 echo $DOCKERRUNCMD
-TOKEN=$DOCKERRUNCMD
 
 # Remover espacos
-TOKEN=`echo $TOKEN | sed 's/ *$//g'`
+# TOKEN=$DOCKERRUNCMD
+# TOKEN=`echo $TOKEN | sed 's/ *$//g'`
+# echo $TOKEN > workers.sh
 printf "\n\n"
-echo $TOKEN
+echo $DOCKERRUNCMD
 printf "\n\n"
 echo "   TOKEN ACIMA : CLUSTER JOIN"
 printf "\n\n"
 
 ### CONFIGURANDO OS NODES :
-
-echo $TOKEN > workers.sh
 
 printf "\n\n"
 echo "CONFIGURANDO OS NODES - JOIN:"
@@ -38,7 +37,7 @@ for N in $(seq 1 $WORKER_NODES); do
     printf "\n\n"
     NODE=$(terraform output -json ip_externo | jq .[] | jq .[$N] | sed 's/"//g')
     echo "   CONFIGURANDO NODE $N ($NODE): JOIN"
-    ssh -oStrictHostKeyChecking=no -i ~/environment/labsuser.pem ec2-user@$NODE 'bash -s' < workers.sh
+    ssh -oStrictHostKeyChecking=no -i ~/environment/labsuser.pem ec2-user@$NODE 'bash -s' < $DOCKERRUNCMD
 done
 
 ### CONCLUINDO
@@ -47,8 +46,8 @@ printf "\n\n"
 echo "   CONFIGURAÇÕES REALIZADAS. FIM."
 echo "   Acessar Rancher URL = http://fiap.${RANCHER_SERVER}.nip.io"
 echo ""
+echo "   Senha : fiapfiapfiap"
+#echo "   Senha de Bootstrap:"
 echo ""
-echo "   Senha de Bootstrap:"
-echo ""
-ssh -o LogLevel=error -oStrictHostKeyChecking=no -i ~/environment/labsuser.pem ec2-user@$RANCHER_SERVER 'docker logs rancherserver 2>&1 | grep "Bootstrap Password:"'
+#ssh -o LogLevel=error -oStrictHostKeyChecking=no -i ~/environment/labsuser.pem ec2-user@$RANCHER_SERVER 'docker logs rancherserver 2>&1 | grep "Bootstrap Password:"'
 printf "\n\n"
