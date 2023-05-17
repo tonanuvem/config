@@ -6,25 +6,26 @@ echo "  Aguardando componentes do Rancher "
 while ! curl -ks https://localhost/ping; do printf . && sleep 3; done
 
 # Descobrir senha
-SENHA=$(docker logs  rancher-server  2>&1 | grep -oP '(?<=Bootstrap Password: ).*')
-echo "TEMPORARIA SENHA = $SENHA"
+TEMPSENHA=$(docker logs  rancher-server  2>&1 | grep -oP '(?<=Bootstrap Password: ).*')
+echo "\n\n\tTEMPORARIA SENHA = $TEMPSENHA"
+echo $TEMPSENHA > TEMPSENHA
 
 # Login
 curl -s 'https://127.0.0.1/v3-public/localProviders/local?action=login' -H 'content-type: application/json' --data-binary '{"username":"admin","password":"'${SENHA}'"}' --insecure | jq -r .token > LOGINTOKEN
 cat LOGINTOKEN
 LOGINTOKEN=$(cat LOGINTOKEN)
-echo "LOGINTOKEN = $LOGINTOKEN"
+echo "\n\n\tLOGINTOKEN = $LOGINTOKEN"
 
 # Create API key
 curl -s 'https://127.0.0.1/v3/token' -H 'content-type: application/json' -H "Authorization: Bearer ${LOGINTOKEN}" --data-binary '{"type":"token","description":"automation"}' --insecure | jq -r .token > APITOKEN
 cat APITOKEN
 APITOKEN=$(cat APITOKEN)
-echo "APITOKEN = $APITOKEN"
+echo "\n\n\tAPITOKEN = $APITOKEN"
 
 # Change password
-echo "Alterando a senha para fiap"
-curl -s 'https://127.0.0.1/v3/users?action=changepassword' -H 'content-type: application/json' -H "Authorization: Bearer $LOGINTOKEN" --data-binary '{"currentPassword":"'${SENHA}'","newPassword":"fiap"}' --insecure
-SENHA=fiap
+echo "Alterando a senha para: fiapfiapfiap"
+SENHA=fiapfiapfiap
+curl -s 'https://127.0.0.1/v3/users?action=changepassword' -H 'content-type: application/json' -H "Authorization: Bearer $LOGINTOKEN" --data-binary '{"currentPassword":"'${TEMPSENHA}'","newPassword":"'${SENHA}'"}' --insecure
 
 # Set server-url
 HOST_IP=$(curl checkip.amazonaws.com)
