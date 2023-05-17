@@ -50,7 +50,7 @@ APITOKEN=$(cat APITOKEN)
 echo "  Aguardando Token para o Cluster "
 while ! curl -s 'https://127.0.0.1/v3/clusterregistrationtoken?id="'$CLUSTERID'"' -H 'content-type: application/json' -H "Authorization: Bearer $APITOKEN" --insecure | jq -r '.data[].nodeCommand'; do printf . && sleep 3; done
 AGENTCMD=$(curl -s 'https://127.0.0.1/v3/clusterregistrationtoken?id="'$CLUSTERID'"' -H 'content-type: application/json' -H "Authorization: Bearer $APITOKEN" --insecure | jq -r '.data[].nodeCommand' | head -1)
-printf "\n\n\tTAGENTCMD = $AGENTCMD"
+printf "\n\n\tAGENTCMD = $AGENTCMD"
 echo $AGENTCMD > AGENTCMD
 
 printf "\n\n xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx \n"
@@ -61,7 +61,4 @@ AGENTCMD=$(cat AGENTCMD)
 ROLEFLAGS="--etcd --controlplane --worker"
 DOCKERRUNCMD="$AGENTCMD $ROLEFLAGS"
 echo "$DOCKERRUNCMD" > DOCKERRUNCMD
-
-# Echo command
-cat DOCKERRUNCMD
 
