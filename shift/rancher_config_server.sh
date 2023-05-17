@@ -11,7 +11,7 @@ printf "\n\n\tTEMPORARIA SENHA = $TEMPSENHA"
 echo $TEMPSENHA > TEMPSENHA
 
 # Login
-curl -s 'https://127.0.0.1/v3-public/localProviders/local?action=login' -H 'content-type: application/json' --data-binary '{"username":"admin","password":"'${SENHA}'"}' --insecure | jq -r .token > LOGINTOKEN
+curl -s 'https://127.0.0.1/v3-public/localProviders/local?action=login' -H 'content-type: application/json' --data-binary '{"username":"admin","password":"'${TEMPSENHA}'"}' --insecure | jq -r .token > LOGINTOKEN
 cat LOGINTOKEN
 LOGINTOKEN=$(cat LOGINTOKEN)
 printf "\n\n\tLOGINTOKEN = $LOGINTOKEN"
