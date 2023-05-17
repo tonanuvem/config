@@ -7,20 +7,20 @@ while ! curl -ks https://localhost/ping; do printf . && sleep 3; done
 
 # Descobrir senha
 TEMPSENHA=$(docker logs  rancher-server  2>&1 | grep -oP '(?<=Bootstrap Password: ).*')
-echo "\n\n\tTEMPORARIA SENHA = $TEMPSENHA"
+printf "\n\n\tTEMPORARIA SENHA = $TEMPSENHA"
 echo $TEMPSENHA > TEMPSENHA
 
 # Login
 curl -s 'https://127.0.0.1/v3-public/localProviders/local?action=login' -H 'content-type: application/json' --data-binary '{"username":"admin","password":"'${SENHA}'"}' --insecure | jq -r .token > LOGINTOKEN
 cat LOGINTOKEN
 LOGINTOKEN=$(cat LOGINTOKEN)
-echo "\n\n\tLOGINTOKEN = $LOGINTOKEN"
+printf "\n\n\tLOGINTOKEN = $LOGINTOKEN"
 
 # Create API key
 curl -s 'https://127.0.0.1/v3/token' -H 'content-type: application/json' -H "Authorization: Bearer ${LOGINTOKEN}" --data-binary '{"type":"token","description":"automation"}' --insecure | jq -r .token > APITOKEN
 cat APITOKEN
 APITOKEN=$(cat APITOKEN)
-echo "\n\n\tAPITOKEN = $APITOKEN"
+printf "\n\n\tAPITOKEN = $APITOKEN"
 
 # Change password
 echo "Alterando a senha para: fiapfiapfiap"
