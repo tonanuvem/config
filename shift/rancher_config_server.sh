@@ -44,9 +44,6 @@ echo "CLUSTERID = $CLUSTERID"
 echo "Criando o token"
 curl -s 'https://127.0.0.1/v3/clusterregistrationtoken' -H 'content-type: application/json' -H "Authorization: Bearer $APITOKEN" --data-binary '{"type":"clusterRegistrationToken","clusterId":"'$CLUSTERID'"}' --insecure
 
-# Set role flags
-ROLEFLAGS="--etcd --controlplane --worker"
-
 # Generate nodecommand
 CLUSTERID=$(cat CLUSTERID)
 APITOKEN=$(cat APITOKEN)
@@ -56,6 +53,8 @@ echo "AGENTCMD = $AGENTCMD"
 printf "\n\n xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx \n"
 
 # Concat commands
+# Set role flags
+ROLEFLAGS="--etcd --controlplane --worker"
 DOCKERRUNCMD="$AGENTCMD $ROLEFLAGS"
 echo "$DOCKERRUNCMD" > DOCKERRUNCMD
 
