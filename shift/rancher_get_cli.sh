@@ -4,4 +4,4 @@
 
 wget https://github.com/rancher/cli/releases/download/v2.4.12/rancher-linux-amd64-v2.4.12.tar.gz
 tar -zxvf rancher-linux-amd64-v2.4.12.tar.gz
-mv rancher-v2.4.12/rancher /usr/local/bin/
+sudo mv rancher-v2.4.12/rancher /usr/local/bin/
