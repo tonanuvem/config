@@ -47,6 +47,8 @@ curl -s 'https://127.0.0.1/v3/clusterregistrationtoken' -H 'content-type: applic
 # Generate nodecommand
 CLUSTERID=$(cat CLUSTERID)
 APITOKEN=$(cat APITOKEN)
+echo "  Aguardando componentes do Rancher "
+while ! curl -s 'https://127.0.0.1/v3/clusterregistrationtoken?id="'$CLUSTERID'"' -H 'content-type: application/json' -H "Authorization: Bearer $APITOKEN" --insecure | jq -r '.data[].nodeCommand'; do printf . && sleep 3; done
 AGENTCMD=$(curl -s 'https://127.0.0.1/v3/clusterregistrationtoken?id="'$CLUSTERID'"' -H 'content-type: application/json' -H "Authorization: Bearer $APITOKEN" --insecure | jq -r '.data[].nodeCommand' | head -1)
 printf "\n\n\tTAGENTCMD = $AGENTCMD"
 echo $AGENTCMD > AGENTCMD
