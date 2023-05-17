@@ -22,8 +22,12 @@ echo $DOCKERRUNCMD
 # TOKEN=$DOCKERRUNCMD
 # TOKEN=`echo $TOKEN | sed 's/ *$//g'`
 echo $DOCKERRUNCMD > rancher_join_token.sh
+
+# Ajustar Server:
+sed -i 's|--server|--server https://'$RANCHER_SERVER'|' rancher_join_token.sh
 printf "\n\n"
-echo "   TOKEN ACIMA : CLUSTER JOIN"
+echo "   TOKEN ABAIXO : CLUSTER JOIN"
+cat rancher_join_token.sh
 printf "\n\n"
 
 ### CONFIGURANDO OS NODES :
