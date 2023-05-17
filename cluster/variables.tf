@@ -19,7 +19,8 @@ variable "ec2_name" {
 
 variable "instance_type" {
   # default     = "t2.micro"
-  default     = "t2.medium"
+  # default     = "t2.medium"
+  default     = "t2.large" # 4	CPUs e 16 GB
 }
 
 variable "key_name" {
