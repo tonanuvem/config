@@ -11,14 +11,11 @@ printf "\n\n\tRANCHER_SERVER:\n"
 echo ""
 echo "   Aguardando configurações: "
 
-ssh -o LogLevel=error -oStrictHostKeyChecking=no -i ~/environment/labsuser.pem ec2-user@$RANCHER_SERVER 'bash -s' < rancher_config_server.sh
+ssh -o LogLevel=error -oStrictHostKeyChecking=no -i ~/environment/labsuser.pem ec2-user@$RANCHER_SERVER 'bash -s' < rancher_config_credenciais.sh
 
-ssh -o LogLevel=error -oStrictHostKeyChecking=no -i ~/environment/labsuser.pem ec2-user@$RANCHER_SERVER 'bash -s' < rancher_get_cli.sh
-
-#ssh -o LogLevel=error -oStrictHostKeyChecking=no -i ~/environment/labsuser.pem ec2-user@$RANCHER_SERVER 'bash -s' < rancher_join_token.sh
+ssh -o LogLevel=error -oStrictHostKeyChecking=no -i ~/environment/labsuser.pem ec2-user@$RANCHER_SERVER 'bash -s' < rancher_config_cli_create.sh
 
 # Get Token
-#DOCKERRUNCMD=$(ssh -o LogLevel=error -oStrictHostKeyChecking=no -i ~/environment/labsuser.pem ec2-user@$RANCHER_SERVER 'cat DOCKERRUNCMD')
 DOCKERRUNCMD=$(ssh -o LogLevel=error -oStrictHostKeyChecking=no -i ~/environment/labsuser.pem ec2-user@$RANCHER_SERVER 'cat JOINTOKEN')
 # Echo command
 echo $DOCKERRUNCMD
