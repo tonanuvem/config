@@ -48,12 +48,14 @@ curl -s 'https://127.0.0.1/v3/clusterregistrationtoken' -H 'content-type: applic
 CLUSTERID=$(cat CLUSTERID)
 APITOKEN=$(cat APITOKEN)
 AGENTCMD=$(curl -s 'https://127.0.0.1/v3/clusterregistrationtoken?id="'$CLUSTERID'"' -H 'content-type: application/json' -H "Authorization: Bearer $APITOKEN" --insecure | jq -r '.data[].nodeCommand' | head -1)
-echo "AGENTCMD = $AGENTCMD"
+printf "\n\n\tTAGENTCMD = $AGENTCMD"
+echo $AGENTCMD > AGENTCMD
 
 printf "\n\n xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx \n"
 
 # Concat commands
 # Set role flags
+AGENTCMD=$(cat AGENTCMD)
 ROLEFLAGS="--etcd --controlplane --worker"
 DOCKERRUNCMD="$AGENTCMD $ROLEFLAGS"
 echo "$DOCKERRUNCMD" > DOCKERRUNCMD
