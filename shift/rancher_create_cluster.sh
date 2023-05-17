@@ -24,7 +24,7 @@ echo $DOCKERRUNCMD
 echo $DOCKERRUNCMD > rancher_join_token.sh
 
 # Ajustar Server:
-sed -i 's|--server|--server https://'$RANCHER_SERVER'|' rancher_join_token.sh
+sed -i 's|--server|--server https://fiap.'$RANCHER_SERVER'.nip.io |' rancher_join_token.sh
 printf "\n\n"
 echo "   TOKEN ABAIXO : CLUSTER JOIN"
 cat rancher_join_token.sh
