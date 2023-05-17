@@ -2,11 +2,13 @@
 CLUSTERID=$(cat CLUSTERID)
 APITOKEN=$(cat APITOKEN)
 echo "  Aguardando Token para o Cluster "
-while [ "$(curl -s 'https://127.0.0.1/v3/clusterregistrationtoken/' -H 'content-type: application/json' -H "Authorization: Bearer $APITOKEN" --insecure | grep nodeCommand | wc -l)" != "1" ]; do
+CMD=$(curl -s 'https://127.0.0.1/v3/clusterregistrationtoken?id="'$CLUSTERID'"' -H 'content-type: application/json' -H "Authorization: Bearer $APITOKEN" --insecure | jq -r '.data[].nodeCommand' | head -1)
+while [ $CMD != "1" ]; do
   printf "."
+  CMD=$(curl -s 'https://127.0.0.1/v3/clusterregistrationtoken?id="'$CLUSTERID'"' -H 'content-type: application/json' -H "Authorization: Bearer $APITOKEN" --insecure | jq -r '.data[].nodeCommand' | head -1)
   sleep 1
 done
-sleep 5
+sleep 1
 AGENTCMD=$(curl -s 'https://127.0.0.1/v3/clusterregistrationtoken?id="'$CLUSTERID'"' -H 'content-type: application/json' -H "Authorization: Bearer $APITOKEN" --insecure | jq -r '.data[].nodeCommand' | head -1)
 #printf "\n\n\tAGENTCMD = $AGENTCMD"
 echo $AGENTCMD > AGENTCMD
