@@ -21,7 +21,7 @@ echo $DOCKERRUNCMD
 # Remover espacos
 # TOKEN=$DOCKERRUNCMD
 # TOKEN=`echo $TOKEN | sed 's/ *$//g'`
-echo $DOCKERRUNCMD > nodes.sh
+echo $DOCKERRUNCMD > rancher_join_token.sh
 printf "\n\n"
 echo "   TOKEN ACIMA : CLUSTER JOIN"
 printf "\n\n"
@@ -35,7 +35,7 @@ for N in $(seq 1 $WORKER_NODES); do
     printf "\n\n"
     NODE=$(terraform output -json ip_externo | jq .[] | jq .[$N] | sed 's/"//g')
     echo "   CONFIGURANDO NODE $N ($NODE): JOIN"
-    ssh -oStrictHostKeyChecking=no -i ~/environment/labsuser.pem ec2-user@$NODE 'bash -s' < nodes.sh
+    ssh -oStrictHostKeyChecking=no -i ~/environment/labsuser.pem ec2-user@$NODE 'bash -s' < rancher_join_token.sh
 done
 
 ### CONCLUINDO
