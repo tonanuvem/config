@@ -10,7 +10,7 @@ export QTD_NODES=$(terraform output -json ip_externo | jq '.[] | length')
 export WORKER_NODES=$(expr $QTD_NODES - 1)
 
 # configurar inventario ansible
-echo '[server]' > inv.hosts
+echo '[servers]' > inv.hosts
 echo "rancher_server ansible_ssh_host=$RANCHER_SERVER" >> inv.hosts
 echo '' >> inv.hosts
 echo '[nodes]' >> inv.hosts
