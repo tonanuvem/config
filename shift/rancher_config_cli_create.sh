@@ -2,7 +2,9 @@
 # https://rancher.com/docs/rancher/v2.x/en/cli/
 # https://github.com/rancher/cli/releases
 
-wget https://github.com/rancher/cli/releases/download/v2.4.12/rancher-linux-amd64-v2.4.12.tar.gz
+# wget https://github.com/rancher/cli/releases/download/v2.4.12/rancher-linux-amd64-v2.4.12.tar.gz
+curl -s https://github.com/rancher/cli/releases/download/v2.4.12/rancher-linux-amd64-v2.4.12.tar.gz -o rancher-linux-amd64-v2.4.12.tar.gz
+
 tar -zxvf rancher-linux-amd64-v2.4.12.tar.gz
 sudo mv rancher-v2.4.12/rancher /usr/local/bin/
 
