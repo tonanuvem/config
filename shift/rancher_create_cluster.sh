@@ -25,7 +25,7 @@ echo $DOCKERRUNCMD > rancher_join_token.sh
 
 # Ajustar Server:
 #sed -i 's|--server|--server https://fiap.'$RANCHER_SERVER'.nip.io |' rancher_join_token.sh
-sed -i 's|sudo docker run -d --privileged --restart=unless-stopped --net=host -v /etc/kubernetes:/etc/kubernetes -v /var/run:/var/run rancher/rancher-agent:v2.7.3 --server|curl --insecure -fL https://fiap.34.227.89.181.nip.io/system-agent-install.sh | sudo  sh -s - --server https://fiap.'$RANCHER_SERVER'.nip.io --label "cattle.io/os=linux" |' rancher_join_token.sh
+sed -i 's|sudo docker run -d --privileged --restart=unless-stopped --net=host -v /etc/kubernetes:/etc/kubernetes -v /var/run:/var/run rancher/rancher-agent:v2.7.3 --server|curl --insecure -fL https://fiap.34.227.89.181.nip.io/system-agent-install.sh && sudo  sh -s - --server https://fiap.'$RANCHER_SERVER'.nip.io --label "cattle.io/os=linux" |' rancher_join_token.sh
 printf "\n\n"
 echo "   TOKEN ABAIXO : CLUSTER JOIN"
 cat rancher_join_token.sh
