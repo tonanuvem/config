@@ -48,6 +48,8 @@ curl -s 'https://127.0.0.1/v3/clusterregistrationtoken' -H 'content-type: applic
 ROLEFLAGS="--etcd --controlplane --worker"
 
 # Generate nodecommand
+CLUSTERID=$(cat CLUSTERID)
+APITOKEN=$(cat APITOKEN)
 AGENTCMD=$(curl -s 'https://127.0.0.1/v3/clusterregistrationtoken?id="'$CLUSTERID'"' -H 'content-type: application/json' -H "Authorization: Bearer $APITOKEN" --insecure | jq -r '.data[].nodeCommand' | head -1)
 echo "AGENTCMD = $AGENTCMD"
 
