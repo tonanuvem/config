@@ -9,7 +9,7 @@ WORKER_NODES=$(expr $QTD_NODES - 1)
 export IP=$RANCHER_SERVER
 echo "   Aguardando RANCHER_SERVER com IP = $IP: "
 while [ $(ssh -q -oStrictHostKeyChecking=no -i ~/environment/labsuser.pem ec2-user@$IP "echo CONECTADO1" | grep CONECTADO1 | wc -l) != '1' ]; do { printf .; sleep 1; } done
-echo "   Conectado ao MASTER"
+echo "   Conectado ao RANCHER_SERVER"
 
 # Aguardando Nodes
 for N in $(seq 1 $WORKER_NODES); do
