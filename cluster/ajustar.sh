@@ -21,4 +21,4 @@ ansible-playbook ~/environment/config/ansible/ansible_hosts.yml --inventory inv.
 ansible-playbook ~/environment/config/ansible/ansible_utils.yml --inventory inv.hosts -u ec2-user --key-file ~/environment/labsuser.pem
 ansible-playbook ~/environment/config/ansible/ansible_docker.yml --inventory inv.hosts -u ec2-user --key-file ~/environment/labsuser.pem
 ansible-playbook ~/environment/config/ansible/ansible_k8s.yml --inventory inv.hosts -u ec2-user --key-file ~/environment/labsuser.pem
-
+ansible-playbook ~/environment/config/ansible/k8s_storage_helm_wordpress.yml  --inventory inv.hosts -u ec2-user --key-file ~/environment/labsuser.pem
