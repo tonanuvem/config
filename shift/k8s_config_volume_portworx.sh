@@ -27,7 +27,7 @@ kubectl get pods -o wide -n kube-system -l name=portworx
 
 # Aguadar até: Ready 1/1 (Demora uns 4 min) --> Para sair, CTRL + C
 echo "Aguardando PORTWORX: GERENCIAMENTO DE VOLUMES (geralmente 4 min): "
-while [ "$(kubectl get pods -o wide -n kube-system -l name=portworx | grep Running | wc -l)" != "$WORKER_NODES" ]; do
+while [ "$(kubectl get pods -o wide -n kube-system -l name=portworx | grep 2/2 | wc -l)" != "$WORKER_NODES" ]; do
 #while [ "$(kubectl get pods -o wide -n kube-system -l name=portworx | grep 1/1 | wc -l)" != "3" ]; do
   printf "."
   sleep 1
