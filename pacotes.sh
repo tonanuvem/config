@@ -1,5 +1,7 @@
 #!/bin/bash
 
+sudo apt-get update
+
 echo "Aguardando Cloud9 (geralmente 4 min): apt.systemd.daily update."
 while [ "$(ps aux | grep -i apt | wc -l)" != "1" ]; do
   printf "."
