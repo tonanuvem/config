@@ -17,7 +17,7 @@ variable "tamanho_disco" {
 
 variable "ec2_name" {
   type        = string
-  default     = "fiap_vm_medium_2cpus_4gb"
+  default     = "fiap_vm_k8s"
 }
 
 variable "key_name" {
