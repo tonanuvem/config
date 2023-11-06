@@ -25,6 +25,6 @@ variable "aws_region" {
 variable "aws_amis" {
   default = {
     # us-east-1 = "ami-0c2b8ca1dad447f8a" # amazon linux 1
-    us-east-1 = "ami-0e8a34246278c21e4" # amazon linux 2 (v. 2003)
+    us-east-1 = "ami-0e8a34246278c21e4" # amazon linux 2 (v. 202311)
   }
 }
