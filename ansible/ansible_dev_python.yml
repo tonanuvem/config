@@ -2,6 +2,7 @@
 # https://docs.ansible.com/ansible/2.9/modules/modules_by_category.html
 # https://docs.ansible.com/ansible/latest/user_guide/playbooks_conditionals.html#playbooks-conditionals
 # https://docs.ansible.com/ansible/latest/user_guide/playbooks_loops.html#playbooks-loops
+# https://stackoverflow.com/questions/74750329/ansible-playbook-to-install-packages-using-yum-and-dnf
   - name: Instalação das ferramentas DEV Python
     hosts: all
     tasks:
