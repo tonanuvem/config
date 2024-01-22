@@ -6,7 +6,10 @@
 SIZE=${1:-100}
 
 # Get the ID of the environment host Amazon EC2 instance.
-INSTANCEID=$(curl http://169.254.169.254/latest/meta-data//instance-id)
+#INSTANCEID=$(curl http://169.254.169.254/latest/meta-data//instance-id)
+
+TOKEN=$(curl -X PUT "http://169.254.169.254/latest/api/token" -H "X-aws-ec2-metadata-token-ttl-seconds: 21600")
+INSTANCEID=$(curl -H "X-aws-ec2-metadata-token: $TOKEN" http://169.254.169.254/latest/meta-data///instance-id)
 
 # Get the ID of the Amazon EBS volume associated with the instance.
 VOLUMEID=$(aws ec2 describe-instances \
