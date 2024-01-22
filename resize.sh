@@ -7,7 +7,7 @@ SIZE=${1:-100}
 
 # Get the ID of the environment host Amazon EC2 instance.
 #INSTANCEID=$(curl http://169.254.169.254/latest/meta-data//instance-id)
-
+# https://docs.aws.amazon.com/pt_br/AWSEC2/latest/UserGuide/instancedata-data-retrieval.html
 TOKEN=$(curl -X PUT "http://169.254.169.254/latest/api/token" -H "X-aws-ec2-metadata-token-ttl-seconds: 21600")
 INSTANCEID=$(curl -H "X-aws-ec2-metadata-token: $TOKEN" http://169.254.169.254/latest/meta-data///instance-id)
 
