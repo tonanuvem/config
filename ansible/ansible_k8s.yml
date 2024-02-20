@@ -154,7 +154,8 @@
           
         - name: Instalar helm
           shell: |
-            curl -s https://get.helm.sh/helm-v3.1.2-linux-amd64.tar.gz -o helm-linux-amd64.tar.gz
+            #curl -s https://get.helm.sh/helm-v3.1.2-linux-amd64.tar.gz -o helm-linux-amd64.tar.gz
+            curl -s https://get.helm.sh/helm-v3.14.1-linux-amd64.tar.gz -o helm-linux-amd64.tar.gz
             tar -zxvf helm-linux-amd64.tar.gz
             sudo mv linux-amd64/helm /usr/local/bin/helm
             rm -rf helm-linux-amd64.tar.gz linux-amd64
