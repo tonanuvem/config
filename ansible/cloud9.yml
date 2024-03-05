@@ -62,7 +62,7 @@
     become: yes
     shell: |
       curl -s "https://get.sdkman.io" | bash > /dev/null
-      source "$HOME/.sdkman/bin/sdkman-init.sh"
+      sh "$HOME/.sdkman/bin/sdkman-init.sh"
       #source "$HOME/.sdkman/bin/sdkman-init.sh"
       sdk install springboot 2.7.10
       spring version
