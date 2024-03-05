@@ -20,7 +20,8 @@ echo "\n\n Configurar pre-req para instalação do Ansible"
 # configurar pre-req (inventario) ansible
 export VM=$(curl -s checkip.amazonaws.com)
 echo '[nodes]' > hosts
-echo "cloud9 ansible_ssh_host=$VM" >> hosts
+echo "localhost ansible_connection=local" >> hosts
+#echo "cloud9 ansible_ssh_host=$VM" >> hosts
 echo '' >> hosts
 export ANSIBLE_PYTHON_INTERPRETER=auto_silent
 export ANSIBLE_DEPRECATION_WARNINGS=false
