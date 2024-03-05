@@ -1,6 +1,8 @@
-#- hosts: localhost
+#- hosts: all
 
-- hosts: all
+- name: Preparando Cloud9
+  hosts: localhost
+  connection: local
   tasks:
   - name: utils desabilita SSH host key checking
     ansible.builtin.copy:
