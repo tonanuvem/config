@@ -16,10 +16,10 @@ export ANSIBLE_DEPRECATION_WARNINGS=false
 export ANSIBLE_DISPLAY_SKIPPED_HOSTS=false
 
 # verificar o tamanho do disco
-printf "\n\tVERIFICA O TAMANHO DO DISCO :\n"
+printf "\n\tVERIFICA O TAMANHO DO DISCO :\n\n"
 if [ $(df -mh | grep 97G | wc -l) = "1" ]
 then
-  printf "\t\tDISCO OK!\n"
+  printf "\t\tDISCO OK!\n\n"
   sh ansible.sh
 else
   echo "\t\tTamanho do disco talvez seja insuficiente. (em caso de erro, executar: \"sh ~/environment/config/resize.sh 100\")"
