@@ -1,3 +1,5 @@
+#!/bin/bash
+
 echo "O nome do grupo de seguranca será exibido a seguir, aguardar."
 echo ""
 aws ec2 describe-security-groups | grep GroupName
