@@ -1,6 +1,6 @@
 ---
-  - name: Check the remote host uptime
-    hosts: testservers
+  - name: Verificar host uptime
+    hosts: all
     tasks:
       - name: Execute the Uptime command over Command module
         register: uptimeoutput
