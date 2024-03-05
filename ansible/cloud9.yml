@@ -66,7 +66,9 @@
       #source "$HOME/.sdkman/bin/sdkman-init.sh"
       sdk install springboot 2.7.10
       spring version
-
+    args:
+      executable: /bin/bash
+      
   - name: Instalar o docker-compose
     become: yes
     shell: |
