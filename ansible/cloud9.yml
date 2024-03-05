@@ -54,7 +54,7 @@
       mode: u+rwx,g+rwx,o+rx
 
 
-  - name: Instalacão do Maven Java:
+  - name: Instalacão do Maven Java
     become: yes
     shell: |
       curl -s "https://get.sdkman.io" | bash > /dev/null
@@ -62,13 +62,13 @@
       sdk install springboot 2.7.10
       spring version
 
-  - name: Instalar o docker-compose:
+  - name: Instalar o docker-compose
     become: yes
     shell: |
       sudo curl -L "https://github.com/docker/compose/releases/download/v2.14.2/docker-compose-linux-x86_64" -o /usr/local/bin/docker-compose
       sudo chmod +x /usr/local/bin/docker-compose
 
-  - name: Instalar o Terraform:
+  - name: Instalar o Terraform
     become: yes
     shell: |
       curl -s "https://releases.hashicorp.com/terraform/0.12.29/terraform_0.12.29_linux_amd64.zip" -o "terraform_linux_amd64.zip"
@@ -76,7 +76,7 @@
       sudo mv terraform /usr/bin/
       rm -rf terraform_linux_amd64.zip
 
-  - name: Instalar ferramentas K8S:
+  - name: Instalar ferramentas K8S
     become: yes
     shell: |
       # minikube
@@ -124,7 +124,7 @@
     when: ansible_os_family == "Debian"
 
 
-  - name: Verificando as versões instaladas e atualizar permissão docker:
+  - name: Verificando as versões instaladas e atualizar permissão docker
     become: yes
     shell: |
       printf "\n\n xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx \n"
