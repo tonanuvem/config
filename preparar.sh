@@ -27,7 +27,7 @@ else
 fi
 
 echo "\n\n Configurar Cloud9 com Ansible"
-ansible-playbook ~/environment/config/ansible/cloud9.yml --inventory hosts 
+ansible-playbook ~/environment/config/ansible/cloud9.yml --inventory ~/environment/config/hosts 
   #-u ubuntu --key-file ~/environment/labsuser.pem
 
 echo " Liberando firewall para o ambiente do Cloud9"
