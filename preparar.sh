@@ -43,4 +43,4 @@ fi
 
 
 ## FIM
-source ~/.bash_profile
+#source ~/.bash_profile
