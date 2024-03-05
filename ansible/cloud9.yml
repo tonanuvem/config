@@ -58,14 +58,14 @@
       mode: u+rwx,g+rwx,o+rx
 
 
-  - name: Instalacão do Maven Java
+  - name: Instalacão do Springboot
     become: yes
     shell: |
       curl -s "https://get.sdkman.io" | bash > /dev/null
-      sh ~/.sdkman/bin/sdkman-init.sh
+      bash ~/.sdkman/bin/sdkman-init.sh
       #source "$HOME/.sdkman/bin/sdkman-init.sh"
-      sdk install springboot 2.7.10
-      spring version
+      #sdk install springboot 2.7.10
+      #spring version
     args:
       executable: /bin/bash
       
