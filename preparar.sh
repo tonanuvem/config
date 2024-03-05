@@ -39,10 +39,10 @@ else
 fi
 
 echo "\n\n Configurar Cloud9 com Ansible"
-ansible-playbook ~/environment/config/ansible/cloud9.yml 
-  #--inventory hosts -u ubuntu --key-file ~/environment/labsuser.pem
+ansible-playbook ~/environment/config/ansible/cloud9.yml --inventory hosts 
+  #-u ubuntu --key-file ~/environment/labsuser.pem
 
-ansible-playbook ~/environment/config/ansible/ansible_verificar.yml 
+ansible-playbook ~/environment/config/ansible/ansible_verificar.yml --inventory hosts
 
 ## FIM
 source ~/.bash_profile
