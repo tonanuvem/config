@@ -20,7 +20,7 @@ printf "\n\tVERIFICA O TAMANHO DO DISCO :\n\n"
 if [ $(df -mh | grep 97G | wc -l) = "1" ]
 then
   printf "\t\tDISCO OK!\n\n"
-  sh ansible.sh
+  bash ~/environment/config/ansible.sh
 else
   echo "\t\tTamanho do disco talvez seja insuficiente. (em caso de erro, executar: \"sh ~/environment/config/resize.sh 100\")"
   exit
