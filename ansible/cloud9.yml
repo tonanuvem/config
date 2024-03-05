@@ -10,15 +10,6 @@
         Host *
          StrictHostKeyChecking no
          UserKnownHostsFile=/dev/null
-    #opcao 2:
-    #become: yes
-    #shell: |
-    #  sudo cat >> ~/.ssh/config <<EOL
-    #  Host *
-    #     StrictHostKeyChecking no
-    #     UserKnownHostsFile=/dev/null
-    #  EOL
-    #when: ansible_os_family == 'Ubuntu' or ansible_os_family == 'Debian'
 
   - name: Preparar utilitário ccat
     ansible.builtin.shell: |
@@ -31,12 +22,12 @@
     args:
       executable: /bin/bash
       
-  - name: Ajustar o .bashrc (ubuntu)
-    shell: |
-      cp /etc/skel/.bashrc ~/
-    args:
-      executable: /bin/bash
-    when: ansible_os_family == "Debian"
+  #- name: Ajustar o .bashrc (ubuntu)
+  #  shell: |
+  #    cp /etc/skel/.bashrc ~/
+  #  args:
+  #    executable: /bin/bash
+  #  when: ansible_os_family == "Debian"
 
   - name: atualizar index page
     become: yes
@@ -49,7 +40,7 @@
       content: |
         for region in us-east-1 us-west-2
         do
-          aws ec2 describe-instances --region \$region --query "Reservations[*].Instances[*].[PublicIpAddress, Tags[?Key=='Name'].Value|[0]]" --output text | grep -v None
+          aws ec2 describe-instances --region $region --query "Reservations[*].Instances[*].[PublicIpAddress, Tags[?Key=='Name'].Value|[0]]" --output text | grep -v None
         done
   - name: Mudar a permissao do arquivo ~/ip
     ansible.builtin.file:
@@ -61,10 +52,10 @@
     become: yes
     shell: |
       curl -s "https://get.sdkman.io" | bash > /dev/null
-      bash ~/.sdkman/bin/sdkman-init.sh
+      #bash ~/.sdkman/bin/sdkman-init.sh
       #source "$HOME/.sdkman/bin/sdkman-init.sh"
-      sdk install springboot 2.7.10
-      spring version
+      #sdk install springboot 2.7.10
+      #spring version
     args:
       executable: /bin/bash
       
