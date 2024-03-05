@@ -1,0 +1,189 @@
+- hosts: all
+  tasks:
+  - name: utils: desabilita SSH host key checking
+    ansible.builtin.copy:
+      dest: "~/.ssh/config"
+      content: |
+        Host *
+         StrictHostKeyChecking no
+         UserKnownHostsFile=/dev/null
+    #opcao 2:
+    #become: yes
+    #shell: |
+    #  sudo cat >> ~/.ssh/config <<EOL
+    #  Host *
+    #     StrictHostKeyChecking no
+    #     UserKnownHostsFile=/dev/null
+    #  EOL
+    #when: ansible_os_family == 'Ubuntu' or ansible_os_family == 'Debian'
+
+  - name: Preparar utilitário ccat
+    ansible.builtin.shell: |
+      wget https://github.com/jingweno/ccat/releases/download/v1.1.0/linux-amd64-1.1.0.tar.gz
+      tar -zxvf linux-amd64-1.1.0.tar.gz 
+      chmod +x linux-amd64-1.1.0/ccat
+      sudo mv linux-amd64-1.1.0/ccat /usr/local/bin/ccat
+      echo "alias cat='/usr/local/bin/ccat --bg=dark'" | sudo tee -a /etc/profile
+      rm -rf linux-amd64-1.1.0*
+    args:
+      executable: /bin/bash
+      
+  - name: Ajustar o .bashrc (ubuntu)
+    shell: |
+      cp /etc/skel/.bashrc ~/
+    args:
+      executable: /bin/bash
+    when: ansible_os_family == "Debian"
+
+  - name: atualizar index page
+    become: yes
+    shell: |
+      sudo curl -s "https://tonanuvem.github.io/page/docs/hero.html" -o "/var/www/html/index.html" 
+  
+  - name: Criar o arquivo ~/ip para pegar o IP da maquina
+    ansible.builtin.copy:
+      dest: "~/environment/ip"
+      content: |
+        for region in us-east-1 us-west-2
+        do
+          aws ec2 describe-instances --region \$region --query "Reservations[*].Instances[*].[PublicIpAddress, Tags[?Key=='Name'].Value|[0]]" --output text | grep -v None
+        done
+  - name: Mudar a permissao do arquivo ~/ip
+    ansible.builtin.file:
+      path: ~/environment/ip
+      mode: u+rwx,g+rwx,o+rx
+
+
+  - name: Instalacão do Maven Java:
+    become: yes
+    shell: |
+      curl -s "https://get.sdkman.io" | bash > /dev/null
+      source "$HOME/.sdkman/bin/sdkman-init.sh"
+      sdk install springboot 2.7.10
+      spring version
+
+  - name: Instalar o docker-compose:
+    become: yes
+    shell: |
+      sudo curl -L "https://github.com/docker/compose/releases/download/v2.14.2/docker-compose-linux-x86_64" -o /usr/local/bin/docker-compose
+      sudo chmod +x /usr/local/bin/docker-compose
+
+  - name: Instalar o Terraform:
+    become: yes
+    shell: |
+      curl -s "https://releases.hashicorp.com/terraform/0.12.29/terraform_0.12.29_linux_amd64.zip" -o "terraform_linux_amd64.zip"
+      unzip terraform_linux_amd64.zip
+      sudo mv terraform /usr/bin/
+      rm -rf terraform_linux_amd64.zip
+
+  - name: Instalar ferramentas K8S:
+    become: yes
+    shell: |
+      # minikube
+      curl -s "https://storage.googleapis.com/minikube/releases/latest/minikube-linux-amd64" -o "minikube-linux"
+      chmod +x minikube-linux 
+      sudo mv minikube-linux /usr/bin/minikube
+      mkdir $HOME/.kube && mkdir $HOME/.minikube 
+      sudo chown -R $USER $HOME/.kube
+      sudo chown -R $USER $HOME/.minikube
+      sudo chmod -R u+wrx $HOME/.minikube
+      sudo snap install kubectl --classic
+      # helm
+      curl -s https://get.helm.sh/helm-v3.1.2-linux-amd64.tar.gz -o helm-linux-amd64.tar.gz
+      tar -zxvf helm-linux-amd64.tar.gz
+      sudo mv linux-amd64/helm /usr/local/bin/helm
+      rm -rf linux-amd64
+      rm -rf helm-linux-amd64.tar.gz
+
+  - name: Instalar lista de pacotes (ubuntu)
+    become: yes
+    apt:
+      name:
+        - python3
+        - python3-pip
+        - python3-venv
+        - wget
+        - git
+        - jq
+        - maven 
+        - build-essential 
+        - zlib1g-dev 
+        - libssl-dev 
+        - libncurses-dev 
+        - libffi-dev 
+        - libsqlite3-dev 
+        - libreadline-dev 
+        - libbz2-dev
+      state: present
+      update_cache: true
+      cache_valid_time: 3600
+      force_apt_get: true
+    register: apt_action
+    retries: 100
+    until: apt_action is success or ('Failed to lock apt for exclusive operation' not in apt_action.msg and '/var/lib/dpkg/lock' not in apt_action.msg)
+    when: ansible_os_family == "Debian"
+
+
+  - name: Verificando as versões instaladas e atualizar permissão docker:
+    become: yes
+    shell: |
+      printf "\n\n xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx \n"
+      printf "\n\n\tVerificando as instações:\n\n"
+      printf "\n\n\tDEV TOOLS:\n\n"
+      printf "\n\tJAVA:\n"
+      java -version
+      javac -version
+      printf "\n\tMAVEN:\n"
+      mvn -version
+      printf "\n\tSPRING:\n"
+      spring --version
+      printf "\n\tPYTHON:\n"
+      python3 --version
+      printf "\n\tPIP:\n"
+      pip3 --version
+      printf "\n\n\tOPS TOOLS:\n\n"
+      printf "\n\tDOCKER:\n"
+      sudo docker version
+      docker-compose --version
+      printf "\n\tAWSCLI:\n"
+      aws --version
+      printf "\n\tTERRAFORM:\n"
+      terraform --version
+      #printf "\n\tANSIBLE:\n"
+      #ansible --version
+      printf "\n\tMINIKUBE:\n"
+      minikube version
+      printf "\n\tKUBECTL:\n"
+      kubectl version --client
+      printf "\n\tHELM:\n"
+      helm version -c
+      printf "\n\tEXIBE DISCO :\n"
+      df -mh | grep dev
+      #liberando acesso externo
+      printf "\n\tAPLICANDO ULTIMAS CONFIGURAÇÕES:\n"
+      #sudo apt-get -y install jq > /dev/null
+      source ~/environment/config/pacotes.sh
+      printf "\n\tMAVEN:\n"
+      mvn -version
+
+
+  - name: Instalar lista de pacotes (ubuntu)
+    become: yes
+    apt:
+    #ansible.builtin.package:
+      name:
+        - python3
+        - python3-pip
+        - python3-venv
+        - wget
+        - git
+        - jq
+      state: present
+      update_cache: true
+      cache_valid_time: 3600
+      force_apt_get: true
+    register: apt_action
+    retries: 100
+    until: apt_action is success or ('Failed to lock apt for exclusive operation' not in apt_action.msg and '/var/lib/dpkg/lock' not in apt_action.msg)
+    when: ansible_os_family == "Debian"
+    
