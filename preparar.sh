@@ -12,7 +12,7 @@ then
   aws ec2 authorize-security-group-ingress --group-name $NOME_GRUPO_SEGURANCA --protocol tcp --port 0-65535 --cidr 0.0.0.0/0
 else
   # escolher manualmente dentre os securty groups existentes
-  sh ~/environment/config/firewall_allow.sh
+  bash ~/environment/config/firewall_allow.sh
 fi
 #sh ~/environment/config/resize.sh 100 > /dev/null
 
