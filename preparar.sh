@@ -1,6 +1,6 @@
 #!/bin/bash
 
-echo " Aumentando o tamanho do disco para 100G, podem aparecer Warnings"
+echo "\n\n Aumentando o tamanho do disco para 100G, podem aparecer Warnings"
 # aumentando o disco para 100G e 
 sh ~/environment/config/resize.sh 100 > /dev/null
 
