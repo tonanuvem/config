@@ -42,6 +42,8 @@ df -mh | grep dev
 #liberando acesso externo
 printf "\n\tAPLICANDO ULTIMAS CONFIGURAÇÕES:\n"
 #sudo apt-get -y install jq > /dev/null
-sh ~/environment/config/pacotes.sh
+
+#sh ~/environment/config/pacotes.sh
+
 printf "\n\tMAVEN:\n"
 mvn -version
