@@ -1,5 +1,8 @@
 #!/bin/bash
 
+echo "\n\n Ajustando permissão do arquivo labsuser.pem"
+chmod 400 ~/environment/labsuser.pem
+
 echo "\n\n Aumentando o tamanho do disco para 100G, podem aparecer Warnings"
 # aumentando o disco para 100G e 
 sh ~/environment/config/resize.sh 100 > /dev/null
