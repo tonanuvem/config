@@ -111,6 +111,7 @@
         - libsqlite3-dev 
         - libreadline-dev 
         - libbz2-dev
+        - openjdk-17-jdk
       state: present
       update_cache: true
       cache_valid_time: 3600
