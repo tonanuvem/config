@@ -2,7 +2,7 @@
 
 echo "\n\n Ajustando permissão do arquivo labsuser.pem"
 # verificar o tamanho do disco
-printf "\n\tVERIFICA ARQUIVO DE CHAVE labsuser.pem :\n\n"
+printf "\n\tVERIFICANDO ARQUIVO DE CHAVE labsuser.pem :\n\n"
 if [ $(ls ~/environment/ | grep labsuser.pem | wc -l) = "1" ]
 then
   printf "\t\tARQUIVO labsuser.pem OK!\n\n"
@@ -28,7 +28,7 @@ export ANSIBLE_DEPRECATION_WARNINGS=false
 export ANSIBLE_DISPLAY_SKIPPED_HOSTS=false
 
 # verificar o tamanho do disco
-printf "\n\tVERIFICA O TAMANHO DO DISCO :\n\n"
+printf "\n\tVERIFICANDO O TAMANHO DO DISCO :\n\n"
 if [ $(df -mh | grep 97G | wc -l) = "1" ]
 then
   printf "\t\tDISCO OK!\n\n"
@@ -38,7 +38,7 @@ else
   exit
 fi
 
-echo "\n\n Configurar Cloud9 com Ansible"
+echo "\n\n Configurando Cloud9 com Ansible"
 ansible-playbook ~/environment/config/ansible/cloud9.yml --inventory ~/environment/config/hosts 
   #-u ubuntu --key-file ~/environment/labsuser.pem
 
