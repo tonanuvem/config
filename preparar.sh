@@ -8,7 +8,7 @@ then
   printf "\t\tARQUIVO labsuser.pem OK!\n\n"
   chmod 400 ~/environment/labsuser.pem
 else
-  echo "\t\tArquivo labsuser.pem não encontrado, você deve fazer o upload do arquivo para o Cloud9"
+  echo "\t\tArquivo labsuser.pem não encontrado, você deve fazer o upload do arquivo para o Cloud9\n\n"
   exit
 fi
 
