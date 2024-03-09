@@ -1,7 +1,16 @@
 #!/bin/bash
 
 echo "\n\n Ajustando permissão do arquivo labsuser.pem"
-chmod 400 ~/environment/labsuser.pem
+# verificar o tamanho do disco
+printf "\n\tVERIFICA ARQUIVO DE CHAVE labsuser.pem :\n\n"
+if [ $(ls ~/environment/ | grep labsuser.pem | wc -l) = "1" ]
+then
+  printf "\t\tARQUIVO labsuser.pem OK!\n\n"
+  chmod 400 ~/environment/labsuser.pem
+else
+  echo "\t\tArquivo labsuser.pem não encontrado, você deve fazer o upload do arquivo para o Cloud9"
+  exit
+fi
 
 echo "\n\n Aumentando o tamanho do disco para 100G, podem aparecer Warnings\n\n"
 # aumentando o disco para 100G e 
