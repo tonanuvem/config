@@ -42,6 +42,9 @@ echo "\n\n Configurando Cloud9 com Ansible"
 ansible-playbook ~/environment/config/ansible/cloud9.yml --inventory ~/environment/config/hosts 
   #-u ubuntu --key-file ~/environment/labsuser.pem
 
+echo "\n\n Configurando Cloud9 com Spring"
+bash ~/environment/config/spring.sh
+
 echo " Liberando firewall para o ambiente do Cloud9"
 if [ $(aws ec2 describe-security-groups | jq '.SecurityGroups[] | select(.GroupName | contains("cloud9")) | .GroupName' | wc -l) = "1" ]
 then
