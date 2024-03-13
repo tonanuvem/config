@@ -1,5 +1,6 @@
 #!/bin/bash
 
+cd ~/environment
 curl -s "https://get.sdkman.io" | bash > /dev/null
 bash ~/.sdkman/bin/sdkman-init.sh
 . "$HOME/.sdkman/bin/sdkman-init.sh"
