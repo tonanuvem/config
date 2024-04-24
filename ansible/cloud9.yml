@@ -68,7 +68,8 @@
   - name: Instalar o Terraform
     become: yes
     shell: |
-      curl -s "https://releases.hashicorp.com/terraform/0.12.29/terraform_0.12.29_linux_amd64.zip" -o "terraform_linux_amd64.zip"
+      #curl -s "https://releases.hashicorp.com/terraform/0.12.29/terraform_0.12.29_linux_amd64.zip" -o "terraform_linux_amd64.zip"
+      curl -s "https://releases.hashicorp.com/terraform/1.8.2/terraform_1.8.2_linux_amd64.zip" -o "terraform_linux_amd64.zip"
       unzip terraform_linux_amd64.zip
       sudo mv terraform /usr/bin/
       rm -rf terraform_linux_amd64.zip
