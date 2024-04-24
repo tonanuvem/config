@@ -59,3 +59,6 @@ fi
 
 ## FIM
 #source ~/.bash_profile
+echo ""
+echo "  FIM!! Cloud9 foi configurado!"
+echo ""
