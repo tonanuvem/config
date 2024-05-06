@@ -8,11 +8,11 @@ export ANSIBLE_DISPLAY_SKIPPED_HOSTS=false
 # configurar inventario ansible
 echo '' > inv.hosts
 echo '[nodes]' >> inv.hosts
-NODE1=$(terraform output Node_1_ip_externo)
+NODE1=$(terraform output -raw Node_1_ip_externo)
 echo "node1 ansible_ssh_host=$NODE1" >> inv.hosts
-NODE2=$(terraform output Node_2_ip_externo)
+NODE2=$(terraform output -raw Node_2_ip_externo)
 echo "node2 ansible_ssh_host=$NODE2" >> inv.hosts
-NODE3=$(terraform output Node_3_ip_externo)
+NODE3=$(terraform output -raw Node_3_ip_externo)
 echo "node3 ansible_ssh_host=$NODE3" >> inv.hosts
 
 # aplicar configurações
