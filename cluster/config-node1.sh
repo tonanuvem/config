@@ -6,7 +6,7 @@ printf "\n\n\tNODE 1: configurando hostname\n\n"
 echo ""
 echo "   Aguardando configurações: "
 sleep 10
-export IP=$(terraform output Node_1_ip_externo)
+export IP=$(terraform output -raw Node_1_ip_externo)
 while [ $(ssh -q -oStrictHostKeyChecking=no -i ~/environment/labsuser.pem ec2-user@$IP "echo CONECTADO" | grep CONECTADO | wc -l) != '1' ]; do { printf .; sleep 1; } done
 echo "   Conectado ao $IP, verificando ajustes: "
 ssh -o LogLevel=error -i ~/environment/labsuser.pem ec2-user@$IP "while [ \$(ls /usr/local/bin/ | grep docker-compose | wc -l) != '1' ]; do { printf .; sleep 1; } done"
