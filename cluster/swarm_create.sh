@@ -1,6 +1,6 @@
-NODE1=$(terraform output Node_1_ip_externo)
-NODE2=$(terraform output Node_2_ip_externo)
-NODE3=$(terraform output Node_3_ip_externo)
+NODE1=$(terraform output -raw Node_1_ip_externo)
+NODE2=$(terraform output -raw Node_2_ip_externo)
+NODE3=$(terraform output -raw Node_3_ip_externo)
 
 # Criando arquivos vazios para receber os comandos
 > init.sh
