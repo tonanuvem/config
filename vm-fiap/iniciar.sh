@@ -2,7 +2,7 @@ terraform init; terraform plan; terraform apply -auto-approve
 echo ""
 echo "   Aguardando configurações: "
 sleep 10
-export IP=$(terraform output ip_externo)
+export IP=$(terraform output -raw ip_externo)
 while [ $(ssh -q -oStrictHostKeyChecking=no -i ~/environment/labsuser.pem ec2-user@$IP "echo CONECTADO" | grep CONECTADO | wc -l) != '1' ]; do { printf .; sleep 1; } done
 echo "   Conectado ao $IP, verificando ajustes: "
 sh ajustar.sh
