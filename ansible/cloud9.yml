@@ -100,7 +100,7 @@
         - python3
         - python3-pip
         - python3-venv
-        - python3-dnf
+        #- python3-dnf
         - wget
         - git
         - jq
