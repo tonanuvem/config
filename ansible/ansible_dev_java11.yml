@@ -39,7 +39,7 @@
         - name: Verificar Java e Maven
           shell: |
             java --version
-            -mvn --version
+            mvn --version
           args:
             executable: /bin/bash
           register: log
