@@ -9,7 +9,7 @@
             name: "{{ inventory_hostname }}"
             
   - name: Exibir informações sobre a VM
-  - hosts: all
+    hosts: all
     become: true
     gather_facts: yes
     tasks:
