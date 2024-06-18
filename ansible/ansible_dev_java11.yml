@@ -2,10 +2,10 @@
 # https://docs.ansible.com/ansible/2.9/modules/modules_by_category.html
 # https://docs.ansible.com/ansible/latest/user_guide/playbooks_conditionals.html#playbooks-conditionals
 # https://docs.ansible.com/ansible/latest/user_guide/playbooks_loops.html#playbooks-loops
-  - name: Instalação das ferramentas DEV Java 11 no Amazon Linux 2
+  - name: Instalação das ferramentas DEV
     hosts: all
     tasks:
-        - name: Instalar Java e Maven
+        - name: Instalar Java 11 no Amazon Linux 2
           become: yes
           shell: |
             sudo amazon-linux-extras install java-openjdk11 -y
