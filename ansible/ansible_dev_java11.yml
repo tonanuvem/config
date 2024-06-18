@@ -2,7 +2,7 @@
 # https://docs.ansible.com/ansible/2.9/modules/modules_by_category.html
 # https://docs.ansible.com/ansible/latest/user_guide/playbooks_conditionals.html#playbooks-conditionals
 # https://docs.ansible.com/ansible/latest/user_guide/playbooks_loops.html#playbooks-loops
-  - name: Instalação das ferramentas DEV Java
+  - name: Instalação das ferramentas DEV Java 11 no Amazon Linux 2
     hosts: all
     tasks:
         - name: Instalar Java e Maven
@@ -22,11 +22,24 @@
             echo 'export PATH=/opt/maven/bin:${PATH}' | sudo tee -a /etc/profile
           args:
             executable: /bin/bash
+          when: (ansible_os_family == "RedHat") and (ansible_distribution_major_version == "2")
 
+        - name: Instalação das ferramentas DEV Java 22 no Amazon Linux 2023
+          become: yes
+          #yum:
+          ansible.builtin.package:
+            name:
+              - java-22-amazon-corretto-devel
+              - maven
+            state: present
+            disable_gpg_check: yes
+            lock_timeout: 180
+          when: ansible_os_family == "RedHat"
+    
         - name: Verificar Java e Maven
           shell: |
             java --version
-            #mvn --version
+            -mvn --version
           args:
             executable: /bin/bash
           register: log
