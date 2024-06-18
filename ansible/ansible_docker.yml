@@ -49,11 +49,10 @@
           #shell: "amazon-linux-extras install docker -y"
           shell: |
             amazon-linux-extras install docker -y
-          when: (ansible_os_family == "RedHat") and (ansible_distribution_major_version == "2")
+          when: (ansible_os_family == "RedHat") and (ansible_distribution_version == "2")
 
         - name: Instalar dependencias
           ansible.builtin.package:
-          #yum:
             name: 
              - docker
             state: latest
