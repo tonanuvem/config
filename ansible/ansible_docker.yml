@@ -12,10 +12,14 @@
           when: (ansible_os_family == "RedHat") and (ansible_distribution_version == "2")
 
         - name: Instalar o Docker via dfm no Amazon Linux 2023
+          become: yes
           ansible.builtin.package:
             name: 
              - docker
-            state: latest
+            #state: latest
+            state: present
+            disable_gpg_check: yes
+            lock_timeout: 180
             when: (ansible_os_family == "RedHat") and (ansible_distribution_version == "2023")
 
         - name: Restartar o Docker service
