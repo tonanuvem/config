@@ -30,9 +30,8 @@
       EOF
     when: ansible_os_family == "RedHat"
 
-  - name: Instalar lista de pacotes via yum/dfn
+  - name: Instalar lista de pacotes via dfm no Amazon Linux 2023
     become: yes
-    #yum:
     ansible.builtin.package:
       name:
         - python3
@@ -44,7 +43,12 @@
       state: present
       disable_gpg_check: yes
       lock_timeout: 180
-    when: ansible_os_family == "RedHat"
+    when: (ansible_os_family == "RedHat") and (ansible_distribution_version == "2023")
+
+  - name: Instalar o Docker via yum no Amazon Linux 2
+    shell: |
+      yum install -y docker python3 python3-pip wget git jq
+    when: (ansible_os_family == "RedHat") and (ansible_distribution_version == "2")
     
   - name: Instalar lista de pacotes (ubuntu)
     become: yes
