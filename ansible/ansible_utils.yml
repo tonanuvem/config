@@ -30,10 +30,10 @@
       EOF
     when: ansible_os_family == "RedHat"
 
-  - name: Instalar lista de pacotes via yum
+  - name: Instalar lista de pacotes via yum/dfn
     become: yes
-    yum:
-    #ansible.builtin.package:
+    #yum:
+    ansible.builtin.package:
       name:
         - python3
         - python3-pip
