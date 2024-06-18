@@ -7,3 +7,20 @@
         - name: Set hostname
           ansible.builtin.hostname:
             name: "{{ inventory_hostname }}"
+            
+  - name: Exibir informações sobre a VM
+  - hosts: all
+    become: true
+    gather_facts: yes
+    tasks:
+      - name: OS Family
+        debug: msg="{{ ansible_os_family }}"      
+      - name: Distribution
+        debug: msg="{{ ansible_distribution }}"
+      - name: File variety
+        debug: msg="{{ ansible_distribution_file_variety }}"
+      - name: Version
+        debug: msg="{{ ansible_distribution_version }}"
+      - name: Package mgr
+        debug: msg="{{ ansible_pkg_mgr }}"
+    when: checar_ambiente is defined
