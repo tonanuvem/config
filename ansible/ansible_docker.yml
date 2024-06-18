@@ -6,12 +6,12 @@
     hosts: all
     become: yes
     tasks:        
-        - name: Instalar o Docker via amazon-linux-extras
+        - name: Instalar o Docker via amazon-linux-extras no Amazon Linux 2
           shell: |
             amazon-linux-extras install docker -y
           when: (ansible_os_family == "RedHat") and (ansible_distribution_version == "2")
 
-        - name: Instalar dependencias
+        - name: Instalar o Docker via dfm no Amazon Linux 2023
           ansible.builtin.package:
             name: 
              - docker
