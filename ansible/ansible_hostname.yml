@@ -23,4 +23,4 @@
         debug: msg="{{ ansible_distribution_version }}"
       - name: Package mgr
         debug: msg="{{ ansible_pkg_mgr }}"
-    when: checar_ambiente is defined
+    when: checar_Ambiente is defined
