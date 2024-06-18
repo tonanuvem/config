@@ -13,18 +13,18 @@
     become: true
     gather_facts: yes
     tasks:
-      - name: OS Family
+      - name: OS Family: ansible_os_family
         debug: msg="{{ ansible_os_family }}"
         when: checar_Ambiente is defined
-      - name: Distribution
+      - name: Distribution: ansible_distribution
         debug: msg="{{ ansible_distribution }}"
         when: checar_Ambiente is defined
-      - name: File variety
+      - name: File variety: ansible_distribution_file_variety
         debug: msg="{{ ansible_distribution_file_variety }}"
         when: checar_Ambiente is defined
-      - name: Version
+      - name: Version: ansible_distribution_version 
         debug: msg="{{ ansible_distribution_version }}"
         when: checar_Ambiente is defined
-      - name: Package mgr
+      - name: Package mgr: ansible_pkg_mgr
         debug: msg="{{ ansible_pkg_mgr }}"
         when: checar_Ambiente is defined
