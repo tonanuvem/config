@@ -20,7 +20,7 @@
             state: present
             disable_gpg_check: yes
             lock_timeout: 180
-            when: (ansible_os_family == "RedHat") and (ansible_distribution_version == "2023")
+          when: (ansible_os_family == "RedHat") and (ansible_distribution_version == "2023")
 
         - name: Restartar o Docker service
           service:
