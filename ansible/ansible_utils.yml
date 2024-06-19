@@ -46,6 +46,7 @@
     when: (ansible_os_family == "RedHat") and (ansible_distribution_version == "2023")
 
   - name: Instalar o Docker via yum no Amazon Linux 2
+    become: yes
     shell: |
       sudo yum install -y docker python3 python3-pip wget git jq
     when: (ansible_os_family == "RedHat") and (ansible_distribution_version == "2")
