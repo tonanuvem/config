@@ -161,7 +161,13 @@
           args:
             executable: /bin/bash
 
-        - name: Instalar lista de pacotes
+        - name: Instalar pacote iproute-tc via yum no Amazon Linux 2
+          become: yes
+          shell: |
+            sudo yum install -y iproute-tc
+          when: (ansible_os_family == "RedHat") and (ansible_distribution_version == "2")
+    
+        - name: Instalar pacote iproute-tc via dfm no Amazon Linux 2023
           become: yes
           ansible.builtin.package:
           #yum:
@@ -169,7 +175,7 @@
               - iproute-tc
             state: present
             lock_timeout: 180
-          when: ansible_os_family == "RedHat"
+          when: (ansible_os_family == "RedHat") and (ansible_distribution_version == "2023")
             
         - name: Restartar o daemon services
           become: yes
