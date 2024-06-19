@@ -11,7 +11,7 @@
             sudo amazon-linux-extras install java-openjdk11 -y
             wget https://downloads.apache.org/maven/maven-3/3.9.8/binaries/apache-maven-3.9.8-bin.tar.gz
             sudo tar xf apache-maven-*.tar.gz -C /opt
-            rm -f apache-maven-3.8.1-bin.tar.gz
+            rm -f apache-maven-*.tar.gz
             sudo ln -s /opt/apache-maven-3.9.8 /opt/maven
             sudo cat >> /etc/environment <<EOL
             export JAVA_HOME=/usr/lib/jvm/jre-11-openjdk
