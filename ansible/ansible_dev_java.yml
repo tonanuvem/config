@@ -12,7 +12,7 @@
             wget https://downloads.apache.org/maven/maven-3/3.9.8/binaries/apache-maven-3.9.8-bin.tar.gz
             sudo tar xf apache-maven-*.tar.gz -C /opt
             rm -f apache-maven-3.8.1-bin.tar.gz
-            sudo ln -s /opt/apache-maven-3.8.1 /opt/maven
+            sudo ln -s /opt/apache-maven-3.9.8 /opt/maven
             sudo cat >> /etc/environment <<EOL
             export JAVA_HOME=/usr/lib/jvm/jre-11-openjdk
             export M2_HOME=/opt/maven
