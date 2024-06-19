@@ -16,7 +16,7 @@ NODE3=$(terraform output -raw Node_3_ip_externo)
 echo "node3 ansible_ssh_host=$NODE3" >> inv.hosts
 
 # aplicar configurações
-ansible-playbook ~/environment/config/ansible/ansible_hostname.yml --inventory inv.hosts -u ec2-user --key-file ~/environment/labsuser.pem
+ansible-playbook ~/environment/config/ansible/ansible_hostname.yml --inventory inv.hosts -u ec2-user --key-file ~/environment/labsuser.pem # --extra-vars "checar_Ambiente=sim"
 ansible-playbook ~/environment/config/ansible/ansible_hosts.yml --inventory inv.hosts -u ec2-user --key-file ~/environment/labsuser.pem
 ansible-playbook ~/environment/config/ansible/ansible_utils.yml --inventory inv.hosts -u ec2-user --key-file ~/environment/labsuser.pem
 ansible-playbook ~/environment/config/ansible/ansible_docker.yml --inventory inv.hosts -u ec2-user --key-file ~/environment/labsuser.pem
