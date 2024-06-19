@@ -9,7 +9,7 @@
           become: yes
           shell: |
             sudo amazon-linux-extras install java-openjdk11 -y
-            wget https://www-eu.apache.org/dist/maven/maven-3/3.8.1/binaries/apache-maven-3.8.1-bin.tar.gz
+            wget https://downloads.apache.org/maven/maven-3/3.9.8/binaries/apache-maven-3.9.8-bin.tar.gz
             sudo tar xf apache-maven-*.tar.gz -C /opt
             rm -f apache-maven-3.8.1-bin.tar.gz
             sudo ln -s /opt/apache-maven-3.8.1 /opt/maven
