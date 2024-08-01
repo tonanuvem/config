@@ -10,7 +10,7 @@ RUN git clone https://github.com/tonanuvem/config/
 RUN touch /home/ubuntu/environment/labsuser.pem
 
 WORKDIR /home/ubuntu/environment
-RUN sh /home/ubuntu/environment/preparar.sh
+RUN sh /home/ubuntu/environment/config/preparar.sh
 
 VOLUME /home/ubuntu/environment/.aws
 VOLUME /home/ubuntu/environment/.kube
