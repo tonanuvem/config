@@ -15,6 +15,8 @@ RUN apt-get update && apt-get install -y openssl curl openssh-client sudo shelli
     ln -sf '/etc/shellinabox/options-enabled/01+Color Terminal.css' \
       /etc/shellinabox/options-enabled/01+Color-Terminal.css
 
+USER ubuntu
+
 RUN mkdir /home/ubuntu/environment
 WORKDIR /home/ubuntu/environment
 RUN git clone https://github.com/tonanuvem/config/
@@ -31,5 +33,5 @@ EXPOSE 4200
 
 ADD shellinabox/entrypoint.sh /usr/local/sbin/
 
-#ENTRYPOINT ["entrypoint.sh"]
-#CMD ["shellinabox"]
+ENTRYPOINT ["entrypoint.sh"]
+CMD ["shellinabox"]
