@@ -25,7 +25,7 @@ RUN touch /home/ubuntu/environment/labsuser.pem
 WORKDIR /home/ubuntu/environment
 #RUN sh /home/ubuntu/environment/config/preparar.sh
 ENV DEBIAN_FRONTEND=noninteractive
-RUN apt-get install -y python3.12 pip python3.12-venv 
+RUN apt-get update && apt-get install -y python3.12 pip python3.12-venv 
 #RUN python3 -m venv pip
 RUN pip install --upgrade pip --break-system-packages && sudo python3 -m pip install ansible --break-system-packages
 
