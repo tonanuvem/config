@@ -18,6 +18,7 @@ RUN set -x \
 #RUN apt-get update && apt-get install -y locales && rm -rf /var/lib/apt/lists/* && localedef -i en_US -c -f UTF-8 -A /usr/share/locale/locale.alias en_US.UTF-8
 #ENV LANG en_US.utf8
 
+RUN mkdir /home/ubuntu/environment
 WORKDIR /home/ubuntu/environment
 RUN git clone https://github.com/tonanuvem/config/
 RUN touch /home/ubuntu/environment/labsuser.pem
