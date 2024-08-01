@@ -28,6 +28,13 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get install -y python3.12 pip python3.12-
 #RUN python3 -m venv pip
 RUN pip install --upgrade pip --break-system-packages && sudo python3 -m pip install ansible --break-system-packages
 
+# Configurar pre-req para instalação do Ansible"
+RUN echo '[nodes]' > ~/environment/config/hosts &&
+  echo "cloud9 ansible_connection=local" >> ~/environment/config/hosts  &&
+  echo '' >> ~/environment/config/hosts  &&
+  export ANSIBLE_PYTHON_INTERPRETER=auto_silent &&
+  export ANSIBLE_DEPRECATION_WARNINGS=false  &&
+  export ANSIBLE_DISPLAY_SKIPPED_HOSTS=false
 
 VOLUME /home/ubuntu/environment/.aws
 VOLUME /home/ubuntu/environment/.kube
