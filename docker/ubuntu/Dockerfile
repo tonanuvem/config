@@ -1,5 +1,7 @@
 FROM ubuntu:24.10
 
+ENV DEBIAN_FRONTEND=noninteractive
+
 ## Pre-reqs : https://github.com/docker-library/postgres/blob/69bc540ecfffecce72d49fa7e4a46680350037f9/9.6/Dockerfile#L21-L24
 RUN set -x \
 	&& apt-get update && apt-get install -y --no-install-recommends ca-certificates wget git && rm -rf /var/lib/apt/lists/*
@@ -28,8 +30,6 @@ RUN touch /home/ubuntu/environment/labsuser.pem
 
 WORKDIR /home/ubuntu/environment
 #RUN sh /home/ubuntu/environment/config/preparar.sh
-ENV DEBIAN_FRONTEND=noninteractive
-#RUN python3 -m venv pip
 
 # Configurar pre-req para instalação do Ansible"
 RUN touch /home/ubuntu/environment/labsuser.pem && \
