@@ -41,12 +41,6 @@ WORKDIR /home/ubuntu/environment
 RUN git clone https://github.com/tonanuvem/config/
 RUN touch /home/ubuntu/environment/labsuser.pem
 
-WORKDIR /home/ubuntu/environment
-RUN sh /home/ubuntu/environment/config/preparar.sh
-
-RUN mkdir /home/ubuntu/.ssh
-RUN touch /home/ubuntu/.ssh/config
-
 # Configurar pre-req para instalação do Ansible"
 RUN touch /home/ubuntu/environment/labsuser.pem && \
   echo '[nodes]' > /home/ubuntu/environment/config/hosts && \
@@ -55,6 +49,14 @@ RUN touch /home/ubuntu/environment/labsuser.pem && \
   export ANSIBLE_PYTHON_INTERPRETER=auto_silent && \
   export ANSIBLE_DEPRECATION_WARNINGS=false  && \
   export ANSIBLE_DISPLAY_SKIPPED_HOSTS=false
+
+WORKDIR /home/ubuntu/environment
+#RUN sh /home/ubuntu/environment/config/preparar.sh
+RUN ansible-playbook ~/environment/config/ansible/cloud9.yml --inventory ~/environment/config/hosts 
+RUN sh ~/environment/config/spring.sh
+
+RUN mkdir /home/ubuntu/.ssh
+RUN touch /home/ubuntu/.ssh/config
 
 VOLUME /home/ubuntu/environment/.aws
 VOLUME /home/ubuntu/environment/.kube
