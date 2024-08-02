@@ -7,7 +7,7 @@ RUN set -x \
 	&& apt-get update && apt-get install -y --no-install-recommends ca-certificates wget git && rm -rf /var/lib/apt/lists/*
 
 ## Pre-reqs : https://github.com/sspreitzer/shellinabox-container-image/blob/main/ubuntu/Dockerfile
-RUN apt-get update && apt-get install -y openssl curl unzip openssh-client sudo shellinabox && \
+RUN apt-get update && apt-get install -y openssl curl unzip zip openssh-client sudo shellinabox && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/* && \
     ln -sf '/etc/shellinabox/options-enabled/00+Black on White.css' \
