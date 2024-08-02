@@ -15,8 +15,9 @@ RUN apt-get update && apt-get install -y openssl curl openssh-client sudo shelli
     ln -sf '/etc/shellinabox/options-enabled/01+Color Terminal.css' \
       /etc/shellinabox/options-enabled/01+Color-Terminal.css
 
-##
+## Instalar Python 3, pip, venv:
 RUN apt-get update && apt-get install -y python3.12 pip python3.12-venv 
+RUN pip install --upgrade pip --break-system-packages && python3 -m pip install ansible --break-system-packages
 
 USER ubuntu
 
@@ -29,7 +30,6 @@ WORKDIR /home/ubuntu/environment
 #RUN sh /home/ubuntu/environment/config/preparar.sh
 ENV DEBIAN_FRONTEND=noninteractive
 #RUN python3 -m venv pip
-RUN pip install --upgrade pip --break-system-packages && sudo python3 -m pip install ansible --break-system-packages
 
 # Configurar pre-req para instalação do Ansible"
 RUN RUN touch /home/ubuntu/environment/labsuser.pem && \
