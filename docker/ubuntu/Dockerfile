@@ -21,6 +21,9 @@ RUN apt-get update && apt-get install -y openssl curl unzip zip openssh-client s
 RUN apt-get update && apt-get install -y python3.12 pip python3.12-venv 
 RUN python3 -m pip install ansible --break-system-packages
 
+# Configurar usuario ubuntu para nao precisar de password no sudo:
+RUN adduser ubuntu sudo
+
 USER ubuntu
 
 RUN mkdir /home/ubuntu/environment
