@@ -21,6 +21,9 @@ RUN apt-get update && apt-get install -y openssl curl unzip zip openssh-client s
 RUN apt-get update && apt-get install -y python3.12 pip python3.12-venv 
 RUN python3 -m pip install ansible --break-system-packages
 
+## Instalar Python 3, pip, venv:
+RUN apt-get install -y apache2
+
 ## Instalar AWS CLI
 RUN curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
 RUN unzip awscliv2.zip
@@ -39,7 +42,7 @@ RUN git clone https://github.com/tonanuvem/config/
 RUN touch /home/ubuntu/environment/labsuser.pem
 
 WORKDIR /home/ubuntu/environment
-#RUN sh /home/ubuntu/environment/config/preparar.sh
+RUN sh /home/ubuntu/environment/config/preparar.sh
 
 RUN mkdir /home/ubuntu/.ssh
 RUN touch /home/ubuntu/.ssh/config
