@@ -33,7 +33,7 @@ ENV DEBIAN_FRONTEND=noninteractive
 #RUN python3 -m venv pip
 
 # Configurar pre-req para instalação do Ansible"
-RUN RUN touch /home/ubuntu/environment/labsuser.pem && \
+RUN touch /home/ubuntu/environment/labsuser.pem && \
   echo '[nodes]' > /home/ubuntu/environment/config/hosts && \
   echo "cloud9 ansible_connection=local" >> /home/ubuntu/environment/config/hosts  && \
   echo '' >> /home/ubuntu/environment/config/hosts  && \
