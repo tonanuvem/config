@@ -15,6 +15,8 @@ echo "AWS_SECRET_ACCESS_KEY=$(echo "$OUTPUT" | jq -r '.SecretAccessKey')" > ~/cr
 echo "AWS_SESSION_TOKEN=$(echo "$OUTPUT" | jq -r '.Token')" > ~/credentials
 echo "region=us-east-1" > ~/credentials
 
+# INICIANDO COMENTARIO
+: <<'END'
 printf "\n\tVERIFICANDO ARQUIVO DE CHAVE labsuser.pem :\n\n"
 if [ $(ls ~ | grep config | wc -l) = "1" ]
 then
@@ -28,7 +30,8 @@ fi
 if [ $(ls ~ | grep labsuser.pem | wc -l) = "1" ]
 then
   printf "\t\tARQUIVO labsuser.pem OK!\n\n"
-  mv  ~/labsuser.pem ~/environment/labsuser.pem
+  mkdir ~/environment/
+  cp  ~/labsuser.pem ~/environment/labsuser.pem
   chmod 400 ~/environment/labsuser.pem
   sh ~/environment/config/preparar.sh
 else
@@ -52,3 +55,6 @@ else
   echo "\t\tArquivo credentials não encontrado, você deve reiniciar o CloudShell\n\n"
   exit
 fi
+
+#FINALIZANDO COMENTARIO
+END
