@@ -49,14 +49,13 @@ RUN touch /home/ubuntu/environment/labsuser.pem && \
   export ANSIBLE_PYTHON_INTERPRETER=auto_silent && \
   export ANSIBLE_DEPRECATION_WARNINGS=false  && \
   export ANSIBLE_DISPLAY_SKIPPED_HOSTS=false
+RUN mkdir /home/ubuntu/.ssh
+RUN touch /home/ubuntu/.ssh/config
 
 WORKDIR /home/ubuntu/environment
 #RUN sh /home/ubuntu/environment/config/preparar.sh
 RUN ansible-playbook ~/environment/config/ansible/cloud9.yml --inventory ~/environment/config/hosts 
 RUN sh ~/environment/config/spring.sh
-
-RUN mkdir /home/ubuntu/.ssh
-RUN touch /home/ubuntu/.ssh/config
 
 VOLUME /home/ubuntu/environment/.aws
 VOLUME /home/ubuntu/environment/.kube
