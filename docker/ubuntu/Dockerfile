@@ -23,6 +23,8 @@ RUN python3 -m pip install ansible --break-system-packages
 
 # Configurar usuario ubuntu para nao precisar de password no sudo:
 RUN adduser ubuntu sudo
+# New added for disable sudo password
+RUN echo '%sudo ALL=(ALL) NOPASSWD:ALL' >> /etc/sudoers
 
 USER ubuntu
 
