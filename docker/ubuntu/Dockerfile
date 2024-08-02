@@ -55,7 +55,7 @@ RUN touch /home/ubuntu/.ssh/config
 WORKDIR /home/ubuntu/environment
 #RUN sh /home/ubuntu/environment/config/preparar.sh
 RUN ansible-playbook ~/environment/config/ansible/cloud9.yml --inventory ~/environment/config/hosts 
-RUN sh ~/environment/config/spring.sh
+#RUN sh ~/environment/config/spring.sh
 
 VOLUME /home/ubuntu/environment/.aws
 VOLUME /home/ubuntu/environment/.kube
