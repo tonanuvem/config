@@ -21,6 +21,11 @@ RUN apt-get update && apt-get install -y openssl curl unzip zip openssh-client s
 RUN apt-get update && apt-get install -y python3.12 pip python3.12-venv 
 RUN python3 -m pip install ansible --break-system-packages
 
+## Instalar AWS CLI
+RUN curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+RUN unzip awscliv2.zip
+RUN sudo ./aws/install
+
 # Configurar usuario ubuntu para nao precisar de password no sudo:
 RUN adduser ubuntu sudo
 # New added for disable sudo password
