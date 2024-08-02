@@ -1,1 +1,1 @@
-docker build -t config .
+docker build --progress=plain -t config .
