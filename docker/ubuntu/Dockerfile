@@ -17,7 +17,6 @@ RUN apt-get update && apt-get install -y openssl curl openssh-client sudo shelli
 
 ## Instalar Python 3, pip, venv:
 RUN apt-get update && apt-get install -y python3.12 pip python3.12-venv 
-#RUN pip install --upgrade pip --break-system-packages 
 RUN python3 -m pip install ansible --break-system-packages
 
 USER ubuntu
