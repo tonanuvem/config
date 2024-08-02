@@ -48,5 +48,5 @@ EXPOSE 4200
 
 ADD shellinabox/entrypoint.sh /usr/local/sbin/
 
-ENTRYPOINT ["entrypoint.sh"]
-CMD ["shellinabox"]
+#ENTRYPOINT ["entrypoint.sh"]
+#CMD ["shellinabox"]
