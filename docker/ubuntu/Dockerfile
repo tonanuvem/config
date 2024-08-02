@@ -31,6 +31,7 @@ RUN touch /home/ubuntu/environment/labsuser.pem
 WORKDIR /home/ubuntu/environment
 #RUN sh /home/ubuntu/environment/config/preparar.sh
 
+RUN mkdir /home/ubuntu/.ssh
 RUN touch /home/ubuntu/.ssh/config
 
 # Configurar pre-req para instalação do Ansible"
