@@ -1,4 +1,4 @@
-docker run -d --rm \
+docker run -d \
   --name=google-chrome \
   --security-opt seccomp=unconfined `#optional` \
   -e PUID=1000 \
