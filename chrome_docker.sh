@@ -11,3 +11,10 @@ docker run -d \
   --shm-size="1gb" \
   --restart unless-stopped \
   ghcr.io/tibor309/chrome:latest
+
+echo ""
+ip=$(curl -s checkip.amazonaws.com)
+echo ""
+echo "Acessar: http://$ip:8443"
+echo ""
+echo ""
