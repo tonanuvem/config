@@ -10,6 +10,14 @@
       path: ~/ip
       mode: u+rwx,g+rwx,o+rx
 
+- hosts: all
+  tasks:
+  - name: Criar o arquivo ~/dns.sh 
+    ansible.builtin.copy:
+      dest: "~/dns.sh"
+      content: |
+        curl -s https://raw.githubusercontent.com/tonanuvem/config/main/dns.sh | bash
+
   #- name: Desabilitar GPGCheck certs em amzn2-core.repo
   #  become: yes
   #  # yum repo configuration file, the line gpgcheck=1 indicates that GPG checking should be done for all packages in this repository
