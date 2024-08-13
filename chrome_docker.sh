@@ -15,6 +15,6 @@ docker run -d \
 echo ""
 ip=$(curl -s checkip.amazonaws.com)
 echo ""
-echo "Acessar: http://$ip:8443"
+echo "Acessar: https://$ip:8443"
 echo ""
 echo ""
