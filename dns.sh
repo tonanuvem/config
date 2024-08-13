@@ -23,6 +23,7 @@ echo "Atualizando o DNS:"
 
 curl -X POST "https://dns.fiapaws.tonanuvem.com/labdns" -H "accept: */*" -H "Content-Type: application/json" -d "{ \"internal_ip\": \"$ip\",\"set_hostname\": \"$hostname\",\"validation_hash\": \"$hash\"}"
 echo ""
+echo ""
 echo "Acessar:"
 echo "http://$NOME_DNS.fiapaws.tonanuvem.com"
 echo ""
