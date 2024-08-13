@@ -1,6 +1,7 @@
+echo ""
+echo ""
 echo "Digite seu nome para ser usado no DNS: " 
 read NOME_DNS
-
 
 ip=$(curl -s checkip.amazonaws.com)
 hostname="$NOME_DNS.fiapaws.tonanuvem.com."
