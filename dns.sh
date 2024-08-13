@@ -1,7 +1,11 @@
+echo "Digite seu nome para ser usado no DNS: " 
+read NOME_DNS
+
+
 ip=$(curl -s checkip.amazonaws.com)
-hostname="homologacao.fiapaws.tonanuvem.com."
+hostname="$NOME_DNS.fiapaws.tonanuvem.com."
 secret="fiaplab"
-texto="${ip}${hostname}${secret}"
+texto="${ip}${hostname}'.'${secret}"
 
 echo "Texto para ser calculado o Hash = ${texto}:"
 
@@ -17,5 +21,8 @@ echo ""
 echo "Atualizando o DNS:"
 
 curl -X POST "https://dns.fiapaws.tonanuvem.com/labdns" -H "accept: */*" -H "Content-Type: application/json" -d "{ \"internal_ip\": \"$ip\",\"set_hostname\": \"$hostname\",\"validation_hash\": \"$hash\"}"
+echo ""
+echo "Acessar:"
+echo "http://$NOME_DNS.fiapaws.tonanuvem.com"
 echo ""
 echo ""
