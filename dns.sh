@@ -10,7 +10,7 @@ texto="${ip}${hostname}${secret}"
 
 echo "Texto para ser calculado o Hash = ${texto}:"
 
-hash=$(python -c "import hashlib; print(hashlib.sha256('$texto'.encode('utf8')).hexdigest())")
+hash=$(python3 -c "import hashlib; print(hashlib.sha256('$texto'.encode('utf8')).hexdigest())")
 echo $hash
 
 echo "Parametros:"
