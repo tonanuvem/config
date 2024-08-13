@@ -6,7 +6,7 @@ read NOME_DNS
 ip=$(curl -s checkip.amazonaws.com)
 hostname="$NOME_DNS.fiapaws.tonanuvem.com."
 secret="fiaplab"
-texto="${ip}${hostname}'.'${secret}"
+texto="${ip}${hostname}${secret}"
 
 echo "Texto para ser calculado o Hash = ${texto}:"
 
