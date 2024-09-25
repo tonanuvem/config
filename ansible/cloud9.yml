@@ -32,7 +32,7 @@
   - name: atualizar index page
     become: yes
     shell: |
-      sudo curl -s "https://tonanuvem.github.io/page/docs/hero.html" -o "/var/www/html/index.html" 
+      sudo curl -s "https://tonanuvem.github.io/page/docs/open.html" -o "/var/www/html/index.html" 
   
   - name: Criar o arquivo ~/ip para pegar o IP da maquina
     ansible.builtin.copy:
