@@ -29,8 +29,13 @@ sudo ufw allow 'Apache'
 sudo ufw status
 #sudo systemctl status apache2
 
-### UTILS: unzip
+### UTILS: 
+# UNZIP, ZIP
 sudo apt install -y unzip zip
+# AWS CLI
+curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+unzip awscliv2.zip
+sudo ./aws/install
 
 echo "\n\n Configurar pre-req para instalação do Ansible"
 # configurar pre-req (inventario) ansible
