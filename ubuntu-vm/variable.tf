@@ -12,7 +12,7 @@ variable "quantidade" {
 
 variable "tamanho_disco" {
   type        = number
-  default     = "50"
+  default     = "100"
 }
 
 variable "ec2_name" {
