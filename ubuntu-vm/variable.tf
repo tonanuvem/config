@@ -33,7 +33,7 @@ variable "aws_region" {
 # Ubuntu
 variable "aws_amis" {
   default = {
-    # us-east-1 = "ami-00bd2fe1439631665"
-    us-east-1 = "ami-0bf6b162dbe07782b" # ubuntu do cloud9
+    us-east-1 = "ami-00bd2fe1439631665"
+    # us-east-1 = "ami-0bf6b162dbe07782b" # ubuntu do cloud9 (precisaria rodar cloud-init para configurar)
   }
 }
