@@ -18,10 +18,10 @@ done
 
 ### AJUSTANDO via SSH
 echo ""
-echo "AJUSTANDO via SSH o NODE $NODE"
+echo "AJUSTANDO via SSH o CODESERVER ($NODE)"
 echo ""
-ssh -oStrictHostKeyChecking=no -i ~/environment/labsuser.pem ec2-user@$NODE 'bash -s' < 'mkdir ~/environment/'
-ssh -oStrictHostKeyChecking=no -i ~/environment/labsuser.pem ec2-user@$NODE 'bash -s' < 'git clone https://github.com/tonanuvem/config'
+scp -i environment/labsuser.pem -r ~/environment/ ubuntu@$NODE:/home/ubuntu/
+ssh -oStrictHostKeyChecking=no -i ~/environment/labsuser.pem ubuntu@$NODE 'bash -s' < 'ls /home/ubuntu/environment/'
 
 #ansible-playbook ~/environment/config/ansible/ansible_hostname.yml --inventory inv.hosts -u ubuntu --key-file ~/environment/labsuser.pem
 #ansible-playbook ~/environment/config/ansible/ansible_hosts.yml --inventory inv.hosts -u ubuntu --key-file ~/environment/labsuser.pem
