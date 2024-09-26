@@ -12,12 +12,12 @@ variable "quantidade" {
 
 variable "tamanho_disco" {
   type        = number
-  default     = "20"
+  default     = "50"
 }
 
 variable "ec2_name" {
   type        = string
-  default     = "fiap_alunos"
+  default     = "fiap_aluno_code"
 }
 
 variable "key_name" {
