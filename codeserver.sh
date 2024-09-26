@@ -1,6 +1,6 @@
 #!/bin/bash
 
-mkdir ~/environment/
+# mkdir ~/environment/
 
 echo "\n\n Ajustando permissão do arquivo labsuser.pem"
 # verificar o tamanho do disco
