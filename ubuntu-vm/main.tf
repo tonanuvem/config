@@ -81,7 +81,7 @@ resource "aws_instance" "web" {
   
   # Define o nome da VM : "${format("%s_%d_%s", "aluno", count.index, var.ec2_name)}"
   tags = {
-    Name = "${format("%s_%d_%s", "ubuntuvm", count.index, var.ec2_name)}"
+    Name = "${format("%s_%d_%s", "ubuntu_vm", count.index, var.ec2_name)}"
     # Name = "${format("%s_%d_%s", "vm", count.index+1, var.ec2_name)}"
   }  
   
