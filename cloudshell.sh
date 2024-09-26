@@ -63,4 +63,5 @@ fi
 # CRIAR UBUNTU VM DO CODESERVER
 # https://docs.aws.amazon.com/cli/v1/userguide/cli-services-ec2-instances.html
 sh terraform.sh
-sh ~/environment/config/ubuntu-vm/iniciar.sh 
+cd ~/environment/config/ubuntu-vm/
+sh iniciar.sh 
