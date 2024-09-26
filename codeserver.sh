@@ -16,6 +16,7 @@ fi
 
 ### ANSIBLE
 #bash ~/environment/config/ansible.sh
+sudo apt-get update
 sudo apt install python3-pip
 pip3 install --upgrade pip
 sudo python3 -m pip install ansible
