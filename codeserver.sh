@@ -49,6 +49,7 @@ sed -i.bak 's/bind-addr: 127.0.0.1:8080/bind-addr: 0.0.0.0:443/' ~/.config/code-
 sed -i.bak 's/password: .*/password: fiap/g' ~/.config/code-server/config.yaml
 # Allows code-server to listen on port 443.
 sudo setcap cap_net_bind_service=+ep /usr/lib/code-server/lib/node
+sudo systemctl restart code-server@$USER
 #sudo systemctl status code-server@ubuntu
 
 
