@@ -24,10 +24,10 @@ printf "\n\tANSIBLE:\n"
 ansible --version
 
 ### APACHE
-sudo apt install apache2
+sudo apt install -y apache2
 sudo ufw allow 'Apache'
 sudo ufw status
-sudo systemctl status apache2
+#sudo systemctl status apache2
 
 echo "\n\n Configurar pre-req para instalação do Ansible"
 # configurar pre-req (inventario) ansible
