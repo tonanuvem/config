@@ -39,7 +39,7 @@ sudo ./aws/install
 
 ### CODE SERVER:
 curl -fsSL https://code-server.dev/install.sh | sh
-sudo systemctl enable --now code-server@$USER
+#sudo systemctl enable --now code-server
 # https://coder.com/docs/code-server/guide#using-a-self-signed-certificate
 # Replaces "cert: false" with "cert: true" in the code-server config.
 sed -i.bak 's/cert: false/cert: true/' ~/.config/code-server/config.yaml
@@ -49,8 +49,9 @@ sed -i.bak 's/bind-addr: 127.0.0.1:8080/bind-addr: 0.0.0.0:443/' ~/.config/code-
 sed -i.bak 's/password: .*/password: fiap/g' ~/.config/code-server/config.yaml
 # Allows code-server to listen on port 443.
 sudo setcap cap_net_bind_service=+ep /usr/lib/code-server/lib/node
-sudo systemctl restart code-server@$USER
-#sudo systemctl status code-server@ubuntu
+sudo systemctl enable --now code-server
+#sudo systemctl restart code-server
+#sudo systemctl status code-server
 
 
 echo "\n\n Configurar pre-req para instalação do Ansible"
