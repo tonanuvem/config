@@ -26,7 +26,7 @@ ansible --version
 ### APACHE
 sudo apt install -y apache2
 sudo ufw allow 'Apache'
-sudo ufw status
+#sudo ufw status
 #sudo systemctl status apache2
 
 ### UTILS: 
