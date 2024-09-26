@@ -18,7 +18,7 @@ done
 
 ### AJUSTANDO via SSH
 echo ""
-echo "AJUSTANDO via SSH"
+echo "AJUSTANDO via SSH o NODE $NODE"
 echo ""
 ssh -oStrictHostKeyChecking=no -i ~/environment/labsuser.pem ec2-user@$NODE 'bash -s' < 'mkdir ~/environment/'
 ssh -oStrictHostKeyChecking=no -i ~/environment/labsuser.pem ec2-user@$NODE 'bash -s' < 'git clone https://github.com/tonanuvem/config'
