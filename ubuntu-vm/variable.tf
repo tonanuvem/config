@@ -33,7 +33,8 @@ variable "aws_region" {
 # Ubuntu
 variable "aws_amis" {
   default = {
-    us-east-1 = "ami-00bd2fe1439631665"
+    us-east-1 = "ami-0e86e20dae9224db8" # Ubuntu Server 24.04 LTS (HVM),EBS General Purpose (SSD) Volume Type. 
+    # us-east-1 = "ami-00bd2fe1439631665" # Uso anterior
     # us-east-1 = "ami-0bf6b162dbe07782b" # ubuntu do cloud9 (precisaria rodar cloud-init para configurar)
   }
 }
