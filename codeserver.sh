@@ -39,6 +39,7 @@ sudo ./aws/install
 
 ### CODE SERVER:
 curl -fsSL https://code-server.dev/install.sh | sh
+sudo systemctl enable --now code-server@$USER
 
 echo "\n\n Configurar pre-req para instalação do Ansible"
 # configurar pre-req (inventario) ansible
