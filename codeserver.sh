@@ -23,6 +23,12 @@ sudo python3 -m pip install ansible --break-system-packages
 printf "\n\tANSIBLE:\n"
 ansible --version
 
+### APACHE
+sudo apt install apache2
+sudo ufw allow 'Apache'
+sudo ufw status
+sudo systemctl status apache2
+
 echo "\n\n Configurar pre-req para instalação do Ansible"
 # configurar pre-req (inventario) ansible
 export VM=$(curl -s checkip.amazonaws.com)
