@@ -14,7 +14,12 @@ else
   exit
 fi
 
-bash ~/environment/config/ansible.sh
+### ANSIBLE
+#bash ~/environment/config/ansible.sh
+pip3 install --upgrade pip
+sudo python3 -m pip install ansible
+printf "\n\tANSIBLE:\n"
+ansible --version
 
 echo "\n\n Configurar pre-req para instalação do Ansible"
 # configurar pre-req (inventario) ansible
