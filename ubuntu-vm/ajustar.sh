@@ -16,6 +16,13 @@ for N in $(seq 0 $WORKER_NODES); do
     echo "node$N ansible_ssh_host=$NODE" >> inv.hosts
 done
 
+### AJUSTANDO via SSH
+echo ""
+echo "AJUSTANDO via SSH"
+echo ""
+ssh -oStrictHostKeyChecking=no -i ~/environment/labsuser.pem ec2-user@$NODE 'bash -s' < 'mkdir ~/environment/'
+ssh -oStrictHostKeyChecking=no -i ~/environment/labsuser.pem ec2-user@$NODE 'bash -s' < 'git clone https://github.com/tonanuvem/config'
+
 #ansible-playbook ~/environment/config/ansible/ansible_hostname.yml --inventory inv.hosts -u ubuntu --key-file ~/environment/labsuser.pem
 #ansible-playbook ~/environment/config/ansible/ansible_hosts.yml --inventory inv.hosts -u ubuntu --key-file ~/environment/labsuser.pem
 #ansible-playbook ~/environment/config/ansible/ansible_utils.yml --inventory inv.hosts -u ubuntu --key-file ~/environment/labsuser.pem
