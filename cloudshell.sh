@@ -38,7 +38,7 @@ then
   #sh ~/environment/config/preparar.sh
 else
   echo "\t\tArquivo labsuser.pem não encontrado, você deve fazer o upload do arquivo para o CloudShell\n\n"
-  exit
+  #exit
 fi
 
 if [ $(ls ~ | grep credentials | wc -l) = "1" ]
@@ -55,7 +55,7 @@ then
   export ANSIBLE_DISPLAY_SKIPPED_HOSTS=false
 else
   echo "\t\tArquivo credentials não encontrado, você deve reiniciar o CloudShell\n\n"
-  exit
+  #exit
 fi
 
 #FINALIZANDO COMENTARIO
@@ -63,6 +63,28 @@ fi
 
 # CRIAR UBUNTU VM DO CODESERVER
 # https://docs.aws.amazon.com/cli/v1/userguide/cli-services-ec2-instances.html
-sh terraform.sh
+
+#sh terraform.sh
+if [ $(ls ~ | grep terraform | wc -l) = "1" ]
+then
+  sudo cp terraform /usr/bin/
+else
+  # Atualizar versao do Terraform: 
+  printf "\n\n xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx \n"
+  printf "\n\n\tTerraform:\n\n"
+  curl -s "https://releases.hashicorp.com/terraform/1.9.5/terraform_1.9.5_linux_amd64.zip" -o "terraform_linux_amd64.zip"
+  unzip terraform_linux_amd64.zip
+  sudo cp terraform /usr/bin/
+  rm -rf terraform_linux_amd64.zip LICENSE
+fi
+
+# Verificando as versões instaladas e atualizar permissão docker:
+cd ~
+printf "\n\n xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx \n"
+printf "\n\n\tVerificando as instações:\n\n"
+
+printf "\n\tTERRAFORM:\n"
+terraform --version
+
 cd ~/environment/config/ubuntu-vm/
 sh iniciar.sh 
