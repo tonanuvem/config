@@ -20,7 +20,7 @@ done
 echo ""
 echo "AJUSTANDO via SSH o CODESERVER ($NODE)"
 echo ""
-scp -i environment/labsuser.pem -r ~/environment/ ubuntu@$NODE:/home/ubuntu/
+scp -i ~/environment/labsuser.pem -r ~/environment/ ubuntu@$NODE:/home/ubuntu/
 ssh -oStrictHostKeyChecking=no -i ~/environment/labsuser.pem ubuntu@$NODE 'bash -s' < 'ls /home/ubuntu/environment/'
 
 #ansible-playbook ~/environment/config/ansible/ansible_hostname.yml --inventory inv.hosts -u ubuntu --key-file ~/environment/labsuser.pem
