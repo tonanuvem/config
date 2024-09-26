@@ -29,6 +29,9 @@ sudo ufw allow 'Apache'
 sudo ufw status
 #sudo systemctl status apache2
 
+### UTILS: unzip
+sudo apt install -y unzip zip
+
 echo "\n\n Configurar pre-req para instalação do Ansible"
 # configurar pre-req (inventario) ansible
 export VM=$(curl -s checkip.amazonaws.com)
