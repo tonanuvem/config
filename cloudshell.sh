@@ -26,7 +26,7 @@ then
   cp  ~/credentials ~/environment/
 else
   echo "\t\Pasta CONFIG não encontrada, você deve  rodar o comando git clone na pasta raiz\n\n"
-  exit
+  #exit
 fi
 
 if [ $(ls ~ | grep labsuser.pem | wc -l) = "1" ]
