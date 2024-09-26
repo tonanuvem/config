@@ -37,6 +37,9 @@ curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip
 unzip awscliv2.zip
 sudo ./aws/install
 
+### CODE SERVER:
+curl -fsSL https://code-server.dev/install.sh | sh
+
 echo "\n\n Configurar pre-req para instalação do Ansible"
 # configurar pre-req (inventario) ansible
 export VM=$(curl -s checkip.amazonaws.com)
