@@ -15,14 +15,9 @@ echo "AWS_SECRET_ACCESS_KEY=$(echo "$OUTPUT" | jq -r '.SecretAccessKey')" >> ~/c
 echo "AWS_SESSION_TOKEN=$(echo "$OUTPUT" | jq -r '.Token')" >> ~/credentials
 echo "region=us-east-1" >> ~/credentials
 
-# sh terraform.sh
-
-# CRIAR UBUNTU VM DO CODESERVER
-# https://docs.aws.amazon.com/cli/v1/userguide/cli-services-ec2-instances.html
-# aws ec2 run-instances --image-id ami-0bf6b162dbe07782b --key-name vockey --instance-type m5.large
 
 # INICIANDO COMENTARIO
-: <<'END'
+#: <<'END'
 printf "\n\tVERIFICANDO ARQUIVO DE CHAVE labsuser.pem :\n\n"
 if [ $(ls ~ | grep config | wc -l) = "1" ]
 then
@@ -63,4 +58,9 @@ else
 fi
 
 #FINALIZANDO COMENTARIO
-END
+#END
+
+# CRIAR UBUNTU VM DO CODESERVER
+# https://docs.aws.amazon.com/cli/v1/userguide/cli-services-ec2-instances.html
+sh terraform.sh
+sh ~/environment/config/ubuntu-vm/iniciar.sh 
