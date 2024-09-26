@@ -23,6 +23,7 @@ if [ $(ls ~ | grep config | wc -l) = "1" ]
 then
   mkdir ~/environment/
   mv  ~/config ~/environment/config
+  cp  ~/credentials ~/environment/
 else
   echo "\t\Pasta CONFIG não encontrada, você deve  rodar o comando git clone na pasta raiz\n\n"
   exit
@@ -34,7 +35,7 @@ then
   mkdir ~/environment/
   cp  ~/labsuser.pem ~/environment/labsuser.pem
   chmod 400 ~/environment/labsuser.pem
-  sh ~/environment/config/preparar.sh
+  #sh ~/environment/config/preparar.sh
 else
   echo "\t\tArquivo labsuser.pem não encontrado, você deve fazer o upload do arquivo para o CloudShell\n\n"
   exit
