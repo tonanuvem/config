@@ -6,6 +6,7 @@ printf "\n\n\tTerraform:\n\n"
 curl -s "https://releases.hashicorp.com/terraform/1.9.5/terraform_1.9.5_linux_amd64.zip" -o "terraform_linux_amd64.zip"
 unzip terraform_linux_amd64.zip
 sudo mv terraform /usr/bin/
+rm -rf terraform_linux_amd64.zip LICENSE
 
 # Verificando as versões instaladas e atualizar permissão docker:
 cd ~
