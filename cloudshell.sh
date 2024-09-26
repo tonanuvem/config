@@ -15,6 +15,10 @@ echo "AWS_SECRET_ACCESS_KEY=$(echo "$OUTPUT" | jq -r '.SecretAccessKey')" >> ~/c
 echo "AWS_SESSION_TOKEN=$(echo "$OUTPUT" | jq -r '.Token')" >> ~/credentials
 echo "region=us-east-1" >> ~/credentials
 
+# CRIAR UBUNTU VM DO CODESERVER
+# https://docs.aws.amazon.com/cli/v1/userguide/cli-services-ec2-instances.html
+# aws ec2 run-instances --image-id ami-0bf6b162dbe07782b --key-name vockey --instance-type m5.large
+
 # INICIANDO COMENTARIO
 : <<'END'
 printf "\n\tVERIFICANDO ARQUIVO DE CHAVE labsuser.pem :\n\n"
