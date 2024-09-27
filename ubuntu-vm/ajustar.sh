@@ -23,6 +23,7 @@ echo ""
 scp -i ~/environment/labsuser.pem -r ~/environment/ ubuntu@$NODE:/home/ubuntu/
 ssh -i ~/environment/labsuser.pem ubuntu@$NODE "mkdir -p /home/ubuntu/.aws/"
 scp -i ~/environment/labsuser.pem -r ~/environment/credentials ubuntu@$NODE:/home/ubuntu/.aws/credentials
+ssh -oStrictHostKeyChecking=no -i ~/environment/labsuser.pem ubuntu@$NODE 'bash -s' < 'ln /home/ubuntu/environment/credentials /home/ubuntu/.aws/credentials'
 ssh -oStrictHostKeyChecking=no -i ~/environment/labsuser.pem ubuntu@$NODE 'bash -s' < '../codeserver.sh'
 
 #ansible-playbook ~/environment/config/ansible/ansible_hostname.yml --inventory inv.hosts -u ubuntu --key-file ~/environment/labsuser.pem
