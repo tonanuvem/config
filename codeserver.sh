@@ -53,6 +53,14 @@ sudo setcap cap_net_bind_service=+ep /usr/lib/code-server/lib/node
 sudo systemctl restart code-server@$USER
 #sudo systemctl status code-server
 
+# settings.json : Code Server
+mkdir ~/.local/share/code-server/User/
+cat >> ~/.local/share/code-server/User/settings.json <<EOL
+{
+    "workbench.colorTheme": "Default Dark Modern"
+}
+EOL
+
 # utils: cria script para verificar ip publico.
 sudo cat >> ~/ip <<EOL
 curl checkip.amazonaws.com
