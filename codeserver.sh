@@ -72,18 +72,6 @@ ansible-playbook ~/environment/config/ansible/cloud9.yml --inventory ~/environme
 echo "\n\n Configurando Cloud9 com Spring"
 bash ~/environment/config/spring.sh
 
-echo " Liberando firewall para o ambiente do CodeServer"
-if [ $(aws ec2 describe-security-groups | jq '.SecurityGroups[] | select(.GroupName | contains("cloud9")) | .GroupName' | wc -l) = "1" ]
-then
-  # liberar firewall automaticamente se só existe 1 security group
-  NOME_GRUPO_SEGURANCA=$(aws ec2 describe-security-groups | jq '.SecurityGroups[] | select(.GroupName | contains("cloud9")) | .GroupName' | tr -d \")
-  aws ec2 authorize-security-group-ingress --group-name $NOME_GRUPO_SEGURANCA --protocol tcp --port 0-65535 --cidr 0.0.0.0/0
-else
-  # escolher manualmente dentre os securty groups existentes
-  bash ~/environment/config/firewall_allow.sh
-fi
-
-
 ## FIM
 #source ~/.bash_profile
 echo ""
