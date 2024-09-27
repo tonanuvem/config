@@ -53,6 +53,11 @@ sudo setcap cap_net_bind_service=+ep /usr/lib/code-server/lib/node
 sudo systemctl restart code-server@$USER
 #sudo systemctl status code-server
 
+# utils: cria script para verificar ip publico.
+sudo cat >> ~/ip <<EOL
+curl checkip.amazonaws.com
+EOL
+chmod +x ~/ip
 
 echo "\n\n Configurar pre-req para instalação do Ansible"
 # configurar pre-req (inventario) ansible
