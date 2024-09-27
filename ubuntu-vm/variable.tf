@@ -17,7 +17,7 @@ variable "tamanho_disco" {
 
 variable "ec2_name" {
   type        = string
-  default     = "fiap_aluno_code"
+  default     = "fiap_aluno"
 }
 
 variable "key_name" {
