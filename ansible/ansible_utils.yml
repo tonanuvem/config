@@ -57,7 +57,7 @@
   - name: Instalar o Docker via yum no Amazon Linux 2
     become: yes
     shell: |
-      sudo yum install -y docker python3 python3-pip wget git jq
+      sudo yum install -y docker python3 python3-pip wget git jq http
     when: (ansible_os_family == "RedHat") and (ansible_distribution_version == "2")
     
   - name: Instalar lista de pacotes (ubuntu)
@@ -81,25 +81,10 @@
     until: apt_action is success or ('Failed to lock apt for exclusive operation' not in apt_action.msg and '/var/lib/dpkg/lock' not in apt_action.msg)
     when: ansible_os_family == "Debian"
 
-  - name: Preparar Apache web server (Amazon Linux 2)
+  - name: atualizar index page (Apache web server)
     become: yes
     shell: |
-      #sudo systemctl start httpd
-      #sudo systemctl enable httpd
-      #sudo firewall-cmd --permanent --add-service=http
-      #sudo firewall-cmd --reload
-      #sudo chmod 777 /var/www/html
-      # atualizar index page
-      sudo curl -s "https://tonanuvem.github.io/page/docs/hero.html" -o "/var/www/html/index.html"
-    when: (ansible_os_family == "RedHat") and (ansible_distribution_version == "2")
-
-  - name: Ajustar Apache web server (ubuntu)
-    shell: |
-      # atualizar index page
-      sudo curl -s "https://tonanuvem.github.io/page/docs/hero.html" -o "/var/www/html/index.html"
-    args:
-      executable: /bin/bash
-    when: ansible_os_family == "Debian"
+      sudo curl -s "https://tonanuvem.github.io/page/docs/open.html" -o "/var/www/html/index.html" 
       
   - name: Preparar utilitário ccat
     ansible.builtin.shell: |
