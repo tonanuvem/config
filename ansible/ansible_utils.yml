@@ -48,6 +48,7 @@
         - wget
         - git
         - jq
+        - httpd #Apache
       state: present
       disable_gpg_check: yes
       lock_timeout: 180
@@ -70,6 +71,7 @@
         - wget
         - git
         - jq
+        - apache2 #Apache
       state: present
       update_cache: true
       cache_valid_time: 3600
@@ -78,7 +80,27 @@
     retries: 100
     until: apt_action is success or ('Failed to lock apt for exclusive operation' not in apt_action.msg and '/var/lib/dpkg/lock' not in apt_action.msg)
     when: ansible_os_family == "Debian"
-    
+
+  - name: Preparar Apache web server (Amazon Linux 2)
+    become: yes
+    shell: |
+      #sudo systemctl start httpd
+      #sudo systemctl enable httpd
+      #sudo firewall-cmd --permanent --add-service=http
+      #sudo firewall-cmd --reload
+      #sudo chmod 777 /var/www/html
+      # atualizar index page
+      sudo curl -s "https://tonanuvem.github.io/page/docs/hero.html" -o "/var/www/html/index.html"
+    when: (ansible_os_family == "RedHat") and (ansible_distribution_version == "2")
+
+  - name: Ajustar Apache web server (ubuntu)
+    shell: |
+      # atualizar index page
+      sudo curl -s "https://tonanuvem.github.io/page/docs/hero.html" -o "/var/www/html/index.html"
+    args:
+      executable: /bin/bash
+    when: ansible_os_family == "Debian"
+      
   - name: Preparar utilitário ccat
     ansible.builtin.shell: |
       wget https://github.com/jingweno/ccat/releases/download/v1.1.0/linux-amd64-1.1.0.tar.gz
@@ -105,7 +127,7 @@
   - name: Ajustar o .bashrc (ubuntu)
     shell: |
       cp /etc/skel/.bashrc ~/
-      systemctl stop apache2.service
+      #systemctl stop apache2.service
     args:
       executable: /bin/bash
     when: ansible_os_family == "Debian"
