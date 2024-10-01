@@ -48,7 +48,7 @@
         - wget
         - git
         - jq
-        - httpd #Apache
+        - httpd
       state: present
       disable_gpg_check: yes
       lock_timeout: 180
@@ -71,7 +71,7 @@
         - wget
         - git
         - jq
-        - apache2 #Apache
+        - apache2
       state: present
       update_cache: true
       cache_valid_time: 3600
