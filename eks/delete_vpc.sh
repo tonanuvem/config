@@ -382,7 +382,7 @@ do
         echo "    network attachment is ${attachment}"
         aws ec2 detach-network-interface \
             --attachment-id "${attachment}" \
-            --region "${AWS_REGION}" >/dev/null
+            --force --region "${AWS_REGION}" >/dev/null
 
         # we need a waiter here
         sleep 3
