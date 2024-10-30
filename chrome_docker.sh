@@ -11,7 +11,7 @@ docker run --rm -d \
   -p 8443:3001 \
   -v /home/ubuntu/environment/:/config \
   --shm-size="1gb" \
-  --restart unless-stopped \
+#  --restart unless-stopped \
   ghcr.io/tibor309/chrome:latest
 
 echo ""
