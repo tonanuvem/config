@@ -1,6 +1,6 @@
 # https://github.com/tonanuvem/chrome
 
-docker run -d \
+docker run --rm -d \
   --name=google-chrome \
   --security-opt seccomp=unconfined `#optional` \
   -e PUID=1000 \
