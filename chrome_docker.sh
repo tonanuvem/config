@@ -7,7 +7,7 @@ docker run -d \
   -e PGID=1000 \
   -e TZ=Etc/UTC \
   -e CHROME_CLI=https://www.fiap.com.br/ `#optional` \
-  -p 8080:3000 \
+  -p 8888:3000 \
   -p 8443:3001 \
   -v /home/ubuntu/environment/:/config \
   --shm-size="1gb" \
@@ -17,7 +17,7 @@ docker run -d \
 echo ""
 ip=$(curl -s checkip.amazonaws.com)
 echo ""
-echo "Acessar: http://$ip:8080"
+echo "Acessar: http://$ip:8888"
 #echo "Acessar: https://$ip:8443"
 echo ""
 echo ""
