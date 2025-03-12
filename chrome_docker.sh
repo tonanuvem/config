@@ -1,22 +1,16 @@
 # https://github.com/tonanuvem/chrome
 
-docker run --rm -d \
-  --name=google-chrome \
-  --security-opt seccomp=unconfined `#optional` \
-  -e PUID=1000 \
-  -e PGID=1000 \
-  -e TZ=Etc/UTC \
-  -e CHROME_CLI=https://www.fiap.com.br/ `#optional` \
-  -p 8888:3000 \
-  -p 8843:3001 \
-  -v /home/ubuntu/environment/:/config \
-  --shm-size="1gb" \
-  ghcr.io/tibor309/chrome:latest
+# https://github.com/bonigarcia/novnc
+# https://github.com/siomiz/chrome
+
+docker network create chrome
+docker run --rm --name chrome -p 5900:5900 --net chrome -d siomiz/chrome
+docker run --rm --name novnc -p 6080:6080 --net chrome -e AUTOCONNECT=true -e VNC_SERVER=chrome:5900 -d bonigarcia/novnc:1.2.0
 
 echo ""
 ip=$(curl -s checkip.amazonaws.com)
 echo ""
-echo "Acessar: http://$ip:8888"
+echo "Acessar: http://$ip:6080"
 #echo "Acessar: https://$ip:8843"
 echo ""
 echo ""
