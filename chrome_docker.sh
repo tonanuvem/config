@@ -3,9 +3,9 @@
 # https://github.com/bonigarcia/novnc
 # https://github.com/siomiz/chrome
 
-docker network create chrome
-docker run --rm --name chrome -p 5900:5900 --net chrome -e VNC_SCREEN_SIZE=1024x768 -d siomiz/chrome
-docker run --rm --name novnc -p 6080:6080 --net chrome -e AUTOCONNECT=true -e VNC_SERVER=chrome:5900 -d bonigarcia/novnc:1.2.0
+docker network create netchrome
+docker run --rm --name chrome -p 5900:5900 --net netchrome -e VNC_SCREEN_SIZE=1024x768 -d siomiz/chrome
+docker run --rm --name novnc -p 6080:6080 --net netchrome -e AUTOCONNECT=true -e VNC_SERVER=chrome:5900 -d bonigarcia/novnc:1.2.0
 
 echo ""
 ip=$(curl -s checkip.amazonaws.com)
