@@ -87,7 +87,7 @@
       sudo chmod -R u+wrx $HOME/.minikube
       sudo snap install kubectl --classic
       # helm
-      curl -s https://get.helm.sh/helm-v3.1.2-linux-amd64.tar.gz -o helm-linux-amd64.tar.gz
+      curl -s https://get.helm.sh/helm-v3.17.2-linux-amd64.tar.gz -o helm-linux-amd64.tar.gz
       tar -zxvf helm-linux-amd64.tar.gz
       sudo mv linux-amd64/helm /usr/local/bin/helm
       rm -rf linux-amd64
