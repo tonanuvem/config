@@ -53,7 +53,7 @@
     tasks:
         - name: download docker-compose
           shell: |
-            sudo curl -L "https://github.com/docker/compose/releases/download/v2.14.2/docker-compose-linux-x86_64" -o /usr/local/bin/docker-compose
+            sudo curl -L "https://github.com/docker/compose/releases/download/v2.35.1/docker-compose-linux-x86_64" -o /usr/local/bin/docker-compose
             sudo chmod +x /usr/local/bin/docker-compose
           args:
             executable: /bin/bash
