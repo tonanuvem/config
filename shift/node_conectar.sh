@@ -5,8 +5,15 @@ echo ""
 #echo "Copie e cole um dos IPs exibidos acimas : " 
 #read IP
 
-echo "Em qual NODE você deseja conectar? Digitar: 1 ou 2 ou 3" 
-read NODENUM
+# Verifica se um parâmetro foi passado
+if [ -n "$1" ]; then
+  NODENUM="$1"
+else
+  # Caso não tenha sido passado, solicita ao usuário
+  echo "Em qual NODE você deseja conectar? Digitar: 1 ou 2 ou 3"
+  read NODENUM
+fi
+
 IP=$(~/environment/ip | awk -Fv '{ if ( !($1 ~  "None") && (/vm_'$NODENUM'/) ) { print $1} }')
 
 echo "Conectando.. IP = $IP"
