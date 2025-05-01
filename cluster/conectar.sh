@@ -5,8 +5,16 @@ echo ""
 #echo "Copie e cole um dos IPs exibidos acimas : " 
 #read IP
 terraform apply --auto-approve > /dev/null
-echo "Em qual NODE você deseja conectar? Digitar: 1 ou 2 ou 3" 
-read NODENUM
+
+# Verifica se um parâmetro foi passado
+if [ -n "$1" ]; then
+  NODENUM="$1"
+else
+  # Caso não tenha sido passado, solicita ao usuário
+  echo "Em qual NODE você deseja conectar? Digitar: 1 ou 2 ou 3"
+  read NODENUM
+fi
+
 NODE="Node_${NODENUM}_ip_externo"
 export IP=$(terraform output -raw $NODE)
 
