@@ -63,28 +63,6 @@
       sudo mv terraform /usr/bin/
       rm -rf terraform_linux_amd64.zip
 
-  - name: Instalar ferramentas K8S
-    become: yes
-    shell: |
-      echo "ok"
-      # minikube
-      #curl -s "https://storage.googleapis.com/minikube/releases/latest/minikube-linux-amd64" -o "minikube-linux"
-      #chmod +x minikube-linux 
-      #sudo mv minikube-linux /usr/bin/minikube
-      #mkdir $HOME/.minikube 
-      #sudo chown -R $USER $HOME/.minikube
-      #sudo chmod -R u+wrx $HOME/.minikube
-      # kubectl
-      #sudo chown -R $USER $HOME/.kube
-      #mkdir $HOME/.kube
-      #sudo snap install kubectl --classic
-      # helm
-      #curl -s https://get.helm.sh/helm-v3.17.2-linux-amd64.tar.gz -o helm-linux-amd64.tar.gz
-      #tar -zxvf helm-linux-amd64.tar.gz
-      #sudo mv linux-amd64/helm /usr/local/bin/helm
-      #rm -rf linux-amd64
-      #rm -rf helm-linux-amd64.tar.gz
-
   - name: Instalar lista de pacotes (ubuntu)
     become: yes
     apt:
