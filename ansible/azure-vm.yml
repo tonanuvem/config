@@ -30,10 +30,7 @@
     ansible.builtin.copy:
       dest: "~/environment/ip"
       content: |
-        for region in us-east-1 us-west-2
-        do
-          aws ec2 describe-instances --region $region --query "Reservations[*].Instances[*].[PublicIpAddress, Tags[?Key=='Name'].Value|[0]]" --output text | grep -v None
-        done
+        curl -s checkip.amazonaws.com
   - name: Mudar a permissao do arquivo ~/ip
     ansible.builtin.file:
       path: ~/environment/ip
