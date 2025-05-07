@@ -1,7 +1,7 @@
 #!/bin/bash
 
 sudo apt-get -y update
-sudo apt-get install -y git python3 pip apache2
+sudo apt-get install -y git python3 pip apache2 unzip zip
 pip3 install --upgrade pip
 sudo python3 -m pip install ansible
 
