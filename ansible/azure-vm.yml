@@ -66,6 +66,7 @@
   - name: Instalar ferramentas K8S
     become: yes
     shell: |
+      echo "ok"
       # minikube
       #curl -s "https://storage.googleapis.com/minikube/releases/latest/minikube-linux-amd64" -o "minikube-linux"
       #chmod +x minikube-linux 
