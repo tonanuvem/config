@@ -1,5 +1,7 @@
 #!/bin/bash
 
+# Tamanho da VM: Standard_B2as_v2
+
 sudo apt-get -y update
 sudo apt-get install -y git python3 pip apache2 unzip zip
 pip3 install --upgrade pip
