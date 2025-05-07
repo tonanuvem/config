@@ -67,13 +67,14 @@
     become: yes
     shell: |
       # minikube
-      curl -s "https://storage.googleapis.com/minikube/releases/latest/minikube-linux-amd64" -o "minikube-linux"
-      chmod +x minikube-linux 
-      sudo mv minikube-linux /usr/bin/minikube
-      mkdir $HOME/.kube && mkdir $HOME/.minikube 
+      #curl -s "https://storage.googleapis.com/minikube/releases/latest/minikube-linux-amd64" -o "minikube-linux"
+      #chmod +x minikube-linux 
+      #sudo mv minikube-linux /usr/bin/minikube
+      #mkdir $HOME/.minikube 
+      mkdir $HOME/.kube
       sudo chown -R $USER $HOME/.kube
-      sudo chown -R $USER $HOME/.minikube
-      sudo chmod -R u+wrx $HOME/.minikube
+      #sudo chown -R $USER $HOME/.minikube
+      #sudo chmod -R u+wrx $HOME/.minikube
       sudo snap install kubectl --classic
       # helm
       curl -s https://get.helm.sh/helm-v3.17.2-linux-amd64.tar.gz -o helm-linux-amd64.tar.gz
@@ -103,6 +104,12 @@
         - libreadline-dev 
         - libbz2-dev
         - openjdk-17-jdk
+        - docker-ce
+        - docker-ce-cli 
+        - containerd.io 
+        - docker-buildx-plugin 
+        - docker-compose-plugin
+        
       state: present
       update_cache: true
       cache_valid_time: 3600
