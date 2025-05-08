@@ -1,12 +1,25 @@
+terraform {
+  required_providers {
+    azurerm = {
+      source  = "hashicorp/azurerm"
+      version = "~> 4.27.0"
+    }
+  }
+
+  required_version = ">= 1.1.0"
+}
+
 provider "azurerm" {
   features {}
 }
 
+# Resource Group
 resource "azurerm_resource_group" "rg" {
   name     = "fiap"
   location = "East US"
 }
 
+# Virtual Network
 resource "azurerm_virtual_network" "vnet" {
   name                = "devlabs-vnet"
   address_space       = ["10.0.0.0/16"]
@@ -14,6 +27,7 @@ resource "azurerm_virtual_network" "vnet" {
   resource_group_name = azurerm_resource_group.rg.name
 }
 
+# Subnet
 resource "azurerm_subnet" "subnet" {
   name                 = "devlabs-subnet"
   resource_group_name  = azurerm_resource_group.rg.name
@@ -21,6 +35,7 @@ resource "azurerm_subnet" "subnet" {
   address_prefixes     = ["10.0.1.0/24"]
 }
 
+# Network Security Group
 resource "azurerm_network_security_group" "nsg" {
   name                = "devlabs-nsg"
   location            = azurerm_resource_group.rg.location
@@ -51,6 +66,7 @@ resource "azurerm_network_security_group" "nsg" {
   }
 }
 
+# Network Interface
 resource "azurerm_network_interface" "nic" {
   name                = "devlabs-nic"
   location            = azurerm_resource_group.rg.location
@@ -63,20 +79,34 @@ resource "azurerm_network_interface" "nic" {
   }
 }
 
+# NIC-NSG Association
 resource "azurerm_network_interface_security_group_association" "nic_nsg_assoc" {
   network_interface_id      = azurerm_network_interface.nic.id
   network_security_group_id = azurerm_network_security_group.nsg.id
 }
 
+# Storage Account for Boot Diagnostics
+resource "azurerm_storage_account" "diag" {
+  name                     = "diagstorageacc" # Deve ser único globalmente
+  location                 = azurerm_resource_group.rg.location
+  resource_group_name      = azurerm_resource_group.rg.name
+  account_tier             = "Standard"
+  account_replication_type = "LRS"
+}
+
+# Linux VM
 resource "azurerm_linux_virtual_machine" "vm" {
-  name                  = "devlabs-vm"
-  resource_group_name   = azurerm_resource_group.rg.name
-  location              = azurerm_resource_group.rg.location
-  size                  = "Standard_B2as_v2"
-  admin_username        = "ubuntu"
-  network_interface_ids = [azurerm_network_interface.nic.id]
+  name                            = "devlabs-vm"
+  resource_group_name             = azurerm_resource_group.rg.name
+  location                        = azurerm_resource_group.rg.location
+  size                            = "Standard_B2as_v2"
+  admin_username                  = "ubuntu"
   disable_password_authentication = false
-  admin_password        = "P@ssword1234!"
+  admin_password                  = "P@ssword1234!" # Use "sensitive = true" ou variável secreta em produção
+
+  network_interface_ids = [
+    azurerm_network_interface.nic.id
+  ]
 
   os_disk {
     caching              = "ReadWrite"
@@ -92,15 +122,6 @@ resource "azurerm_linux_virtual_machine" "vm" {
   }
 
   boot_diagnostics {
-    enabled = true
-    storage_uri = azurerm_storage_account.diag.primary_blob_endpoint
+    storage_account_uri = azurerm_storage_account.diag.primary_blob_endpoint
   }
-}
-
-resource "azurerm_storage_account" "diag" {
-  name                     = "diagstorageacc"
-  location                 = azurerm_resource_group.rg.location
-  resource_group_name      = azurerm_resource_group.rg.name
-  account_tier             = "Standard"
-  account_replication_type = "LRS"
 }
