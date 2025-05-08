@@ -83,8 +83,21 @@ resource "azurerm_linux_virtual_machine" "vm" {
 
   source_image_reference {
     publisher = "Canonical"
-    offer     = "UbuntuServer"
-    sku       = "18.04-LTS"
+    offer     = "0001-com-ubuntu-server-jammy"
+    sku       = "22_04-lts"
     version   = "latest"
   }
+
+  boot_diagnostics {
+    enabled = true
+    storage_uri = azurerm_storage_account.diag.primary_blob_endpoint
+  }
+}
+
+resource "azurerm_storage_account" "diag" {
+  name                     = "diagstorageacc"
+  location                 = azurerm_resource_group.rg.location
+  resource_group_name      = azurerm_resource_group.rg.name
+  account_tier             = "Standard"
+  account_replication_type = "LRS"
 }
