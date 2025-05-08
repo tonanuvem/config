@@ -66,7 +66,7 @@ variable "username" {
 }
 
 variable "senha" {
-  description = "Senha do usuário administrador da VM"
+  description = "Senha do usuário administrador da VM, por exemplo = P@ssword1234!"
   type        = string
   sensitive   = true
 }
