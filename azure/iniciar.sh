@@ -1,3 +1,14 @@
+# Verifica se um parâmetro foi passado
+if [ -n "$1" ]; then
+  SENHASEGURA="$1"
+else
+  # Caso não tenha sido passado, solicita ao usuário
+  echo "Qual SENHASEGURA você deseja usar?"
+  read SENHASEGURA
+fi
+
+echo ""
+
 terraform init; terraform plan; terraform apply -auto-approve
 echo ""
 echo "   Aguardando configurações: "
