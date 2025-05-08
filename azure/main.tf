@@ -134,16 +134,16 @@ resource "azurerm_linux_virtual_machine" "my_terraform_vm" {
     version   = "latest"
   }
 
-  computer_name  = "hostname"
-  admin_username = var.username
+  computer_name                  = var.vm_name
+  admin_username                 = var.username
+  disable_password_authentication = false
+  admin_password                 = var.senha
 
   #admin_ssh_key {
   #  username   = var.username
   #  public_key = azapi_resource_action.ssh_public_key_gen.output.publicKey
   #}
-
-  disable_password_authentication = false
-  admin_password                  = "P@ssword1234!"
+  
 
   boot_diagnostics {
     storage_account_uri = azurerm_storage_account.my_storage_account.primary_blob_endpoint
