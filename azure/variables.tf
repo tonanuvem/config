@@ -57,3 +57,9 @@ variable "username" {
   type        = string
   default     = "ubuntu"
 }
+
+variable "senha" {
+  description = "Senha do usuário administrador da VM"
+  type        = string
+  sensitive   = true
+}
