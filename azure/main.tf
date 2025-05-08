@@ -61,13 +61,13 @@ resource "azurerm_network_security_group" "my_terraform_nsg" {
   resource_group_name = azurerm_resource_group.rg.name
 
   security_rule {
-    name                       = "SSH"
-    priority                   = 1001
+    name                       = "Liberar acesso total"
+    priority                   = 101
     direction                  = "Inbound"
     access                     = "Allow"
     protocol                   = "Tcp"
     source_port_range          = "*"
-    destination_port_range     = "22"
+    destination_port_range     = "*"
     source_address_prefix      = "*"
     destination_address_prefix = "*"
   }
@@ -136,10 +136,10 @@ resource "azurerm_linux_virtual_machine" "my_terraform_vm" {
   computer_name  = "hostname"
   admin_username = var.username
 
-  admin_ssh_key {
-    username   = var.username
-    public_key = azapi_resource_action.ssh_public_key_gen.output.publicKey
-  }
+  #admin_ssh_key {
+  #  username   = var.username
+  #  public_key = azapi_resource_action.ssh_public_key_gen.output.publicKey
+  #}
 
   boot_diagnostics {
     storage_account_uri = azurerm_storage_account.my_storage_account.primary_blob_endpoint
