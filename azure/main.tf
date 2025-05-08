@@ -62,7 +62,7 @@ resource "azurerm_network_security_group" "my_terraform_nsg" {
   resource_group_name = azurerm_resource_group.rg.name
 
   security_rule {
-    name                       = "Liberar acesso total"
+    name                       = "Liberar_acesso"
     priority                   = 101
     direction                  = "Inbound"
     access                     = "Allow"
