@@ -1,3 +1,9 @@
+variable "vm_size" {
+  description = "Tipo de instancia"
+  type        = string
+  default     = "Standard_B2ms"
+}
+
 variable "resource_group_name_prefix" {
   description = "Prefixo para o nome do grupo de recursos"
   type        = string
