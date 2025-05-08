@@ -70,7 +70,7 @@ resource "azurerm_linux_virtual_machine" "vm" {
   resource_group_name   = azurerm_resource_group.rg.name
   location              = azurerm_resource_group.rg.location
   size                  = "Standard_B2as_v2"
-  admin_username        = "azureuser"
+  admin_username        = "ubuntu"
   network_interface_ids = [azurerm_network_interface.nic.id]
   disable_password_authentication = false
   admin_password        = "P@ssword1234!"
