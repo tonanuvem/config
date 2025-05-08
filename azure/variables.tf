@@ -2,6 +2,7 @@ variable "vm_size" {
   description = "Tipo de instancia"
   type        = string
   default     = "Standard_B2ms"
+  # default     = "Standard_DS1_v2"
 }
 
 variable "resource_group_name_prefix" {
