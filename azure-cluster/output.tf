@@ -15,8 +15,7 @@ output "linux_virtual_machine_names" {
 }
 
 output "dns_externo" {
-  # value = azurerm_public_ip.fiaplab_public_ip[count.index].fqdn
-  value = [for s in azurerm_linux_virtual_machine.clusterfiaplab_vm : s.fqdn[*]]
+  value = [for ip in azurerm_public_ip.fiaplab_public_ip : ip.fqdn]
 }
 
 output "ip_externo" {
