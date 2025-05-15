@@ -39,9 +39,9 @@
           become: yes
           apt:
             name:
-              - openjdk-22-jdk
+              - openjdk-21-jdk
               - maven
-              - maven-repository
+              - maven-repository-helper
             state: present
             update_cache: true
             cache_valid_time: 3600
