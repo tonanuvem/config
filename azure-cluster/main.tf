@@ -126,7 +126,7 @@ resource "azurerm_availability_set" "avset" {
 
 resource "azurerm_linux_virtual_machine" "clusterfiaplab_vm" {
   count                 = var.quantidade
-  name                  = "var.vm_name${count.index}"
+  name                  = "${var.vm_name}${count.index}"
   location              = azurerm_resource_group.rg.location
   availability_set_id   = azurerm_availability_set.avset.id
   resource_group_name   = azurerm_resource_group.rg.name
@@ -134,10 +134,10 @@ resource "azurerm_linux_virtual_machine" "clusterfiaplab_vm" {
   size                  = var.vm_size
 
   # Uncomment this line to delete the OS disk automatically when deleting the VM
-  # delete_os_disk_on_termination = true
+  delete_os_disk_on_termination = true
 
   # Uncomment this line to delete the data disks automatically when deleting the VM
-  # delete_data_disks_on_termination = true
+  delete_data_disks_on_termination = true
 
   source_image_reference {
     publisher = "Canonical"
@@ -154,7 +154,7 @@ resource "azurerm_linux_virtual_machine" "clusterfiaplab_vm" {
   os_disk {
     caching              = "ReadWrite"
     storage_account_type = "Standard_LRS"
-    name                 = "myosdisk${count.index}"
+    name                 = "disco_so_${count.index}"
   }
 
   computer_name = "${var.vm_name}${count.index}"
@@ -163,7 +163,7 @@ resource "azurerm_linux_virtual_machine" "clusterfiaplab_vm" {
 
 resource "azurerm_managed_disk" "fiaplab_disk" {
   count                = var.quantidade
-  name                 = "datadisk_existing_${count.index}"
+  name                 = "disco_dados_${count.index}"
   location             = azurerm_resource_group.rg.location
   resource_group_name  = azurerm_resource_group.rg.name
   storage_account_type = "Standard_LRS"
