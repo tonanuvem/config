@@ -7,7 +7,8 @@ variable "quantidade" {
 variable "vm_size" {
   description = "Tipo de instancia"
   type        = string
-  default     = "Standard_B2ms"
+  default     = "Standard_B1ms"
+  # default     = "Standard_B2ms"
   # default     = "Standard_DS1_v2"
 }
 
