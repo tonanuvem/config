@@ -130,7 +130,7 @@ resource "azurerm_linux_virtual_machine" "fiaplab_vm" {
 
   computer_name                   = var.vm_name
   admin_username                  = var.username
-  disable_password_authentication = false
+  #disable_password_authentication = false
   #admin_password                  = var.senha
 
   admin_ssh_key {
