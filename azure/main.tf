@@ -131,7 +131,12 @@ resource "azurerm_linux_virtual_machine" "fiaplab_vm" {
   computer_name                   = var.vm_name
   admin_username                  = var.username
   disable_password_authentication = false
-  admin_password                  = var.senha
+  #admin_password                  = var.senha
+
+  admin_ssh_key {
+    username   = var.username
+    public_key = azapi_resource_action.ssh_public_key_gen.output.publicKey
+  }
 
   boot_diagnostics {
     storage_account_uri = azurerm_storage_account.fiaplab_storage_account.primary_blob_endpoint
