@@ -156,7 +156,7 @@ resource "azurerm_linux_virtual_machine" "clusterfiaplab_vm" {
     name                 = "myosdisk${count.index}"
   }
 
-  computer_name  = var.vm_name${count.index}
+  computer_name  = "var.vm_name${count.index}"
   admin_username = var.username
 }
 
