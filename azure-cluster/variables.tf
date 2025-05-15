@@ -12,6 +12,12 @@ variable "vm_size" {
   # default     = "Standard_DS1_v2"
 }
 
+variable "vm_name" {
+  description = "Nome da máquina virtual"
+  type        = string
+  default     = "fiap-vm-k8s"
+}
+
 variable "resource_group_name_prefix" {
   description = "Prefixo para o nome do grupo de recursos"
   type        = string
@@ -58,12 +64,6 @@ variable "storage_account_prefix" {
   description = "Prefixo para o nome da conta de armazenamento"
   type        = string
   default     = "fiaplabdiag"
-}
-
-variable "vm_name" {
-  description = "Nome da máquina virtual"
-  type        = string
-  default     = "fiap_vm_k8s"
 }
 
 variable "username" {
