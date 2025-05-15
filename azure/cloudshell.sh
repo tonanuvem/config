@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # para executar o script, rodar: 
-# curl -s https://raw.githubusercontent.com/tonanuvem/config/refs/heads/main/azure/cloudshell.sh | bash
+# curl -s -H 'Cache-Control: no-cache' -H 'Pragma: no-cache' https://raw.githubusercontent.com/tonanuvem/config/refs/heads/main/azure/cloudshell.sh | bash
 
 # Caminho da pasta
 PASTA_ENV="$HOME/enviroment"
