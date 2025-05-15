@@ -63,7 +63,7 @@ variable "storage_account_prefix" {
 variable "vm_name" {
   description = "Nome da máquina virtual"
   type        = string
-  default     = "fiaplab-vm"
+  default     = "fiap_vm_k8s"
 }
 
 variable "username" {
