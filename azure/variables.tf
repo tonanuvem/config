@@ -68,5 +68,6 @@ variable "username" {
 variable "senha" {
   description = "Senha do usuário administrador da VM, por exemplo = P@ssword1234!"
   type        = string
+  default     = "P@ssword1234!"
   sensitive   = true
 }
