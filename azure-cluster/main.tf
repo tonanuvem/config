@@ -104,7 +104,7 @@ resource "azurerm_network_interface" "fiaplab_nic" {
     name                          = "clusterfiaplab_nic_configuration"
     subnet_id                     = azurerm_subnet.fiaplab_subnet.id
     private_ip_address_allocation = "Dynamic"
-    public_ip_address_id          = [azurerm_public_ip.fiaplab_public_ip[count.index].id]
+    public_ip_address_id          = azurerm_public_ip.fiaplab_public_ip[count.index].id
   }
 }
 
