@@ -4,7 +4,7 @@
 # curl -s https://raw.githubusercontent.com/tonanuvem/config/refs/heads/main/azure/cloudshell.sh | bash
 
 # Caminho da pasta
-PASTA_ENV="enviroment"
+PASTA_ENV="~/enviroment"
 PASTA_CONFIG="$PASTA_ENV/config"
 
 # Verifica se a pasta 'enviroment' existe
@@ -20,3 +20,5 @@ if [ ! -d "$PASTA_CONFIG" ]; then
 else
     echo "A pasta '$PASTA_CONFIG' já existe."
 fi
+
+cd $PASTA_CONFIG/azure
