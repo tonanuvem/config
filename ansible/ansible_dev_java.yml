@@ -49,24 +49,13 @@
           until: apt_action is success or ('Failed to lock apt for exclusive operation' not in apt_action.msg and '/var/lib/dpkg/lock' not in apt_action.msg)
           when: ansible_os_family == "Debian"
 
-        - name: Set JAVA_HOME environment variable (Optional)
-          block:
-            - name: Verify JAVA_HOME is not already set
-              lineinfile:
-                path: /etc/environment
-                regexp: "JAVA_HOME="
-                insertafter: "PATH="
-                line: "JAVA_HOME=/usr/lib/jvm/java-22-openjdk-amd64" # Adjust path as needed
-                create: yes
-                state: present
-              ignore_errors: yes
-            - name: Set JAVA_HOME if not already defined
-              lineinfile:
-                path: /etc/environment
-                regexp: "JAVA_HOME="
-                line: "JAVA_HOME=/usr/lib/jvm/java-22-openjdk-amd64" # Adjust path as needed
-                create: yes
-                state: present
+        - name: Adicionar variáveis de ambiente do JAVA no Ubuntu
+          blockinfile:
+            path: /etc/environment
+            block: |
+              JAVA_HOME=/usr/lib/jvm/java-22-openjdk-amd64
+              M2_HOME=/opt/maven
+              MAVEN_HOME=/opt/maven
           when: ansible_os_family == "Debian"
           
         - name: Verificar Java e Maven
