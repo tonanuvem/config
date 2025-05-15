@@ -2,10 +2,34 @@
 # https://docs.ansible.com/ansible/2.9/modules/modules_by_category.html
 # https://docs.ansible.com/ansible/latest/user_guide/playbooks_conditionals.html#playbooks-conditionals
 # https://docs.ansible.com/ansible/latest/user_guide/playbooks_loops.html#playbooks-loops
+
   - name: Instalar o Docker
     hosts: all
     become: yes
-    tasks:        
+    tasks:
+        # PRE-REQS DO UBUNTU
+        - name: Install required packages
+          apt:
+            name:
+              - apt-transport-https
+              - ca-certificates
+              - curl
+              - software-properties-common
+            state: present
+            update_cache: true
+          when: ansible_os_family == "Debian"
+        - name: Add Docker’s official GPG key
+          apt_key:
+            url: https://download.docker.com/linux/ubuntu/gpg
+            state: present
+          when: ansible_os_family == "Debian"
+        - name: Add Docker repository
+          apt_repository:
+            repo: deb https://download.docker.com/linux/ubuntu focal stable
+            state: present
+          when: ansible_os_family == "Debian"
+
+        # INSTALL
         - name: Instalar o Docker via amazon-linux-extras no Amazon Linux 2
           shell: |
             amazon-linux-extras install docker -y
@@ -21,6 +45,24 @@
             disable_gpg_check: yes
             lock_timeout: 180
           when: (ansible_os_family == "RedHat") and (ansible_distribution_version == "2023")
+
+        - name: Instalar o Docker via apt (ubuntu)
+          become: yes
+          apt:
+            name:
+              - docker-ce
+              - docker-ce-cli 
+              - containerd.io 
+              - docker-buildx-plugin 
+              - docker-compose-plugin
+            state: present
+            update_cache: true
+            cache_valid_time: 3600
+            force_apt_get: true
+          register: apt_action
+          retries: 100
+          until: apt_action is success or ('Failed to lock apt for exclusive operation' not in apt_action.msg and '/var/lib/dpkg/lock' not in apt_action.msg)
+          when: ansible_os_family == "Debian"
 
         - name: Restartar o Docker service
           service:
