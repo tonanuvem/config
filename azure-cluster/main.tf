@@ -68,7 +68,7 @@ resource "azurerm_subnet" "fiaplab_subnet" {
 # Create public IPs
 resource "azurerm_public_ip" "fiaplab_public_ip" {
   count               = var.quantidade
-  name                = "var.public_ip_name${count.index}"
+  name                = "public_ip_${count.index}"
   location            = azurerm_resource_group.rg.location
   resource_group_name = azurerm_resource_group.rg.name
   allocation_method   = "Dynamic"
