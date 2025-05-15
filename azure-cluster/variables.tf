@@ -1,6 +1,7 @@
 variable "quantidade" {
   type        = number
-  default     = "4"
+  default     = "3" 
+  # Cannot create more than 3 public IP addresses for this subscription in this region.
 }
 
 variable "vm_size" {
