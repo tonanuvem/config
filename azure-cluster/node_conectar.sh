@@ -8,5 +8,5 @@ fi
 
 NODE=$(terraform output -json ip_externo | jq .[$N] | jq .[] | sed 's/"//g')
 
-echo "Conectando.. IP = $IP"
+echo "Conectando.. IP = $NODE"
 ssh -o LogLevel=error -oStrictHostKeyChecking=no -i ~/environment/labsuser.pem ubuntu@$NODE
