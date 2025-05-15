@@ -126,7 +126,7 @@ resource "azurerm_availability_set" "avset" {
 
 resource "azurerm_linux_virtual_machine" "clusterfiaplab_vm" {
   count                 = var.quantidade
-  name                  = "${var.vm_name}${count.index}"
+  name                  = "${format("%s_%d_%s", "vm", count.index, var.vm_name)}"
   location              = azurerm_resource_group.rg.location
   availability_set_id   = azurerm_availability_set.avset.id
   resource_group_name   = azurerm_resource_group.rg.name
