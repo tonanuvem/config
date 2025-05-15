@@ -55,4 +55,10 @@ else
     echo "A pasta '$PASTA_CONFIG' já existe."
 fi
 
-cd $PASTA_CONFIG/azure
+# Entra no diretório ~/enviroment/config
+cd "$PASTA_CONFIG" || {
+    echo "❌ Erro: não foi possível entrar na pasta '$PASTA_CONFIG'"
+    exit 1
+}
+
+echo "📁 Agora dentro da pasta: $(pwd)"
