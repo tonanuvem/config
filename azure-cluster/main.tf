@@ -110,7 +110,7 @@ resource "azurerm_network_interface" "fiaplab_nic" {
 
 # Connect the security group to the network interface
 resource "azurerm_network_interface_security_group_association" "fiaplab_sg_association" {
-  network_interface_id      = azurerm_network_interface.fiaplab_nic.id
+  network_interface_id      = azurerm_network_interface.fiaplab_nic[count.index].id
   network_security_group_id = azurerm_network_security_group.fiaplab_nsg.id
 }
 
