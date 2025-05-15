@@ -52,6 +52,7 @@
           when: ansible_os_family == "Debian"
 
         - name: Adicionar variáveis de ambiente do JAVA no Ubuntu
+          become: yes
           blockinfile:
             path: /etc/environment
             block: |
