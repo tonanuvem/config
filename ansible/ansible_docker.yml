@@ -8,7 +8,7 @@
     become: yes
     tasks:
         # PRE-REQS DO UBUNTU
-        - name: Install required packages
+        - name: Instalar pré-reqs (ubuntu)
           apt:
             name:
               - apt-transport-https
@@ -18,12 +18,12 @@
             state: present
             update_cache: true
           when: ansible_os_family == "Debian"
-        - name: Add Docker’s official GPG key
+        - name: Adicionar Docker GPG key (ubuntu)
           apt_key:
             url: https://download.docker.com/linux/ubuntu/gpg
             state: present
           when: ansible_os_family == "Debian"
-        - name: Add Docker repository
+        - name: Adicionar Docker repo (ubuntu)
           apt_repository:
             repo: deb https://download.docker.com/linux/ubuntu focal stable
             state: present
