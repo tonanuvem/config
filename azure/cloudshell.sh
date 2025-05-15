@@ -1,6 +1,7 @@
 #!/bin/bash
 
-# para executar o script, rodar: curl -s gh/cloudshell.sh | bash
+# para executar o script, rodar: 
+# curl -s https://raw.githubusercontent.com/tonanuvem/config/refs/heads/main/azure/cloudshell.sh | bash
 
 # Caminho da pasta
 PASTA_ENV="enviroment"
