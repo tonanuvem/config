@@ -157,7 +157,7 @@ resource "azurerm_linux_virtual_machine" "clusterfiaplab_vm" {
     name                 = "disco_so_${count.index}"
   }
 
-  computer_name = "${format("%s-%d-%s", "vm", count.index, var.vm_name)}"
+  computer_name = "${var.vm_name}-${count.index}"
   admin_username = var.username
 }
 
