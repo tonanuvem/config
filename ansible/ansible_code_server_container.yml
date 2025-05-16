@@ -3,6 +3,7 @@
     #become: yes
     tasks:
       # https://docs.ansible.com/ansible/2.9/modules/docker_container_module.html
+      # https://hub.docker.com/r/linuxserver/code-server
       - name: Code server container run
         docker_container:
           name: codeserver
@@ -16,5 +17,4 @@
           volumes:
             - /opt/codeserver:/config
             - /home/ubuntu:/config/workspace
-          restart_policy: 
-            - unless-stopped
+          restart_policy: unless-stopped
