@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # para executar o script, rodar: 
-# curl -s https://raw.githubusercontent.com/tonanuvem/config/refs/heads/main/cloudshell.sh | bash && cd ~/enviroment/config
+# curl -s https://raw.githubusercontent.com/tonanuvem/config/refs/heads/main/cloudshell.sh | bash && cd ~/environment/config
 
 # CONFIG environment ----------
 
