@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # para executar o script, rodar: 
-# curl -s -H 'Cache-Control: no-cache' -H 'Pragma: no-cache' https://raw.githubusercontent.com/tonanuvem/config/refs/heads/main/azure/cloudshell.sh | bash
+# curl -s https://raw.githubusercontent.com/tonanuvem/config/refs/heads/main/cloudshell.sh | bash
 
 # CONFIG SSH  ----------
 
