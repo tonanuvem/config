@@ -26,6 +26,6 @@ fi
 # Entrar no diretório ~/enviroment/config
 echo ""
 echo ""
-echo "📁 Pasta configurada. "
+echo "📁  Pasta configurada. "
 echo "                        cd ~/environment/config"
 echo ""
