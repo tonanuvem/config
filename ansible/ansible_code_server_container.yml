@@ -7,7 +7,7 @@
       - name: Code server container run
         docker_container:
           name: codeserver
-          image: ubuntu:18.04
+          image: lscr.io/linuxserver/code-server:latest
           ports:
             - "8443:8443"
           env:
