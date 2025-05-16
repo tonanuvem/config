@@ -24,6 +24,8 @@ else
 fi
 
 # Entrar no diretório ~/enviroment/config
-
-echo "📁 Entrar na pasta: "
+echo ""
+echo ""
+echo "📁 Pasta configurada. "
 echo "                        cd ~/environment/config"
+echo ""
