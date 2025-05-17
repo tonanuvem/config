@@ -8,6 +8,7 @@
     code_server_version: "4.89.1"
     code_server_port: 8099
     code_server_password: "fiap"  # Altere conforme necessário
+    workspace_dir: "/home/ubuntu"
 
   tasks:
     - name: Instalar dependências
