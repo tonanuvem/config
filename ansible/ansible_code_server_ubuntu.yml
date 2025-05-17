@@ -1,6 +1,6 @@
 ---
 - name: Instalar e configurar Code Server no Ubuntu 22.04
-  hosts: code_server
+  hosts: all
   become: true
 
   vars:
