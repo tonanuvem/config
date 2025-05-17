@@ -10,7 +10,7 @@
     code_server_password: "fiap"  # Altere conforme necessário
 
   tasks:
-    - name: Instalar dependências
+    - name: Instalar dependências do Code Server
       apt:
         name: [curl, wget, gnupg, software-properties-common]
         update_cache: yes
