@@ -69,6 +69,34 @@
         group: "{{ code_server_user }}"
         mode: 0644
 
+    - name: Criar pasta .vscode no workspace
+      file:
+        path: "/home/ubuntu/.vscode"
+        state: directory
+        owner: ubuntu
+        group: ubuntu
+        mode: '0755'
+    
+    - name: Criar tasks.json para abrir terminal automaticamente
+      copy:
+        dest: "/home/ubuntu/.vscode/tasks.json"
+        owner: ubuntu
+        group: ubuntu
+        mode: '0644'
+        content: |
+          {
+            "version": "2.0.0",
+            "tasks": [
+              {
+                "label": "Abrir terminal",
+                "type": "shell",
+                "command": "echo Terminal iniciado",
+                "runOn": "folderOpen",
+                "problemMatcher": []
+              }
+            ]
+          }
+
     - name: Criar diretório de override do systemd
       file:
         path: "/etc/systemd/system/code-server@{{ code_server_user }}.service.d"
