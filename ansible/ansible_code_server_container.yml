@@ -21,11 +21,12 @@
           name: codeserver
           image: lscr.io/linuxserver/code-server:latest
           ports:
-            - "8443:8443"
+            - "8099:8443"
           env:
             PUID: "1000"
             PGID: "1000"
             PASSWORD: "fiap"
+            TZ: "America/Sao_Paulo"
           volumes:
             - /opt/codeserver:/config
             - /home/ubuntu:/config/workspace
