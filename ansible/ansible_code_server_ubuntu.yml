@@ -63,7 +63,8 @@
             },
             "workbench.colorTheme": "Default Dark+",
             "update.mode": "none",
-            "security.workspace.trust.enabled": false
+            "security.workspace.trust.enabled": false,
+            "keyboard.dispatch": "keyCode"
           }
         owner: "{{ code_server_user }}"
         group: "{{ code_server_user }}"
