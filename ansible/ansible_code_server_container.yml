@@ -3,6 +3,12 @@
     #become: yes
     tasks:
       # Configurar o settings.json
+      - name: Criar diretorio vazio Code Server
+        ansible.builtin.file:
+          path: ~/.local/share/code-server/User/
+          state: directory
+          mode: '0755'
+          
       - name: Configurar o settings.json para o Code Server
         ansible.builtin.copy:
           dest: "~/.local/share/code-server/User/settings.json"
