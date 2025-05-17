@@ -63,3 +63,22 @@
         name: code-server@{{ code_server_user }}
         enabled: yes
         state: started
+
+    - name: Criar override para passar o workspace padrão ao Code Server
+      copy:
+        dest: "/etc/systemd/system/code-server@{{ code_server_user }}.service.d/override.conf"
+        content: |
+          [Service]
+          ExecStart=
+          ExecStart=/usr/bin/code-server --host 0.0.0.0 --port {{ code_server_port }} --auth password --user-data-dir /home/{{ code_server_user }}/.local/share/code-server --extensions-dir /home/{{ code_server_user }}/.vscode --folder=/home/ubuntu
+        owner: root
+        group: root
+        mode: 0644
+
+    - name: Recarregar daemon do systemd
+      command: systemctl daemon-reexec
+
+    - name: Reiniciar Code Server com novo argumento
+      systemd:
+        name: code-server@{{ code_server_user }}
+        state: restarted
