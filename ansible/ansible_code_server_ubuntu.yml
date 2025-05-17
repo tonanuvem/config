@@ -9,11 +9,17 @@
     code_server_port: 8099
     code_server_password: "fiap"  # Altere conforme necessário
 
-  tasks:
-    - name: Instalar dependências do Code Server
+ tasks:
+    - name: Instalar dependências
       apt:
         name: [curl, wget, gnupg, software-properties-common]
         update_cache: yes
+
+    - name: Criar usuário para o Code Server
+      user:
+        name: "{{ code_server_user }}"
+        shell: /bin/bash
+        create_home: yes
 
     - name: Baixar Code Server
       get_url:
@@ -44,7 +50,7 @@
         group: "{{ code_server_user }}"
         mode: 0600
 
-    - name: Criar arquivo de configurações globais (settings.json)
+    - name: Criar configurações globais (settings.json)
       copy:
         dest: "/home/{{ code_server_user }}/.local/share/code-server/User/settings.json"
         content: |
@@ -58,13 +64,7 @@
         group: "{{ code_server_user }}"
         mode: 0644
 
-    - name: Habilitar e iniciar o serviço code-server
-      systemd:
-        name: code-server@{{ code_server_user }}
-        enabled: yes
-        state: started
-
-    - name: Criar diretório para override do systemd
+    - name: Criar diretório de override do systemd
       file:
         path: "/etc/systemd/system/code-server@{{ code_server_user }}.service.d"
         state: directory
@@ -72,22 +72,23 @@
         group: root
         mode: 0755
 
-    - name: Criar override para passar o workspace padrão ao Code Server
+    - name: Criar override para iniciar com workspace padrão
       copy:
         dest: "/etc/systemd/system/code-server@{{ code_server_user }}.service.d/override.conf"
         content: |
           [Service]
           ExecStart=
-          ExecStart=/usr/bin/code-server --host 0.0.0.0 --port {{ code_server_port }} --auth password --user-data-dir /home/{{ code_server_user }}/.local/share/code-server --extensions-dir /home/{{ code_server_user }}/.vscode --folder=/home/ubuntu
+          ExecStart=/usr/bin/code-server {{ workspace_dir }} --host 0.0.0.0 --port {{ code_server_port }} --auth password --user-data-dir /home/{{ code_server_user }}/.local/share/code-server --extensions-dir /home/{{ code_server_user }}/.vscode
         owner: root
         group: root
         mode: 0644
 
-
-    - name: Recarregar daemon do systemd
+    - name: Recarregar systemd
       command: systemctl daemon-reexec
 
-    - name: Reiniciar Code Server com novo argumento
+    - name: Ativar e iniciar o Code Server
       systemd:
         name: code-server@{{ code_server_user }}
+        enabled: yes
         state: restarted
+
