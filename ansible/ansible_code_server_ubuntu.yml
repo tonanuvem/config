@@ -62,7 +62,8 @@
               "**/.*": true
             },
             "workbench.colorTheme": "Default Dark+",
-            "update.mode": "none"
+            "update.mode": "none",
+            "security.workspace.trust.enabled": false
           }
         owner: "{{ code_server_user }}"
         group: "{{ code_server_user }}"
