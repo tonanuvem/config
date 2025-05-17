@@ -1,6 +1,6 @@
 ---
 - name: Instalar Azure CLI no Ubuntu
-  hosts: azure_hosts
+  hosts: all
   become: true
 
   tasks:
