@@ -21,7 +21,7 @@ variable "vm_name" {
 variable "resource_group_name_prefix" {
   description = "Prefixo para o nome do grupo de recursos"
   type        = string
-  default     = "fiaplab"
+  default     = "fiapcluster"
 }
 
 variable "resource_group_location" {
