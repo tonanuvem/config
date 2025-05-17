@@ -22,7 +22,7 @@ provider "azurerm" {
 }
 
 resource "azurerm_resource_group" "rg" {
-  name     = "fiap"
+  name     = var.resource_group_name_prefix
   location = var.resource_group_location
 }
 
