@@ -2,9 +2,21 @@
     hosts: all
     #become: yes
     tasks:
+      # Configurar o settings.json
+      - name: Configurar o settings.json para o Code Server
+        ansible.builtin.copy:
+          dest: "~/.local/share/code-server/User/settings.json"
+          content: |
+            {
+              "files.exclude": {
+                "**/.*": true
+              },
+              "workbench.colorTheme": "Default Dark+"
+            }
+
       # https://docs.ansible.com/ansible/2.9/modules/docker_container_module.html
       # https://hub.docker.com/r/linuxserver/code-server
-      - name: Code server container run
+      - name: Executar o Code server em conteiner
         docker_container:
           name: codeserver
           image: lscr.io/linuxserver/code-server:latest
