@@ -8,7 +8,7 @@ variable "vm_size" {
 variable "resource_group_name_prefix" {
   description = "Prefixo para o nome do grupo de recursos"
   type        = string
-  default     = "fiaplab"
+  default     = "fiapvm"
 }
 
 variable "resource_group_location" {
