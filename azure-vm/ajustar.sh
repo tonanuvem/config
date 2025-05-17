@@ -15,3 +15,4 @@ ansible-playbook ~/environment/config/ansible/ansible_docker.yml --inventory hos
 ansible-playbook ~/environment/config/ansible/ansible_k8s.yml --inventory hosts -u ubuntu --key-file ~/environment/labsuser.pem
 ansible-playbook ~/environment/config/ansible/ansible_dev_java.yml --inventory hosts -u ubuntu --key-file ~/environment/labsuser.pem
 ansible-playbook ~/environment/config/ansible/ansible_code_server_ubuntu.yml --inventory hosts -u ubuntu --key-file ~/environment/labsuser.pem
+ansible-playbook ~/environment/config/ansible/ansible_azure_cli.yml --inventory hosts -u ubuntu --key-file ~/environment/labsuser.pem
