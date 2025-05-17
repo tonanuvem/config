@@ -9,7 +9,7 @@
     code_server_port: 8099
     code_server_password: "fiap"  # Altere conforme necessário
 
- tasks:
+  tasks:
     - name: Instalar dependências
       apt:
         name: [curl, wget, gnupg, software-properties-common]
