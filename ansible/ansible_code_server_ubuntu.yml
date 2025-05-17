@@ -64,6 +64,14 @@
         enabled: yes
         state: started
 
+    - name: Criar diretório para override do systemd
+      file:
+        path: "/etc/systemd/system/code-server@{{ code_server_user }}.service.d"
+        state: directory
+        owner: root
+        group: root
+        mode: 0755
+
     - name: Criar override para passar o workspace padrão ao Code Server
       copy:
         dest: "/etc/systemd/system/code-server@{{ code_server_user }}.service.d/override.conf"
@@ -74,6 +82,7 @@
         owner: root
         group: root
         mode: 0644
+
 
     - name: Recarregar daemon do systemd
       command: systemctl daemon-reexec
