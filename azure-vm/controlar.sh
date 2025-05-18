@@ -2,7 +2,7 @@
 
 # Variáveis
 RESOURCE_GROUP="fiapvm"
-VM_NAME="minha-vm"
+VM_NAME="fiaplab-vm"
 
 # Verifica o estado atual da VM
 VM_STATE=$(az vm get-instance-view \
