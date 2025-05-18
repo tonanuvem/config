@@ -11,11 +11,13 @@ VM_STATE=$(az vm get-instance-view \
   --query "instanceView.statuses[?starts_with(code, 'PowerState/')].code" \
   --output tsv)
 
+echo ""
 echo "Estado atual da VM '$VM_NAME': $VM_STATE"
-
+echo ""
 if [[ "$VM_STATE" == "PowerState/running" ]]; then
     read -p "A VM está ligada. Deseja PARAR (deallocate)? (s/n): " OP
     if [[ "$OP" == "s" ]]; then
+        echo ""
         az vm deallocate --resource-group $RESOURCE_GROUP --name $VM_NAME
         echo "VM parada e recursos desalocados."
         echo "Estamos economizando seus créditos."
@@ -26,6 +28,7 @@ if [[ "$VM_STATE" == "PowerState/running" ]]; then
 elif [[ "$VM_STATE" == "PowerState/deallocated" || "$VM_STATE" == "PowerState/stopped" ]]; then
     read -p "A VM está desligada. Deseja INICIAR? (s/n): " OP
     if [[ "$OP" == "s" ]]; then
+        echo ""
         az vm start --resource-group $RESOURCE_GROUP --name $VM_NAME
         echo "VM iniciada."
         echo ""
@@ -40,3 +43,4 @@ elif [[ "$VM_STATE" == "PowerState/deallocated" || "$VM_STATE" == "PowerState/st
 else
     echo "Estado desconhecido ou não suportado: $VM_STATE"
 fi
+echo ""
