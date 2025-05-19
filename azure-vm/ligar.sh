@@ -22,7 +22,7 @@ if [[ "$VM_STATE" == "PowerState/deallocated" || "$VM_STATE" == "PowerState/stop
     echo ""
     echo "Atualizando as informações da VM:"
     terraform apply --auto-approve > /dev/null
-    export IP=$(terraform output -raw $NODE)
+    export IP=$(terraform output -raw ip_externo)
     echo "   IP = $IP.."
     echo ""
 else
