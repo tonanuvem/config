@@ -4,7 +4,8 @@
     ansible.builtin.copy:
       dest: "~/ip"
       content: |
-        curl -s checkip.amazonaws.com
+        IP=curl -s checkip.amazonaws.com
+        echo "http://$IP"
   - name: Mudar a permissao do arquivo ~/ip
     ansible.builtin.file:
       path: ~/ip
