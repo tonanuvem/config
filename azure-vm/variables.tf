@@ -50,7 +50,12 @@ variable "nic_name" {
 variable "storage_account_prefix" {
   description = "Prefixo para o nome da conta de armazenamento"
   type        = string
-  default     = "fiaplabdiag"
+  default     = "fiaplab-storage"
+}
+
+variable "disk_name" {
+  type        = string
+  default     = "fiaplab-disk"
 }
 
 variable "vm_name" {
