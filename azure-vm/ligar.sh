@@ -28,4 +28,5 @@ if [[ "$VM_STATE" == "PowerState/deallocated" || "$VM_STATE" == "PowerState/stop
 else
     echo "Estado não suportado: $VM_STATE"
 fi
+sh url.sh
 echo ""
