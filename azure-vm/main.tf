@@ -116,7 +116,7 @@ resource "azurerm_linux_virtual_machine" "fiaplab_vm" {
   size                  = var.vm_size
 
   os_disk {
-    name                 = "myOsDisk"
+    name                 = var.disk_name
     caching              = "ReadWrite"
     storage_account_type = "Premium_LRS"
   }
