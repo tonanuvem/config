@@ -52,7 +52,6 @@ resource "azurerm_automation_schedule" "daily_3am" {
   frequency               = "Day"
   interval                = 1
   timezone                = "America/Sao_Paulo"
-  start_time              = "2024-01-01T03:00:00Z"
 }
 
 resource "azurerm_automation_job_schedule" "link_schedule" {
