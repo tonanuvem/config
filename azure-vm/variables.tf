@@ -56,7 +56,7 @@ variable "nic_name" {
 variable "storage_account_prefix" {
   description = "Prefixo para o nome da conta de armazenamento"
   type        = string
-  default     = "fiaplabstorage"
+  default     = "fiapstorage"
 }
 
 variable "disk_name" {
