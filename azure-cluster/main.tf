@@ -178,3 +178,18 @@ resource "azurerm_virtual_machine_data_disk_attachment" "fiaplab_disk_att" {
   lun                = "10"
   caching            = "ReadWrite"
 }
+
+resource "azurerm_dev_test_global_vm_shutdown_schedule" "auto_shutdown" {
+  count               = var.quantidade
+  virtual_machine_id  = azurerm_linux_virtual_machine.clusterfiaplab_vm[count.index].id
+
+  location               = azurerm_resource_group.rg.location
+  enabled                = true
+  daily_recurrence_time  = var.shutdown
+  timezone               = "E. South America Standard Time"
+
+  notification_settings {
+    enabled = false
+  }
+}
+
