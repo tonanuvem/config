@@ -95,7 +95,7 @@ resource "random_id" "random_id" {
     resource_group = azurerm_resource_group.rg.name
   }
 
-  byte_length = 8
+  byte_length = 4
 }
 
 # Create storage account for boot diagnostics
