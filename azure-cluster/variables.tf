@@ -1,6 +1,6 @@
 variable "quantidade" {
   type        = number
-  default     = "3" 
+  default     = 3
   # Cannot create more than 3 public IP addresses for this subscription in this region.
 }
 
