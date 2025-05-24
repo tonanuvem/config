@@ -100,7 +100,7 @@ resource "random_id" "random_id" {
 
 # Create storage account for boot diagnostics
 resource "azurerm_storage_account" "fiaplab_storage_account" {
-  name                     = "${var.storage_account_prefix}"
+  name                     = lower("${var.storage_account_prefix}${random_id.random_id.hex}")
   location                 = azurerm_resource_group.rg.location
   resource_group_name      = azurerm_resource_group.rg.name
   account_tier             = "Standard"
@@ -140,5 +140,17 @@ resource "azurerm_linux_virtual_machine" "fiaplab_vm" {
 
   boot_diagnostics {
     storage_account_uri = azurerm_storage_account.fiaplab_storage_account.primary_blob_endpoint
+  }
+}
+
+resource "azurerm_dev_test_global_vm_shutdown_schedule" "shutdown" {
+  virtual_machine_id     = azurerm_linux_virtual_machine.fiaplab_vm.id
+  location               = azurerm_resource_group.rg.location
+  enabled                = true
+  daily_recurrence_time  = var.shutdown
+  timezone               = "E. South America Standard Time"
+
+  notification_settings {
+    enabled = false
   }
 }
