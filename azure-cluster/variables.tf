@@ -4,6 +4,12 @@ variable "quantidade" {
   # Cannot create more than 3 public IP addresses for this subscription in this region.
 }
 
+variable "shutdown" {
+  description = "Horário diário para desligar a VM no formato HHMM (ex: 0300 para 03h da manhã) para economizar os créditos"
+  type        = string
+  default     = "0300"
+}
+
 variable "vm_size" {
   description = "Tipo de instancia"
   type        = string
