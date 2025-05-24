@@ -1,4 +1,5 @@
-$excluded = "rg-automation" # Nome do resource group onde o Automation Account está
+# RG que nao serao excluidos
+$excluded = @("fiapvm", "rg-automation")
 
 $resourceGroups = Get-AzResourceGroup
 
