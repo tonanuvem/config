@@ -1,5 +1,5 @@
 # RG que nao serao excluidos
-$excluded = @("fiapvm", "rg-automation")
+$excluded = @("fiapvm", "rg-automation", "cloud-shell-storage-eastus")
 
 $resourceGroups = Get-AzResourceGroup
 
