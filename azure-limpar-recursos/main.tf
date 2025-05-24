@@ -32,7 +32,7 @@ resource "azurerm_automation_schedule" "daily_3am" {
   automation_account_name = azurerm_automation_account.automation.name
   frequency               = "Day"
   interval                = 1
-  timezone                = "E. South America Standard Time"
+  timezone                = "America/Sao_Paulo"
   start_time              = "2024-01-01T03:00:00Z"
 }
 
