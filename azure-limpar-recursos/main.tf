@@ -52,6 +52,7 @@ resource "azurerm_automation_schedule" "daily_3am" {
   frequency               = "Day"
   interval                = 1
   timezone                = "America/Sao_Paulo"
+  description             = "Run daily at 3 AM"
 }
 
 resource "azurerm_automation_job_schedule" "link_schedule" {
