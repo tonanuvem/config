@@ -5,6 +5,12 @@ variable "vm_size" {
   # default     = "Standard_DS1_v2"
 }
 
+variable "shutdown" {
+  description = "Horário diário para desligar a VM no formato HHMM (ex: 0300 para 03h da manhã) para economizar os créditos"
+  type        = string
+  default     = "0300"
+}
+
 variable "resource_group_name_prefix" {
   description = "Prefixo para o nome do grupo de recursos"
   type        = string
