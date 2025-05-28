@@ -3,6 +3,11 @@
 # para executar o script, rodar: 
 # curl -s https://raw.githubusercontent.com/tonanuvem/config/refs/heads/main/cloudshell.sh | bash && cd ~/environment/config
 
+# CONFIG provider ----------
+#	Configurar Azure para usar os serviços Compute e ContainerService:
+
+az provider register --namespace Microsoft.Compute && az provider register --namespace Microsoft.ContainerService
+
 # CONFIG environment ----------
 
 # Caminho da pasta
@@ -19,6 +24,8 @@ fi
 if [ ! -d "$PASTA_CONFIG" ]; then
     echo "Clonando repositório na pasta '$PASTA_ENV'..."
     git clone https://github.com/tonanuvem/config "$PASTA_CONFIG"
+    cp ~/environment/config/azure-vm/ligar.sh ~
+    cp ~/environment/config/azure-vm/suspender.sh ~
 else
     echo "A pasta '$PASTA_CONFIG' já existe."
 fi
