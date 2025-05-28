@@ -1,0 +1,19 @@
+- name: Configurar desligamento automático de VMs com fuso horário (Ubuntu 22 e Amazon Linux)
+  hosts: all
+  become: yes # Necessário para executar comandos como root (sudo)
+
+  tasks:
+    - name: Definir fuso horário para America/Sao_Paulo
+      community.general.timezone:
+        name: America/Sao_Paulo
+
+    - name: Adicionar tarefa de desligamento ao crontab
+      cron:
+        name: "desligamento_automatico"
+        minute: "0" # 0 minutos
+        hour: "5"   # 5 horas da manhã
+        day: "*"    # Todos os dias do mês
+        month: "*"  # Todos os meses
+        weekday: "*" # Todos os dias da semana
+        job: "/sbin/shutdown -h now" # Comando para desligar a máquina imediatamente
+        user: "root" # Executar como usuário root
