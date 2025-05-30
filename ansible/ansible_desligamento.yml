@@ -17,3 +17,9 @@
         weekday: "*" # Todos os dias da semana
         job: "/sbin/shutdown -h now" # Comando para desligar a máquina imediatamente
         user: "root" # Executar como usuário root
+
+    - name: Criar o arquivo ~/suspender.sh para desligar a maquina
+      ansible.builtin.copy:
+        dest: "~/suspender.sh"
+        content: |
+          sudo shutdown -h now
