@@ -24,8 +24,8 @@ fi
 if [ ! -d "$PASTA_CONFIG" ]; then
     echo "Clonando repositório na pasta '$PASTA_ENV'..."
     git clone https://github.com/tonanuvem/config "$PASTA_CONFIG"
-    echo '~/ligar.sh' > "cd ~/environment/config/azure-vm/ && sh ligar.sh"
-    echo '~/suspender.sh' > "cd ~/environment/config/azure-vm/ && sh suspender.sh"
+    echo -e 'cd ~/environment/config/azure-vm/ && sh ligar.sh' > ~/ligar.sh 
+    echo -e 'cd ~/environment/config/azure-vm/ && sh suspender.sh' > ~/suspender.sh
 else
     echo "A pasta '$PASTA_CONFIG' já existe."
 fi
