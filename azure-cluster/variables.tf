@@ -39,31 +39,31 @@ variable "resource_group_location" {
 variable "vnet_name" {
   description = "Nome da rede virtual"
   type        = string
-  default     = "fiaplab-vnet"
+  default     = "clusterlab-vnet"
 }
 
 variable "subnet_name" {
   description = "Nome da sub-rede"
   type        = string
-  default     = "fiaplab-subnet"
+  default     = "clusterlab-subnet"
 }
 
 variable "public_ip_name" {
   description = "Nome do IP público"
   type        = string
-  default     = "fiaplab-public-ip"
+  default     = "clusterlab-public-ip"
 }
 
 variable "nsg_name" {
   description = "Nome do Network Security Group"
   type        = string
-  default     = "fiaplab-nsg"
+  default     = "clusterlab-nsg"
 }
 
 variable "nic_name" {
   description = "Nome da interface de rede"
   type        = string
-  default     = "fiaplab-nic"
+  default     = "clusterlab-nic"
 }
 
 variable "storage_account_prefix" {
