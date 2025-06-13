@@ -40,5 +40,12 @@ sh ajustar.sh
 echo ""
 echo " Nodes (VMs) iniciados e configurados"
 echo ""
+export IP=$MASTER
+echo "   Acessar Node Master pelo IP = http://$MASTER:8099         (senha: fiap)"
+for N in $(seq 1 $WORKER_NODES); do
+    NODE=$(terraform output -json ip_externo | jq -r ".[$N]")
+    echo "   Acessar Node $N pelo IP = http://$NODE:8099           (senha: fiap)"
+done
+echo ""
 echo "   OBS: Caso alguma das tarefas anteriores tenha obtido FAILED, executar: sh ajustar.sh"
 echo ""
