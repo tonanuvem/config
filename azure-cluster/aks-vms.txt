@@ -1,0 +1,333 @@
+aluno [ ~/environment/config/azure-cluster ]$ az vm list-skus --location southcentralus --size Standard_D --all --output table
+ResourceType     Locations       Name                    Zones    Restrictions
+---------------  --------------  ----------------------  -------  --------------------------------------------------------------------------------------------------------------------------------------------------------------
+virtualMachines  southcentralus  Standard_D1             2        NotAvailableForSubscription, type: Location, locations: southcentralus
+virtualMachines  southcentralus  Standard_D11            2        NotAvailableForSubscription, type: Location, locations: southcentralus
+virtualMachines  southcentralus  Standard_D11_v2         1,2,3    ['NotAvailableForSubscription, type: Location, locations: southcentralus', 'NotAvailableForSubscription, type: Zone, locations: southcentralus, zones: 1,2,3']
+virtualMachines  southcentralus  Standard_D11_v2_Promo   1,2,3    NotAvailableForSubscription, type: Location, locations: southcentralus
+virtualMachines  southcentralus  Standard_D12            2        NotAvailableForSubscription, type: Location, locations: southcentralus
+virtualMachines  southcentralus  Standard_D128ds_v6      1,2,3    None
+virtualMachines  southcentralus  Standard_D128lds_v6     1,2,3    None
+virtualMachines  southcentralus  Standard_D128ls_v6      1,2,3    None
+virtualMachines  southcentralus  Standard_D128s_v6       1,2,3    None
+virtualMachines  southcentralus  Standard_D12_v2         1,2,3    ['NotAvailableForSubscription, type: Location, locations: southcentralus', 'NotAvailableForSubscription, type: Zone, locations: southcentralus, zones: 1,2,3']
+virtualMachines  southcentralus  Standard_D12_v2_Promo   1,2,3    NotAvailableForSubscription, type: Location, locations: southcentralus
+virtualMachines  southcentralus  Standard_D13            2        NotAvailableForSubscription, type: Location, locations: southcentralus
+virtualMachines  southcentralus  Standard_D13_v2         1,2,3    ['NotAvailableForSubscription, type: Location, locations: southcentralus', 'NotAvailableForSubscription, type: Zone, locations: southcentralus, zones: 1,2,3']
+virtualMachines  southcentralus  Standard_D13_v2_Promo   1,2,3    NotAvailableForSubscription, type: Location, locations: southcentralus
+virtualMachines  southcentralus  Standard_D14            2        NotAvailableForSubscription, type: Location, locations: southcentralus
+virtualMachines  southcentralus  Standard_D14_v2         1,2,3    ['NotAvailableForSubscription, type: Location, locations: southcentralus', 'NotAvailableForSubscription, type: Zone, locations: southcentralus, zones: 1,2,3']
+virtualMachines  southcentralus  Standard_D14_v2_Promo   1,2,3    NotAvailableForSubscription, type: Location, locations: southcentralus
+virtualMachines  southcentralus  Standard_D15_v2         1,2,3    NotAvailableForSubscription, type: Location, locations: southcentralus
+virtualMachines  southcentralus  Standard_D16ads_v5      1,2,3    ['NotAvailableForSubscription, type: Location, locations: southcentralus', 'NotAvailableForSubscription, type: Zone, locations: southcentralus, zones: 1,2,3']
+virtualMachines  southcentralus  Standard_D16ads_v6      1,2      None
+virtualMachines  southcentralus  Standard_D16alds_v6     1,2      None
+virtualMachines  southcentralus  Standard_D16als_v6      1,2      None
+virtualMachines  southcentralus  Standard_D16as_v4       1,2,3    ['NotAvailableForSubscription, type: Location, locations: southcentralus', 'NotAvailableForSubscription, type: Zone, locations: southcentralus, zones: 1,2,3']
+virtualMachines  southcentralus  Standard_D16as_v5       1,2,3    ['NotAvailableForSubscription, type: Location, locations: southcentralus', 'NotAvailableForSubscription, type: Zone, locations: southcentralus, zones: 1,2,3']
+virtualMachines  southcentralus  Standard_D16as_v6       1,2      None
+virtualMachines  southcentralus  Standard_D16a_v4        1,2,3    ['NotAvailableForSubscription, type: Location, locations: southcentralus', 'NotAvailableForSubscription, type: Zone, locations: southcentralus, zones: 1,2,3']
+virtualMachines  southcentralus  Standard_D16ds_v4       1,2,3    ['NotAvailableForSubscription, type: Location, locations: southcentralus', 'NotAvailableForSubscription, type: Zone, locations: southcentralus, zones: 1,2,3']
+virtualMachines  southcentralus  Standard_D16ds_v5       1,2,3    ['NotAvailableForSubscription, type: Location, locations: southcentralus', 'NotAvailableForSubscription, type: Zone, locations: southcentralus, zones: 1,2,3']
+virtualMachines  southcentralus  Standard_D16ds_v6       1,2,3    None
+virtualMachines  southcentralus  Standard_D16d_v4        1,2,3    ['NotAvailableForSubscription, type: Location, locations: southcentralus', 'NotAvailableForSubscription, type: Zone, locations: southcentralus, zones: 1,2,3']
+virtualMachines  southcentralus  Standard_D16d_v5        1,2,3    ['NotAvailableForSubscription, type: Location, locations: southcentralus', 'NotAvailableForSubscription, type: Zone, locations: southcentralus, zones: 1,2,3']
+virtualMachines  southcentralus  Standard_D16lds_v5      1,2,3    ['NotAvailableForSubscription, type: Location, locations: southcentralus', 'NotAvailableForSubscription, type: Zone, locations: southcentralus, zones: 1,2,3']
+virtualMachines  southcentralus  Standard_D16lds_v6      1,2,3    None
+virtualMachines  southcentralus  Standard_D16ls_v5       1,2,3    ['NotAvailableForSubscription, type: Location, locations: southcentralus', 'NotAvailableForSubscription, type: Zone, locations: southcentralus, zones: 1,2,3']
+virtualMachines  southcentralus  Standard_D16ls_v6       1,2,3    None
+virtualMachines  southcentralus  Standard_D16pds_v5      1,2,3    NotAvailableForSubscription, type: Zone, locations: southcentralus, zones: 2,3
+virtualMachines  southcentralus  Standard_D16pds_v6      1,2      None
+virtualMachines  southcentralus  Standard_D16plds_v5     1,2,3    NotAvailableForSubscription, type: Zone, locations: southcentralus, zones: 2,3
+virtualMachines  southcentralus  Standard_D16plds_v6     1,2      None
+virtualMachines  southcentralus  Standard_D16pls_v5      1,2,3    NotAvailableForSubscription, type: Zone, locations: southcentralus, zones: 2,3
+virtualMachines  southcentralus  Standard_D16pls_v6      1,2      None
+virtualMachines  southcentralus  Standard_D16ps_v5       1,2,3    NotAvailableForSubscription, type: Zone, locations: southcentralus, zones: 2,3
+virtualMachines  southcentralus  Standard_D16ps_v6       1,2      None
+virtualMachines  southcentralus  Standard_D16s_v3        1,2,3    ['NotAvailableForSubscription, type: Location, locations: southcentralus', 'NotAvailableForSubscription, type: Zone, locations: southcentralus, zones: 1,2,3']
+virtualMachines  southcentralus  Standard_D16s_v4        1,2,3    ['NotAvailableForSubscription, type: Location, locations: southcentralus', 'NotAvailableForSubscription, type: Zone, locations: southcentralus, zones: 1,2,3']
+virtualMachines  southcentralus  Standard_D16s_v5        1,2,3    ['NotAvailableForSubscription, type: Location, locations: southcentralus', 'NotAvailableForSubscription, type: Zone, locations: southcentralus, zones: 1,2,3']
+virtualMachines  southcentralus  Standard_D16s_v6        1,2,3    None
+virtualMachines  southcentralus  Standard_D16_v3         1,2,3    ['NotAvailableForSubscription, type: Location, locations: southcentralus', 'NotAvailableForSubscription, type: Zone, locations: southcentralus, zones: 1,2,3']
+virtualMachines  southcentralus  Standard_D16_v4         1,2,3    ['NotAvailableForSubscription, type: Location, locations: southcentralus', 'NotAvailableForSubscription, type: Zone, locations: southcentralus, zones: 1,2,3']
+virtualMachines  southcentralus  Standard_D16_v5         1,2,3    ['NotAvailableForSubscription, type: Location, locations: southcentralus', 'NotAvailableForSubscription, type: Zone, locations: southcentralus, zones: 1,2,3']
+virtualMachines  southcentralus  Standard_D1_v2          1,2,3    ['NotAvailableForSubscription, type: Location, locations: southcentralus', 'NotAvailableForSubscription, type: Zone, locations: southcentralus, zones: 1,2,3']
+virtualMachines  southcentralus  Standard_D2             2        NotAvailableForSubscription, type: Location, locations: southcentralus
+virtualMachines  southcentralus  Standard_D2ads_v5       1,2,3    ['NotAvailableForSubscription, type: Location, locations: southcentralus', 'NotAvailableForSubscription, type: Zone, locations: southcentralus, zones: 1,2,3']
+virtualMachines  southcentralus  Standard_D2ads_v6       1,2      None
+virtualMachines  southcentralus  Standard_D2alds_v6      1,2      None
+virtualMachines  southcentralus  Standard_D2als_v6       1,2      None
+virtualMachines  southcentralus  Standard_D2as_v4        1,2,3    ['NotAvailableForSubscription, type: Location, locations: southcentralus', 'NotAvailableForSubscription, type: Zone, locations: southcentralus, zones: 1,2,3']
+virtualMachines  southcentralus  Standard_D2as_v5        1,2,3    ['NotAvailableForSubscription, type: Location, locations: southcentralus', 'NotAvailableForSubscription, type: Zone, locations: southcentralus, zones: 1,2,3']
+virtualMachines  southcentralus  Standard_D2as_v6        1,2      None
+virtualMachines  southcentralus  Standard_D2a_v4         1,2,3    ['NotAvailableForSubscription, type: Location, locations: southcentralus', 'NotAvailableForSubscription, type: Zone, locations: southcentralus, zones: 1,2,3']
+virtualMachines  southcentralus  Standard_D2ds_v4        1,2,3    ['NotAvailableForSubscription, type: Location, locations: southcentralus', 'NotAvailableForSubscription, type: Zone, locations: southcentralus, zones: 1,2,3']
+virtualMachines  southcentralus  Standard_D2ds_v5        1,2,3    ['NotAvailableForSubscription, type: Location, locations: southcentralus', 'NotAvailableForSubscription, type: Zone, locations: southcentralus, zones: 1,2,3']
+virtualMachines  southcentralus  Standard_D2ds_v6        1,2,3    None
+virtualMachines  southcentralus  Standard_D2d_v4         1,2,3    ['NotAvailableForSubscription, type: Location, locations: southcentralus', 'NotAvailableForSubscription, type: Zone, locations: southcentralus, zones: 1,2,3']
+virtualMachines  southcentralus  Standard_D2d_v5         1,2,3    ['NotAvailableForSubscription, type: Location, locations: southcentralus', 'NotAvailableForSubscription, type: Zone, locations: southcentralus, zones: 1,2,3']
+virtualMachines  southcentralus  Standard_D2lds_v5       1,2,3    ['NotAvailableForSubscription, type: Location, locations: southcentralus', 'NotAvailableForSubscription, type: Zone, locations: southcentralus, zones: 1,2,3']
+virtualMachines  southcentralus  Standard_D2lds_v6       1,2,3    None
+virtualMachines  southcentralus  Standard_D2ls_v5        1,2,3    ['NotAvailableForSubscription, type: Location, locations: southcentralus', 'NotAvailableForSubscription, type: Zone, locations: southcentralus, zones: 1,2,3']
+virtualMachines  southcentralus  Standard_D2ls_v6        1,2,3    None
+virtualMachines  southcentralus  Standard_D2pds_v5       1,2,3    NotAvailableForSubscription, type: Zone, locations: southcentralus, zones: 2,3
+virtualMachines  southcentralus  Standard_D2pds_v6       1,2      None
+virtualMachines  southcentralus  Standard_D2plds_v5      1,2,3    NotAvailableForSubscription, type: Zone, locations: southcentralus, zones: 2,3
+virtualMachines  southcentralus  Standard_D2plds_v6      1,2      None
+virtualMachines  southcentralus  Standard_D2pls_v5       1,2,3    NotAvailableForSubscription, type: Zone, locations: southcentralus, zones: 2,3
+virtualMachines  southcentralus  Standard_D2pls_v6       1,2      None
+virtualMachines  southcentralus  Standard_D2ps_v5        1,2,3    NotAvailableForSubscription, type: Zone, locations: southcentralus, zones: 2,3
+virtualMachines  southcentralus  Standard_D2ps_v6        1,2      None
+virtualMachines  southcentralus  Standard_D2s_v3         1,2,3    ['NotAvailableForSubscription, type: Location, locations: southcentralus', 'NotAvailableForSubscription, type: Zone, locations: southcentralus, zones: 1,2,3']
+virtualMachines  southcentralus  Standard_D2s_v4         1,2,3    ['NotAvailableForSubscription, type: Location, locations: southcentralus', 'NotAvailableForSubscription, type: Zone, locations: southcentralus, zones: 1,2,3']
+virtualMachines  southcentralus  Standard_D2s_v5         1,2,3    ['NotAvailableForSubscription, type: Location, locations: southcentralus', 'NotAvailableForSubscription, type: Zone, locations: southcentralus, zones: 1,2,3']
+virtualMachines  southcentralus  Standard_D2s_v6         1,2,3    None
+virtualMachines  southcentralus  Standard_D2_v2          1,2,3    ['NotAvailableForSubscription, type: Location, locations: southcentralus', 'NotAvailableForSubscription, type: Zone, locations: southcentralus, zones: 1,2,3']
+virtualMachines  southcentralus  Standard_D2_v2_Promo    1,2,3    NotAvailableForSubscription, type: Location, locations: southcentralus
+virtualMachines  southcentralus  Standard_D2_v3          1,2,3    ['NotAvailableForSubscription, type: Location, locations: southcentralus', 'NotAvailableForSubscription, type: Zone, locations: southcentralus, zones: 1,2,3']
+virtualMachines  southcentralus  Standard_D2_v4          1,2,3    ['NotAvailableForSubscription, type: Location, locations: southcentralus', 'NotAvailableForSubscription, type: Zone, locations: southcentralus, zones: 1,2,3']
+virtualMachines  southcentralus  Standard_D2_v5          1,2,3    ['NotAvailableForSubscription, type: Location, locations: southcentralus', 'NotAvailableForSubscription, type: Zone, locations: southcentralus, zones: 1,2,3']
+virtualMachines  southcentralus  Standard_D3             2        NotAvailableForSubscription, type: Location, locations: southcentralus
+virtualMachines  southcentralus  Standard_D32ads_v5      1,2,3    ['NotAvailableForSubscription, type: Location, locations: southcentralus', 'NotAvailableForSubscription, type: Zone, locations: southcentralus, zones: 1,2,3']
+virtualMachines  southcentralus  Standard_D32ads_v6      1,2      None
+virtualMachines  southcentralus  Standard_D32alds_v6     1,2      None
+virtualMachines  southcentralus  Standard_D32als_v6      1,2      None
+virtualMachines  southcentralus  Standard_D32as_v4       1,2,3    ['NotAvailableForSubscription, type: Location, locations: southcentralus', 'NotAvailableForSubscription, type: Zone, locations: southcentralus, zones: 1,2,3']
+virtualMachines  southcentralus  Standard_D32as_v5       1,2,3    ['NotAvailableForSubscription, type: Location, locations: southcentralus', 'NotAvailableForSubscription, type: Zone, locations: southcentralus, zones: 1,2,3']
+virtualMachines  southcentralus  Standard_D32as_v6       1,2      None
+virtualMachines  southcentralus  Standard_D32a_v4        1,2,3    ['NotAvailableForSubscription, type: Location, locations: southcentralus', 'NotAvailableForSubscription, type: Zone, locations: southcentralus, zones: 1,2,3']
+virtualMachines  southcentralus  Standard_D32ds_v4       1,2,3    ['NotAvailableForSubscription, type: Location, locations: southcentralus', 'NotAvailableForSubscription, type: Zone, locations: southcentralus, zones: 1,2,3']
+virtualMachines  southcentralus  Standard_D32ds_v5       1,2,3    ['NotAvailableForSubscription, type: Location, locations: southcentralus', 'NotAvailableForSubscription, type: Zone, locations: southcentralus, zones: 1,2,3']
+virtualMachines  southcentralus  Standard_D32ds_v6       1,2,3    None
+virtualMachines  southcentralus  Standard_D32d_v4        1,2,3    ['NotAvailableForSubscription, type: Location, locations: southcentralus', 'NotAvailableForSubscription, type: Zone, locations: southcentralus, zones: 1,2,3']
+virtualMachines  southcentralus  Standard_D32d_v5        1,2,3    ['NotAvailableForSubscription, type: Location, locations: southcentralus', 'NotAvailableForSubscription, type: Zone, locations: southcentralus, zones: 1,2,3']
+virtualMachines  southcentralus  Standard_D32lds_v5      1,2,3    ['NotAvailableForSubscription, type: Location, locations: southcentralus', 'NotAvailableForSubscription, type: Zone, locations: southcentralus, zones: 1,2,3']
+virtualMachines  southcentralus  Standard_D32lds_v6      1,2,3    None
+virtualMachines  southcentralus  Standard_D32ls_v5       1,2,3    ['NotAvailableForSubscription, type: Location, locations: southcentralus', 'NotAvailableForSubscription, type: Zone, locations: southcentralus, zones: 1,2,3']
+virtualMachines  southcentralus  Standard_D32ls_v6       1,2,3    None
+virtualMachines  southcentralus  Standard_D32pds_v5      1,2,3    NotAvailableForSubscription, type: Zone, locations: southcentralus, zones: 2,3
+virtualMachines  southcentralus  Standard_D32pds_v6      1,2      None
+virtualMachines  southcentralus  Standard_D32plds_v5     1,2,3    NotAvailableForSubscription, type: Zone, locations: southcentralus, zones: 2,3
+virtualMachines  southcentralus  Standard_D32plds_v6     1,2      None
+virtualMachines  southcentralus  Standard_D32pls_v5      1,2,3    NotAvailableForSubscription, type: Zone, locations: southcentralus, zones: 2,3
+virtualMachines  southcentralus  Standard_D32pls_v6      1,2      None
+virtualMachines  southcentralus  Standard_D32ps_v5       1,2,3    NotAvailableForSubscription, type: Zone, locations: southcentralus, zones: 2,3
+virtualMachines  southcentralus  Standard_D32ps_v6       1,2      None
+virtualMachines  southcentralus  Standard_D32s_v3        1,2,3    ['NotAvailableForSubscription, type: Location, locations: southcentralus', 'NotAvailableForSubscription, type: Zone, locations: southcentralus, zones: 1,2,3']
+virtualMachines  southcentralus  Standard_D32s_v4        1,2,3    ['NotAvailableForSubscription, type: Location, locations: southcentralus', 'NotAvailableForSubscription, type: Zone, locations: southcentralus, zones: 1,2,3']
+virtualMachines  southcentralus  Standard_D32s_v5        1,2,3    ['NotAvailableForSubscription, type: Location, locations: southcentralus', 'NotAvailableForSubscription, type: Zone, locations: southcentralus, zones: 1,2,3']
+virtualMachines  southcentralus  Standard_D32s_v6        1,2,3    None
+virtualMachines  southcentralus  Standard_D32_v3         1,2,3    ['NotAvailableForSubscription, type: Location, locations: southcentralus', 'NotAvailableForSubscription, type: Zone, locations: southcentralus, zones: 1,2,3']
+virtualMachines  southcentralus  Standard_D32_v4         1,2,3    ['NotAvailableForSubscription, type: Location, locations: southcentralus', 'NotAvailableForSubscription, type: Zone, locations: southcentralus, zones: 1,2,3']
+virtualMachines  southcentralus  Standard_D32_v5         1,2,3    ['NotAvailableForSubscription, type: Location, locations: southcentralus', 'NotAvailableForSubscription, type: Zone, locations: southcentralus, zones: 1,2,3']
+virtualMachines  southcentralus  Standard_D3_v2          1,2,3    ['NotAvailableForSubscription, type: Location, locations: southcentralus', 'NotAvailableForSubscription, type: Zone, locations: southcentralus, zones: 1,2,3']
+virtualMachines  southcentralus  Standard_D3_v2_Promo    1,2,3    NotAvailableForSubscription, type: Location, locations: southcentralus
+virtualMachines  southcentralus  Standard_D4             2        NotAvailableForSubscription, type: Location, locations: southcentralus
+virtualMachines  southcentralus  Standard_D48ads_v5      1,2,3    ['NotAvailableForSubscription, type: Location, locations: southcentralus', 'NotAvailableForSubscription, type: Zone, locations: southcentralus, zones: 1,2,3']
+virtualMachines  southcentralus  Standard_D48ads_v6      1,2      None
+virtualMachines  southcentralus  Standard_D48alds_v6     1,2      None
+virtualMachines  southcentralus  Standard_D48als_v6      1,2      None
+virtualMachines  southcentralus  Standard_D48as_v4       1,2,3    ['NotAvailableForSubscription, type: Location, locations: southcentralus', 'NotAvailableForSubscription, type: Zone, locations: southcentralus, zones: 1,2,3']
+virtualMachines  southcentralus  Standard_D48as_v5       1,2,3    ['NotAvailableForSubscription, type: Location, locations: southcentralus', 'NotAvailableForSubscription, type: Zone, locations: southcentralus, zones: 1,2,3']
+virtualMachines  southcentralus  Standard_D48as_v6       1,2      None
+virtualMachines  southcentralus  Standard_D48a_v4        1,2,3    ['NotAvailableForSubscription, type: Location, locations: southcentralus', 'NotAvailableForSubscription, type: Zone, locations: southcentralus, zones: 1,2,3']
+virtualMachines  southcentralus  Standard_D48ds_v4       1,2,3    ['NotAvailableForSubscription, type: Location, locations: southcentralus', 'NotAvailableForSubscription, type: Zone, locations: southcentralus, zones: 1,2,3']
+virtualMachines  southcentralus  Standard_D48ds_v5       1,2,3    ['NotAvailableForSubscription, type: Location, locations: southcentralus', 'NotAvailableForSubscription, type: Zone, locations: southcentralus, zones: 1,2,3']
+virtualMachines  southcentralus  Standard_D48ds_v6       1,2,3    None
+virtualMachines  southcentralus  Standard_D48d_v4        1,2,3    ['NotAvailableForSubscription, type: Location, locations: southcentralus', 'NotAvailableForSubscription, type: Zone, locations: southcentralus, zones: 1,2,3']
+virtualMachines  southcentralus  Standard_D48d_v5        1,2,3    ['NotAvailableForSubscription, type: Location, locations: southcentralus', 'NotAvailableForSubscription, type: Zone, locations: southcentralus, zones: 1,2,3']
+virtualMachines  southcentralus  Standard_D48lds_v5      1,2,3    ['NotAvailableForSubscription, type: Location, locations: southcentralus', 'NotAvailableForSubscription, type: Zone, locations: southcentralus, zones: 1,2,3']
+virtualMachines  southcentralus  Standard_D48lds_v6      1,2,3    None
+virtualMachines  southcentralus  Standard_D48ls_v5       1,2,3    ['NotAvailableForSubscription, type: Location, locations: southcentralus', 'NotAvailableForSubscription, type: Zone, locations: southcentralus, zones: 1,2,3']
+virtualMachines  southcentralus  Standard_D48ls_v6       1,2,3    None
+virtualMachines  southcentralus  Standard_D48pds_v5      1,2,3    NotAvailableForSubscription, type: Zone, locations: southcentralus, zones: 2,3
+virtualMachines  southcentralus  Standard_D48pds_v6      1,2      None
+virtualMachines  southcentralus  Standard_D48plds_v5     1,2,3    NotAvailableForSubscription, type: Zone, locations: southcentralus, zones: 2,3
+virtualMachines  southcentralus  Standard_D48plds_v6     1,2      None
+virtualMachines  southcentralus  Standard_D48pls_v5      1,2,3    NotAvailableForSubscription, type: Zone, locations: southcentralus, zones: 2,3
+virtualMachines  southcentralus  Standard_D48pls_v6      1,2      None
+virtualMachines  southcentralus  Standard_D48ps_v5       1,2,3    NotAvailableForSubscription, type: Zone, locations: southcentralus, zones: 2,3
+virtualMachines  southcentralus  Standard_D48ps_v6       1,2      None
+virtualMachines  southcentralus  Standard_D48s_v3        1,2,3    ['NotAvailableForSubscription, type: Location, locations: southcentralus', 'NotAvailableForSubscription, type: Zone, locations: southcentralus, zones: 1,2,3']
+virtualMachines  southcentralus  Standard_D48s_v4        1,2,3    ['NotAvailableForSubscription, type: Location, locations: southcentralus', 'NotAvailableForSubscription, type: Zone, locations: southcentralus, zones: 1,2,3']
+virtualMachines  southcentralus  Standard_D48s_v5        1,2,3    ['NotAvailableForSubscription, type: Location, locations: southcentralus', 'NotAvailableForSubscription, type: Zone, locations: southcentralus, zones: 1,2,3']
+virtualMachines  southcentralus  Standard_D48s_v6        1,2,3    None
+virtualMachines  southcentralus  Standard_D48_v3         1,2,3    ['NotAvailableForSubscription, type: Location, locations: southcentralus', 'NotAvailableForSubscription, type: Zone, locations: southcentralus, zones: 1,2,3']
+virtualMachines  southcentralus  Standard_D48_v4         1,2,3    ['NotAvailableForSubscription, type: Location, locations: southcentralus', 'NotAvailableForSubscription, type: Zone, locations: southcentralus, zones: 1,2,3']
+virtualMachines  southcentralus  Standard_D48_v5         1,2,3    ['NotAvailableForSubscription, type: Location, locations: southcentralus', 'NotAvailableForSubscription, type: Zone, locations: southcentralus, zones: 1,2,3']
+virtualMachines  southcentralus  Standard_D4ads_v5       1,2,3    ['NotAvailableForSubscription, type: Location, locations: southcentralus', 'NotAvailableForSubscription, type: Zone, locations: southcentralus, zones: 1,2,3']
+virtualMachines  southcentralus  Standard_D4ads_v6       1,2      None
+virtualMachines  southcentralus  Standard_D4alds_v6      1,2      None
+virtualMachines  southcentralus  Standard_D4als_v6       1,2      None
+virtualMachines  southcentralus  Standard_D4as_v4        1,2,3    ['NotAvailableForSubscription, type: Location, locations: southcentralus', 'NotAvailableForSubscription, type: Zone, locations: southcentralus, zones: 1,2,3']
+virtualMachines  southcentralus  Standard_D4as_v5        1,2,3    ['NotAvailableForSubscription, type: Location, locations: southcentralus', 'NotAvailableForSubscription, type: Zone, locations: southcentralus, zones: 1,2,3']
+virtualMachines  southcentralus  Standard_D4as_v6        1,2      None
+virtualMachines  southcentralus  Standard_D4a_v4         1,2,3    ['NotAvailableForSubscription, type: Location, locations: southcentralus', 'NotAvailableForSubscription, type: Zone, locations: southcentralus, zones: 1,2,3']
+virtualMachines  southcentralus  Standard_D4ds_v4        1,2,3    ['NotAvailableForSubscription, type: Location, locations: southcentralus', 'NotAvailableForSubscription, type: Zone, locations: southcentralus, zones: 1,2,3']
+virtualMachines  southcentralus  Standard_D4ds_v5        1,2,3    ['NotAvailableForSubscription, type: Location, locations: southcentralus', 'NotAvailableForSubscription, type: Zone, locations: southcentralus, zones: 1,2,3']
+virtualMachines  southcentralus  Standard_D4ds_v6        1,2,3    None
+virtualMachines  southcentralus  Standard_D4d_v4         1,2,3    ['NotAvailableForSubscription, type: Location, locations: southcentralus', 'NotAvailableForSubscription, type: Zone, locations: southcentralus, zones: 1,2,3']
+virtualMachines  southcentralus  Standard_D4d_v5         1,2,3    ['NotAvailableForSubscription, type: Location, locations: southcentralus', 'NotAvailableForSubscription, type: Zone, locations: southcentralus, zones: 1,2,3']
+virtualMachines  southcentralus  Standard_D4lds_v5       1,2,3    ['NotAvailableForSubscription, type: Location, locations: southcentralus', 'NotAvailableForSubscription, type: Zone, locations: southcentralus, zones: 1,2,3']
+virtualMachines  southcentralus  Standard_D4lds_v6       1,2,3    None
+virtualMachines  southcentralus  Standard_D4ls_v5        1,2,3    ['NotAvailableForSubscription, type: Location, locations: southcentralus', 'NotAvailableForSubscription, type: Zone, locations: southcentralus, zones: 1,2,3']
+virtualMachines  southcentralus  Standard_D4ls_v6        1,2,3    None
+virtualMachines  southcentralus  Standard_D4pds_v5       1,2,3    NotAvailableForSubscription, type: Zone, locations: southcentralus, zones: 2,3
+virtualMachines  southcentralus  Standard_D4pds_v6       1,2      None
+virtualMachines  southcentralus  Standard_D4plds_v5      1,2,3    NotAvailableForSubscription, type: Zone, locations: southcentralus, zones: 2,3
+virtualMachines  southcentralus  Standard_D4plds_v6      1,2      None
+virtualMachines  southcentralus  Standard_D4pls_v5       1,2,3    NotAvailableForSubscription, type: Zone, locations: southcentralus, zones: 2,3
+virtualMachines  southcentralus  Standard_D4pls_v6       1,2      None
+virtualMachines  southcentralus  Standard_D4ps_v5        1,2,3    NotAvailableForSubscription, type: Zone, locations: southcentralus, zones: 2,3
+virtualMachines  southcentralus  Standard_D4ps_v6        1,2      None
+virtualMachines  southcentralus  Standard_D4s_v3         1,2,3    ['NotAvailableForSubscription, type: Location, locations: southcentralus', 'NotAvailableForSubscription, type: Zone, locations: southcentralus, zones: 1,2,3']
+virtualMachines  southcentralus  Standard_D4s_v4         1,2,3    ['NotAvailableForSubscription, type: Location, locations: southcentralus', 'NotAvailableForSubscription, type: Zone, locations: southcentralus, zones: 1,2,3']
+virtualMachines  southcentralus  Standard_D4s_v5         1,2,3    ['NotAvailableForSubscription, type: Location, locations: southcentralus', 'NotAvailableForSubscription, type: Zone, locations: southcentralus, zones: 1,2,3']
+virtualMachines  southcentralus  Standard_D4s_v6         1,2,3    None
+virtualMachines  southcentralus  Standard_D4_v2          1,2,3    ['NotAvailableForSubscription, type: Location, locations: southcentralus', 'NotAvailableForSubscription, type: Zone, locations: southcentralus, zones: 1,2,3']
+virtualMachines  southcentralus  Standard_D4_v2_Promo    1,2,3    NotAvailableForSubscription, type: Location, locations: southcentralus
+virtualMachines  southcentralus  Standard_D4_v3          1,2,3    ['NotAvailableForSubscription, type: Location, locations: southcentralus', 'NotAvailableForSubscription, type: Zone, locations: southcentralus, zones: 1,2,3']
+virtualMachines  southcentralus  Standard_D4_v4          1,2,3    ['NotAvailableForSubscription, type: Location, locations: southcentralus', 'NotAvailableForSubscription, type: Zone, locations: southcentralus, zones: 1,2,3']
+virtualMachines  southcentralus  Standard_D4_v5          1,2,3    ['NotAvailableForSubscription, type: Location, locations: southcentralus', 'NotAvailableForSubscription, type: Zone, locations: southcentralus, zones: 1,2,3']
+virtualMachines  southcentralus  Standard_D5_v2          1,2,3    ['NotAvailableForSubscription, type: Location, locations: southcentralus', 'NotAvailableForSubscription, type: Zone, locations: southcentralus, zones: 1,2,3']
+virtualMachines  southcentralus  Standard_D5_v2_Promo    1,2,3    NotAvailableForSubscription, type: Location, locations: southcentralus
+virtualMachines  southcentralus  Standard_D64ads_v5      1,2,3    ['NotAvailableForSubscription, type: Location, locations: southcentralus', 'NotAvailableForSubscription, type: Zone, locations: southcentralus, zones: 1,2,3']
+virtualMachines  southcentralus  Standard_D64ads_v6      1,2      None
+virtualMachines  southcentralus  Standard_D64alds_v6     1,2      None
+virtualMachines  southcentralus  Standard_D64als_v6      1,2      None
+virtualMachines  southcentralus  Standard_D64as_v4       1,2,3    ['NotAvailableForSubscription, type: Location, locations: southcentralus', 'NotAvailableForSubscription, type: Zone, locations: southcentralus, zones: 1,2,3']
+virtualMachines  southcentralus  Standard_D64as_v5       1,2,3    ['NotAvailableForSubscription, type: Location, locations: southcentralus', 'NotAvailableForSubscription, type: Zone, locations: southcentralus, zones: 1,2,3']
+virtualMachines  southcentralus  Standard_D64as_v6       1,2      None
+virtualMachines  southcentralus  Standard_D64a_v4        1,2,3    ['NotAvailableForSubscription, type: Location, locations: southcentralus', 'NotAvailableForSubscription, type: Zone, locations: southcentralus, zones: 1,2,3']
+virtualMachines  southcentralus  Standard_D64ds_v4       1,2,3    ['NotAvailableForSubscription, type: Location, locations: southcentralus', 'NotAvailableForSubscription, type: Zone, locations: southcentralus, zones: 1,2,3']
+virtualMachines  southcentralus  Standard_D64ds_v5       1,2,3    ['NotAvailableForSubscription, type: Location, locations: southcentralus', 'NotAvailableForSubscription, type: Zone, locations: southcentralus, zones: 1,2,3']
+virtualMachines  southcentralus  Standard_D64ds_v6       1,2,3    None
+virtualMachines  southcentralus  Standard_D64d_v4        1,2,3    ['NotAvailableForSubscription, type: Location, locations: southcentralus', 'NotAvailableForSubscription, type: Zone, locations: southcentralus, zones: 1,2,3']
+virtualMachines  southcentralus  Standard_D64d_v5        1,2,3    ['NotAvailableForSubscription, type: Location, locations: southcentralus', 'NotAvailableForSubscription, type: Zone, locations: southcentralus, zones: 1,2,3']
+virtualMachines  southcentralus  Standard_D64lds_v5      1,2,3    ['NotAvailableForSubscription, type: Location, locations: southcentralus', 'NotAvailableForSubscription, type: Zone, locations: southcentralus, zones: 1,2,3']
+virtualMachines  southcentralus  Standard_D64lds_v6      1,2,3    None
+virtualMachines  southcentralus  Standard_D64ls_v5       1,2,3    ['NotAvailableForSubscription, type: Location, locations: southcentralus', 'NotAvailableForSubscription, type: Zone, locations: southcentralus, zones: 1,2,3']
+virtualMachines  southcentralus  Standard_D64ls_v6       1,2,3    None
+virtualMachines  southcentralus  Standard_D64pds_v5      1,2,3    NotAvailableForSubscription, type: Zone, locations: southcentralus, zones: 2,3
+virtualMachines  southcentralus  Standard_D64pds_v6      1,2      None
+virtualMachines  southcentralus  Standard_D64plds_v5     1,2,3    NotAvailableForSubscription, type: Zone, locations: southcentralus, zones: 2,3
+virtualMachines  southcentralus  Standard_D64plds_v6     1,2      None
+virtualMachines  southcentralus  Standard_D64pls_v5      1,2,3    NotAvailableForSubscription, type: Zone, locations: southcentralus, zones: 2,3
+virtualMachines  southcentralus  Standard_D64pls_v6      1,2      None
+virtualMachines  southcentralus  Standard_D64ps_v5       1,2,3    NotAvailableForSubscription, type: Zone, locations: southcentralus, zones: 2,3
+virtualMachines  southcentralus  Standard_D64ps_v6       1,2      None
+virtualMachines  southcentralus  Standard_D64s_v3        1,2,3    ['NotAvailableForSubscription, type: Location, locations: southcentralus', 'NotAvailableForSubscription, type: Zone, locations: southcentralus, zones: 1,2,3']
+virtualMachines  southcentralus  Standard_D64s_v4        1,2,3    ['NotAvailableForSubscription, type: Location, locations: southcentralus', 'NotAvailableForSubscription, type: Zone, locations: southcentralus, zones: 1,2,3']
+virtualMachines  southcentralus  Standard_D64s_v5        1,2,3    ['NotAvailableForSubscription, type: Location, locations: southcentralus', 'NotAvailableForSubscription, type: Zone, locations: southcentralus, zones: 1,2,3']
+virtualMachines  southcentralus  Standard_D64s_v6        1,2,3    None
+virtualMachines  southcentralus  Standard_D64_v3         1,2,3    ['NotAvailableForSubscription, type: Location, locations: southcentralus', 'NotAvailableForSubscription, type: Zone, locations: southcentralus, zones: 1,2,3']
+virtualMachines  southcentralus  Standard_D64_v4         1,2,3    ['NotAvailableForSubscription, type: Location, locations: southcentralus', 'NotAvailableForSubscription, type: Zone, locations: southcentralus, zones: 1,2,3']
+virtualMachines  southcentralus  Standard_D64_v5         1,2,3    ['NotAvailableForSubscription, type: Location, locations: southcentralus', 'NotAvailableForSubscription, type: Zone, locations: southcentralus, zones: 1,2,3']
+virtualMachines  southcentralus  Standard_D8ads_v5       1,2,3    ['NotAvailableForSubscription, type: Location, locations: southcentralus', 'NotAvailableForSubscription, type: Zone, locations: southcentralus, zones: 1,2,3']
+virtualMachines  southcentralus  Standard_D8ads_v6       1,2      None
+virtualMachines  southcentralus  Standard_D8alds_v6      1,2      None
+virtualMachines  southcentralus  Standard_D8als_v6       1,2      None
+virtualMachines  southcentralus  Standard_D8as_v4        1,2,3    ['NotAvailableForSubscription, type: Location, locations: southcentralus', 'NotAvailableForSubscription, type: Zone, locations: southcentralus, zones: 1,2,3']
+virtualMachines  southcentralus  Standard_D8as_v5        1,2,3    ['NotAvailableForSubscription, type: Location, locations: southcentralus', 'NotAvailableForSubscription, type: Zone, locations: southcentralus, zones: 1,2,3']
+virtualMachines  southcentralus  Standard_D8as_v6        1,2      None
+virtualMachines  southcentralus  Standard_D8a_v4         1,2,3    ['NotAvailableForSubscription, type: Location, locations: southcentralus', 'NotAvailableForSubscription, type: Zone, locations: southcentralus, zones: 1,2,3']
+virtualMachines  southcentralus  Standard_D8ds_v4        1,2,3    ['NotAvailableForSubscription, type: Location, locations: southcentralus', 'NotAvailableForSubscription, type: Zone, locations: southcentralus, zones: 1,2,3']
+virtualMachines  southcentralus  Standard_D8ds_v5        1,2,3    ['NotAvailableForSubscription, type: Location, locations: southcentralus', 'NotAvailableForSubscription, type: Zone, locations: southcentralus, zones: 1,2,3']
+virtualMachines  southcentralus  Standard_D8ds_v6        1,2,3    None
+virtualMachines  southcentralus  Standard_D8d_v4         1,2,3    ['NotAvailableForSubscription, type: Location, locations: southcentralus', 'NotAvailableForSubscription, type: Zone, locations: southcentralus, zones: 1,2,3']
+virtualMachines  southcentralus  Standard_D8d_v5         1,2,3    ['NotAvailableForSubscription, type: Location, locations: southcentralus', 'NotAvailableForSubscription, type: Zone, locations: southcentralus, zones: 1,2,3']
+virtualMachines  southcentralus  Standard_D8lds_v5       1,2,3    ['NotAvailableForSubscription, type: Location, locations: southcentralus', 'NotAvailableForSubscription, type: Zone, locations: southcentralus, zones: 1,2,3']
+virtualMachines  southcentralus  Standard_D8lds_v6       1,2,3    None
+virtualMachines  southcentralus  Standard_D8ls_v5        1,2,3    ['NotAvailableForSubscription, type: Location, locations: southcentralus', 'NotAvailableForSubscription, type: Zone, locations: southcentralus, zones: 1,2,3']
+virtualMachines  southcentralus  Standard_D8ls_v6        1,2,3    None
+virtualMachines  southcentralus  Standard_D8pds_v5       1,2,3    NotAvailableForSubscription, type: Zone, locations: southcentralus, zones: 2,3
+virtualMachines  southcentralus  Standard_D8pds_v6       1,2      None
+virtualMachines  southcentralus  Standard_D8plds_v5      1,2,3    NotAvailableForSubscription, type: Zone, locations: southcentralus, zones: 2,3
+virtualMachines  southcentralus  Standard_D8plds_v6      1,2      None
+virtualMachines  southcentralus  Standard_D8pls_v5       1,2,3    NotAvailableForSubscription, type: Zone, locations: southcentralus, zones: 2,3
+virtualMachines  southcentralus  Standard_D8pls_v6       1,2      None
+virtualMachines  southcentralus  Standard_D8ps_v5        1,2,3    NotAvailableForSubscription, type: Zone, locations: southcentralus, zones: 2,3
+virtualMachines  southcentralus  Standard_D8ps_v6        1,2      None
+virtualMachines  southcentralus  Standard_D8s_v3         1,2,3    ['NotAvailableForSubscription, type: Location, locations: southcentralus', 'NotAvailableForSubscription, type: Zone, locations: southcentralus, zones: 1,2,3']
+virtualMachines  southcentralus  Standard_D8s_v4         1,2,3    ['NotAvailableForSubscription, type: Location, locations: southcentralus', 'NotAvailableForSubscription, type: Zone, locations: southcentralus, zones: 1,2,3']
+virtualMachines  southcentralus  Standard_D8s_v5         1,2,3    ['NotAvailableForSubscription, type: Location, locations: southcentralus', 'NotAvailableForSubscription, type: Zone, locations: southcentralus, zones: 1,2,3']
+virtualMachines  southcentralus  Standard_D8s_v6         1,2,3    None
+virtualMachines  southcentralus  Standard_D8_v3          1,2,3    ['NotAvailableForSubscription, type: Location, locations: southcentralus', 'NotAvailableForSubscription, type: Zone, locations: southcentralus, zones: 1,2,3']
+virtualMachines  southcentralus  Standard_D8_v4          1,2,3    ['NotAvailableForSubscription, type: Location, locations: southcentralus', 'NotAvailableForSubscription, type: Zone, locations: southcentralus, zones: 1,2,3']
+virtualMachines  southcentralus  Standard_D8_v5          1,2,3    ['NotAvailableForSubscription, type: Location, locations: southcentralus', 'NotAvailableForSubscription, type: Zone, locations: southcentralus, zones: 1,2,3']
+virtualMachines  southcentralus  Standard_D96ads_v5      1,2,3    ['NotAvailableForSubscription, type: Location, locations: southcentralus', 'NotAvailableForSubscription, type: Zone, locations: southcentralus, zones: 1,2,3']
+virtualMachines  southcentralus  Standard_D96ads_v6      1,2      None
+virtualMachines  southcentralus  Standard_D96alds_v6     1,2      None
+virtualMachines  southcentralus  Standard_D96als_v6      1,2      None
+virtualMachines  southcentralus  Standard_D96as_v4       1,2,3    ['NotAvailableForSubscription, type: Location, locations: southcentralus', 'NotAvailableForSubscription, type: Zone, locations: southcentralus, zones: 1,2,3']
+virtualMachines  southcentralus  Standard_D96as_v5       1,2,3    ['NotAvailableForSubscription, type: Location, locations: southcentralus', 'NotAvailableForSubscription, type: Zone, locations: southcentralus, zones: 1,2,3']
+virtualMachines  southcentralus  Standard_D96as_v6       1,2      None
+virtualMachines  southcentralus  Standard_D96a_v4        1,2,3    ['NotAvailableForSubscription, type: Location, locations: southcentralus', 'NotAvailableForSubscription, type: Zone, locations: southcentralus, zones: 1,2,3']
+virtualMachines  southcentralus  Standard_D96ds_v5       1,2,3    ['NotAvailableForSubscription, type: Location, locations: southcentralus', 'NotAvailableForSubscription, type: Zone, locations: southcentralus, zones: 1,2,3']
+virtualMachines  southcentralus  Standard_D96ds_v6       1,2,3    None
+virtualMachines  southcentralus  Standard_D96d_v5        1,2,3    ['NotAvailableForSubscription, type: Location, locations: southcentralus', 'NotAvailableForSubscription, type: Zone, locations: southcentralus, zones: 1,2,3']
+virtualMachines  southcentralus  Standard_D96lds_v5      1,2,3    ['NotAvailableForSubscription, type: Location, locations: southcentralus', 'NotAvailableForSubscription, type: Zone, locations: southcentralus, zones: 1,2,3']
+virtualMachines  southcentralus  Standard_D96lds_v6      1,2,3    None
+virtualMachines  southcentralus  Standard_D96ls_v5       1,2,3    ['NotAvailableForSubscription, type: Location, locations: southcentralus', 'NotAvailableForSubscription, type: Zone, locations: southcentralus, zones: 1,2,3']
+virtualMachines  southcentralus  Standard_D96ls_v6       1,2,3    None
+virtualMachines  southcentralus  Standard_D96pds_v6      1,2      None
+virtualMachines  southcentralus  Standard_D96plds_v6     1,2      None
+virtualMachines  southcentralus  Standard_D96pls_v6      1,2      None
+virtualMachines  southcentralus  Standard_D96ps_v6       1,2      None
+virtualMachines  southcentralus  Standard_D96s_v5        1,2,3    ['NotAvailableForSubscription, type: Location, locations: southcentralus', 'NotAvailableForSubscription, type: Zone, locations: southcentralus, zones: 1,2,3']
+virtualMachines  southcentralus  Standard_D96s_v6        1,2,3    None
+virtualMachines  southcentralus  Standard_D96_v5         1,2,3    ['NotAvailableForSubscription, type: Location, locations: southcentralus', 'NotAvailableForSubscription, type: Zone, locations: southcentralus, zones: 1,2,3']
+virtualMachines  southcentralus  Standard_DC16ds_v3      3        None
+virtualMachines  southcentralus  Standard_DC16s_v3       3        None
+virtualMachines  southcentralus  Standard_DC1ds_v3       3        None
+virtualMachines  southcentralus  Standard_DC1s_v2        2        None
+virtualMachines  southcentralus  Standard_DC1s_v3        3        None
+virtualMachines  southcentralus  Standard_DC24ds_v3      3        None
+virtualMachines  southcentralus  Standard_DC24s_v3       3        None
+virtualMachines  southcentralus  Standard_DC2ds_v3       3        None
+virtualMachines  southcentralus  Standard_DC2s_v2        2        None
+virtualMachines  southcentralus  Standard_DC2s_v3        3        None
+virtualMachines  southcentralus  Standard_DC32ds_v3      3        None
+virtualMachines  southcentralus  Standard_DC32s_v3       3        None
+virtualMachines  southcentralus  Standard_DC48ds_v3      3        None
+virtualMachines  southcentralus  Standard_DC48s_v3       3        None
+virtualMachines  southcentralus  Standard_DC4ds_v3       3        None
+virtualMachines  southcentralus  Standard_DC4s_v2        2        None
+virtualMachines  southcentralus  Standard_DC4s_v3        3        None
+virtualMachines  southcentralus  Standard_DC8ds_v3       3        None
+virtualMachines  southcentralus  Standard_DC8s_v3        3        None
+virtualMachines  southcentralus  Standard_DC8_v2         2        None
+virtualMachines  southcentralus  Standard_DS1            2        NotAvailableForSubscription, type: Location, locations: southcentralus
+virtualMachines  southcentralus  Standard_DS11           2        NotAvailableForSubscription, type: Location, locations: southcentralus
+virtualMachines  southcentralus  Standard_DS11-1_v2      1,2,3    ['NotAvailableForSubscription, type: Location, locations: southcentralus', 'NotAvailableForSubscription, type: Zone, locations: southcentralus, zones: 1,2,3']
+virtualMachines  southcentralus  Standard_DS11_v2        1,2,3    ['NotAvailableForSubscription, type: Location, locations: southcentralus', 'NotAvailableForSubscription, type: Zone, locations: southcentralus, zones: 1,2,3']
+virtualMachines  southcentralus  Standard_DS11_v2_Promo  1,2,3    NotAvailableForSubscription, type: Location, locations: southcentralus
+virtualMachines  southcentralus  Standard_DS12           2        NotAvailableForSubscription, type: Location, locations: southcentralus
+virtualMachines  southcentralus  Standard_DS12-1_v2      1,2,3    ['NotAvailableForSubscription, type: Location, locations: southcentralus', 'NotAvailableForSubscription, type: Zone, locations: southcentralus, zones: 1,2,3']
+virtualMachines  southcentralus  Standard_DS12-2_v2      1,2,3    ['NotAvailableForSubscription, type: Location, locations: southcentralus', 'NotAvailableForSubscription, type: Zone, locations: southcentralus, zones: 1,2,3']
+virtualMachines  southcentralus  Standard_DS12_v2        1,2,3    ['NotAvailableForSubscription, type: Location, locations: southcentralus', 'NotAvailableForSubscription, type: Zone, locations: southcentralus, zones: 1,2,3']
+virtualMachines  southcentralus  Standard_DS12_v2_Promo  1,2,3    NotAvailableForSubscription, type: Location, locations: southcentralus
+virtualMachines  southcentralus  Standard_DS13           2        NotAvailableForSubscription, type: Location, locations: southcentralus
+virtualMachines  southcentralus  Standard_DS13-2_v2      1,2,3    ['NotAvailableForSubscription, type: Location, locations: southcentralus', 'NotAvailableForSubscription, type: Zone, locations: southcentralus, zones: 1,2,3']
+virtualMachines  southcentralus  Standard_DS13-4_v2      1,2,3    ['NotAvailableForSubscription, type: Location, locations: southcentralus', 'NotAvailableForSubscription, type: Zone, locations: southcentralus, zones: 1,2,3']
+virtualMachines  southcentralus  Standard_DS13_v2        1,2,3    ['NotAvailableForSubscription, type: Location, locations: southcentralus', 'NotAvailableForSubscription, type: Zone, locations: southcentralus, zones: 1,2,3']
+virtualMachines  southcentralus  Standard_DS13_v2_Promo  1,2,3    NotAvailableForSubscription, type: Location, locations: southcentralus
+virtualMachines  southcentralus  Standard_DS14           2        NotAvailableForSubscription, type: Location, locations: southcentralus
+virtualMachines  southcentralus  Standard_DS14-4_v2      1,2,3    ['NotAvailableForSubscription, type: Location, locations: southcentralus', 'NotAvailableForSubscription, type: Zone, locations: southcentralus, zones: 1,2,3']
+virtualMachines  southcentralus  Standard_DS14-8_v2      1,2,3    ['NotAvailableForSubscription, type: Location, locations: southcentralus', 'NotAvailableForSubscription, type: Zone, locations: southcentralus, zones: 1,2,3']
+virtualMachines  southcentralus  Standard_DS14_v2        1,2,3    ['NotAvailableForSubscription, type: Location, locations: southcentralus', 'NotAvailableForSubscription, type: Zone, locations: southcentralus, zones: 1,2,3']
+virtualMachines  southcentralus  Standard_DS14_v2_Promo  1,2,3    NotAvailableForSubscription, type: Location, locations: southcentralus
+virtualMachines  southcentralus  Standard_DS15_v2        1,2,3    NotAvailableForSubscription, type: Location, locations: southcentralus
+virtualMachines  southcentralus  Standard_DS1_v2         1,2,3    ['NotAvailableForSubscription, type: Location, locations: southcentralus', 'NotAvailableForSubscription, type: Zone, locations: southcentralus, zones: 1,2,3']
+virtualMachines  southcentralus  Standard_DS2            2        NotAvailableForSubscription, type: Location, locations: southcentralus
+virtualMachines  southcentralus  Standard_DS2_v2         1,2,3    ['NotAvailableForSubscription, type: Location, locations: southcentralus', 'NotAvailableForSubscription, type: Zone, locations: southcentralus, zones: 1,2,3']
+virtualMachines  southcentralus  Standard_DS2_v2_Promo   1,2,3    NotAvailableForSubscription, type: Location, locations: southcentralus
+virtualMachines  southcentralus  Standard_DS3            2        NotAvailableForSubscription, type: Location, locations: southcentralus
+virtualMachines  southcentralus  Standard_DS3_v2         1,2,3    ['NotAvailableForSubscription, type: Location, locations: southcentralus', 'NotAvailableForSubscription, type: Zone, locations: southcentralus, zones: 1,2,3']
+virtualMachines  southcentralus  Standard_DS3_v2_Promo   1,2,3    NotAvailableForSubscription, type: Location, locations: southcentralus
+virtualMachines  southcentralus  Standard_DS4            2        NotAvailableForSubscription, type: Location, locations: southcentralus
+virtualMachines  southcentralus  Standard_DS4_v2         1,2,3    ['NotAvailableForSubscription, type: Location, locations: southcentralus', 'NotAvailableForSubscription, type: Zone, locations: southcentralus, zones: 1,2,3']
+virtualMachines  southcentralus  Standard_DS4_v2_Promo   1,2,3    NotAvailableForSubscription, type: Location, locations: southcentralus
+virtualMachines  southcentralus  Standard_DS5_v2         1,2,3    ['NotAvailableForSubscription, type: Location, locations: southcentralus', 'NotAvailableForSubscription, type: Zone, locations: southcentralus, zones: 1,2,3']
+virtualMachines  southcentralus  Standard_DS5_v2_Promo   1,2,3    NotAvailableForSubscription, type: Location, locations: southcentralus
+aluno [ ~/environment/config/azure-cluster ]$ 
