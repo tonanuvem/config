@@ -49,7 +49,7 @@ echo "   4 - Instalando Docker..."
 ansible-playbook ~/environment/config/ansible/ansible_docker.yml --inventory inv.hosts -u $user --key-file ~/environment/labsuser.pem
 
 echo "   5 - Configurando Kubernetes..."
-ansible-playbook ~/environment/config/ansible/ansible_k8s.yml --inventory inv.hosts -u $user --key-file ~/environment/labsuser.pem
+ansible-playbook ~/environment/config/ansible/ansible_k8s_azure_vm.yml --inventory inv.hosts -u $user --key-file ~/environment/labsuser.pem
 
 echo "   6 - Configurando storage, Helm..."
 ansible-playbook ~/environment/config/ansible/k8s_storage_helm_wordpress.yml --inventory inv.hosts -u $user --key-file ~/environment/labsuser.pem
