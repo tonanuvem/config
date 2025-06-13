@@ -1,0 +1,94 @@
+---
+- name: Instalar Terraform CLI
+  hosts: all
+  become: true
+  tasks:
+    - name: Verificar se o Terraform já está instalado
+      command: terraform version
+      register: terraform_check
+      ignore_errors: yes
+      changed_when: false
+
+    - name: Mostrar versão atual do Terraform (se existir)
+      debug:
+        msg: "Terraform já está instalado: {{ terraform_check.stdout }}"
+      when: terraform_check.rc == 0
+
+    - name: Instalar dependências (Ubuntu/Debian)
+      apt:
+        name:
+          - curl
+          - unzip
+        state: present
+        update_cache: yes
+      when: 
+        - terraform_check.rc != 0
+        - ansible_os_family == "Debian"
+
+    - name: Instalar dependências (Amazon Linux/RHEL/CentOS)
+      yum:
+        name:
+          - curl
+          - unzip
+        state: present
+      when: 
+        - terraform_check.rc != 0
+        - ansible_os_family == "RedHat"
+
+    - name: Detectar arquitetura do sistema
+      command: uname -m
+      register: system_arch
+      changed_when: false
+      when: terraform_check.rc != 0
+
+    - name: Definir arquitetura para download
+      set_fact:
+        terraform_arch: "{{ 'amd64' if system_arch.stdout == 'x86_64' else 'arm64' if system_arch.stdout in ['aarch64', 'arm64'] else 'amd64' }}"
+      when: terraform_check.rc != 0
+
+    - name: Baixar Terraform
+      get_url:
+        url: "https://releases.hashicorp.com/terraform/1.12.2/terraform_1.12.2_linux_{{ terraform_arch }}.zip"
+        dest: /tmp/terraform_linux_{{ terraform_arch }}.zip
+        mode: '0644'
+      when: terraform_check.rc != 0
+
+    - name: Criar diretório temporário para extração
+      file:
+        path: /tmp/terraform_extract
+        state: directory
+        mode: '0755'
+      when: terraform_check.rc != 0
+
+    - name: Extrair Terraform
+      unarchive:
+        src: /tmp/terraform_linux_{{ terraform_arch }}.zip
+        dest: /tmp/terraform_extract
+        remote_src: yes
+      when: terraform_check.rc != 0
+
+    - name: Mover Terraform para /usr/local/bin
+      copy:
+        src: /tmp/terraform_extract/terraform
+        dest: /usr/local/bin/terraform
+        mode: '0755'
+        remote_src: yes
+      when: terraform_check.rc != 0
+
+    - name: Limpar arquivos temporários
+      file:
+        path: "{{ item }}"
+        state: absent
+      loop:
+        - /tmp/terraform_linux_{{ terraform_arch }}.zip
+        - /tmp/terraform_extract
+      when: terraform_check.rc != 0
+
+    - name: Verificar instalação do Terraform
+      command: terraform version
+      register: terraform_version
+      changed_when: false
+
+    - name: Mostrar versão instalada do Terraform
+      debug:
+        msg: "Terraform instalado com sucesso: {{ terraform_version.stdout }}"
