@@ -1,0 +1,184 @@
+---
+# https://kubernetes.io/pt-br/docs/setup/production-environment/tools/kubeadm/install-kubeadm/
+  - name: Instalação das ferramentas do Kubernetes
+    hosts: all
+    tasks:
+        - name: Configurar memoria swap
+          shell: |
+            sudo swapoff -a
+            sudo sed -i '/ swap / s/^/#/' /etc/fstab
+            
+            # https://kubernetes.io/docs/setup/production-environment/tools/kubeadm/install-kubeadm/#configure-cgroup-driver-used-by-kubelet-on-control-plane-node
+            cat <<EOF | sudo tee /etc/modules-load.d/k8s.conf
+            br_netfilter
+            EOF
+            cat <<EOF | sudo tee /etc/sysctl.d/k8s.conf
+            net.bridge.bridge-nf-call-ip6tables = 1
+            net.bridge.bridge-nf-call-iptables = 1
+            EOF
+            sudo sysctl --system
+          args:
+            executable: /bin/bash
+            
+        - name: Instalar containerD 
+        # https://kubernetes.io/docs/setup/production-environment/container-runtimes/#containerd
+          shell: |
+            ## Install and configure prerequisites:
+            cat <<EOF | sudo tee /etc/modules-load.d/containerd.conf
+            overlay
+            br_netfilter
+            EOF
+            sudo modprobe overlay
+            sudo modprobe br_netfilter
+            # Setup required sysctl params, these persist across reboots.
+            cat <<EOF | sudo tee /etc/sysctl.d/99-kubernetes-cri.conf
+            net.bridge.bridge-nf-call-iptables  = 1
+            net.ipv4.ip_forward                 = 1
+            net.bridge.bridge-nf-call-ip6tables = 1
+            EOF
+            # Apply sysctl params without reboot
+            sudo sysctl --system
+            
+            ## Configure containerd:
+            sudo mkdir -p /etc/containerd
+            containerd config default | sudo tee /etc/containerd/config.toml
+            # Restart containerd:
+            sudo systemctl restart containerd
+          args:
+            executable: /bin/bash
+            
+        - name: Configurar /etc/docker/daemon.json
+          become: yes
+          # https://stackoverflow.com/questions/52119985/kubeadm-init-shows-kubelet-isnt-running-or-healthy
+          ansible.builtin.copy:
+            dest: "/etc/docker/daemon.json"
+            content: '{ "exec-opts": ["native.cgroupdriver=systemd"] }'
+            
+        - name: Instalar kubelet kubeadm kubectl (amazon linux 2)
+          become: yes
+          shell: |
+            cat <<EOF | sudo tee /etc/yum.repos.d/kubernetes.repo
+            [kubernetes]
+            name=Kubernetes
+            baseurl=https://pkgs.k8s.io/core:/stable:/v1.29/rpm/
+            enabled=1
+            gpgcheck=1
+            gpgkey=https://pkgs.k8s.io/core:/stable:/v1.29/rpm/repodata/repomd.xml.key
+            exclude=kubelet kubeadm kubectl cri-tools kubernetes-cni
+            EOF
+            # Set SELinux in permissive mode (effectively disabling it)
+            sudo setenforce 0
+            sudo sed -i 's/^SELINUX=enforcing$/SELINUX=permissive/' /etc/selinux/config
+            
+            # DEFINIR A VERSÃO
+            sudo yum install -y kubelet kubeadm kubectl --disableexcludes=kubernetes
+            #sudo systemctl enable --now kubelet
+            
+            ## cgroupd
+            cat <<EOF | sudo tee ~/kubeadm-config.yaml
+            # kubeadm-config.yaml
+            kind: ClusterConfiguration
+            apiVersion: kubeadm.k8s.io/v1beta3
+            kubernetesVersion: v1.21.0
+            ---
+            kind: KubeletConfiguration
+            apiVersion: kubelet.config.k8s.io/v1beta1
+            cgroupDriver: systemd
+            EOF
+            sudo systemctl enable kubelet.service
+          args:
+            executable: /bin/bash
+          when: ansible_os_family == "RedHat"
+
+        - name: Instalar kubelet kubeadm kubectl (ubuntu)
+          become: yes
+          shell: |
+            #Install CNI plugins (required for most pod network):
+            CNI_PLUGINS_VERSION="v1.3.0"
+            ARCH="amd64"
+            DEST="/opt/cni/bin"
+            sudo mkdir -p "$DEST"
+            curl -L "https://github.com/containernetworking/plugins/releases/download/${CNI_PLUGINS_VERSION}/cni-plugins-linux-${ARCH}-${CNI_PLUGINS_VERSION}.tgz" | sudo tar -C "$DEST" -xz
+
+            CRICTL_VERSION="v1.30.0"
+            ARCH="amd64"
+            curl -L "https://github.com/kubernetes-sigs/cri-tools/releases/download/${CRICTL_VERSION}/crictl-${CRICTL_VERSION}-linux-${ARCH}.tar.gz" | sudo tar -C $DOWNLOAD_DIR -xz
+            
+            #Install kubeadm, kubelet, kubectl and add a kubelet systemd service:
+            # DEFINIR A VERSÃO:
+            # RELEASE="v1.31.7"
+            # LATEST:
+            RELEASE="$(curl -sSL https://dl.k8s.io/release/stable.txt)"
+            ARCH="amd64"
+            cd $DOWNLOAD_DIR
+            sudo curl -L --remote-name-all https://dl.k8s.io/release/${RELEASE}/bin/linux/${ARCH}/{kubeadm,kubelet}
+            sudo chmod +x {kubeadm,kubelet}
+            
+            RELEASE_VERSION="v0.16.2"
+            curl -sSL "https://raw.githubusercontent.com/kubernetes/release/${RELEASE_VERSION}/cmd/krel/templates/latest/kubelet/kubelet.service" | sed "s:/usr/bin:${DOWNLOAD_DIR}:g" | sudo tee /usr/lib/systemd/system/kubelet.service
+            sudo mkdir -p /usr/lib/systemd/system/kubelet.service.d
+            curl -sSL "https://raw.githubusercontent.com/kubernetes/release/${RELEASE_VERSION}/cmd/krel/templates/latest/kubeadm/10-kubeadm.conf" | sed "s:/usr/bin:${DOWNLOAD_DIR}:g" | sudo tee /usr/lib/systemd/system/kubelet.service.d/10-kubeadm.conf
+
+            # Instale kubectl seguindo as instruções na página de Instalação de Ferramentas.
+            curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
+            sudo install -o root -g root -m 0755 kubectl /usr/local/bin/kubectl
+            
+	
+            
+            # AJUSTA PACOTE QUE ESTAVA FALTANDO
+            sudo apt update
+            sudo apt install socat conntrack
+
+            systemctl enable --now kubelet
+
+            ## cgroupd
+            cat <<EOF | sudo tee ~/kubeadm-config.yaml
+            # kubeadm-config.yaml
+            kind: ClusterConfiguration
+            apiVersion: kubeadm.k8s.io/v1beta3
+            kubernetesVersion: v1.21.0
+            ---
+            kind: KubeletConfiguration
+            apiVersion: kubelet.config.k8s.io/v1beta1
+            cgroupDriver: systemd
+            EOF
+            sudo systemctl enable kubelet.service
+          args:
+            executable: /bin/bash
+          when: ansible_os_family == "Debian"
+          
+        - name: Instalar helm
+          shell: |
+            #curl -s https://get.helm.sh/helm-v3.1.2-linux-amd64.tar.gz -o helm-linux-amd64.tar.gz
+            curl -s https://get.helm.sh/helm-v3.14.1-linux-amd64.tar.gz -o helm-linux-amd64.tar.gz
+            tar -zxvf helm-linux-amd64.tar.gz
+            sudo mv linux-amd64/helm /usr/local/bin/helm
+            rm -rf helm-linux-amd64.tar.gz linux-amd64
+          args:
+            executable: /bin/bash
+
+        - name: Instalar pacote iproute-tc via yum no Amazon Linux 2
+          become: yes
+          shell: |
+            sudo yum install -y iproute-tc
+          when: (ansible_os_family == "RedHat") and (ansible_distribution_version == "2")
+    
+        - name: Instalar pacote iproute-tc via dfm no Amazon Linux 2023
+          become: yes
+          ansible.builtin.package:
+          #yum:
+            name:
+              - iproute-tc
+            state: present
+            lock_timeout: 180
+          when: (ansible_os_family == "RedHat") and (ansible_distribution_version == "2023")
+            
+        - name: Restartar o daemon services
+          become: yes
+          ansible.builtin.service:
+            name: "{{ item }}"
+            state: restarted
+            enabled: yes
+          with_items:
+          - docker
+          - kubelet
