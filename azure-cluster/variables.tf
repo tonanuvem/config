@@ -33,7 +33,7 @@ variable "resource_group_name_prefix" {
 variable "resource_group_location" {
   description = "Localização para o grupo de recursos"
   type        = string
-  default     = "East US"
+  default     = "southcentralus"
 }
 
 variable "vnet_name" {
