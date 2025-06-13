@@ -8,7 +8,8 @@ variable "resource_group_locations" {
   type        = list(string)
   description = "Lista de regiões da Azure onde os recursos serão criados"
   default     = [
-    "southcentralus",
+    #"southcentralus",
+    "westus"
     "eastus2",
     "westus2"
   ]
