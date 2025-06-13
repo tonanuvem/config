@@ -1,3 +1,4 @@
-MASTER=$(terraform output -json ip_externo | jq .[0] | jq .[] | sed 's/"//g')
+MASTER=$(terraform output -json ip_externo | jq -r '.[0]')
+user=ubuntu
 echo "Conectando.. IP = $MASTER"
 ssh -o LogLevel=error -oStrictHostKeyChecking=no -i ~/environment/labsuser.pem ubuntu@$MASTER
