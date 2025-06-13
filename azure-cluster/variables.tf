@@ -1,7 +1,7 @@
 variable "quantidade" {
   type        = number
-  default     = 3
-  description = "Quantidade de VMs a serem criadas. Deve ser igual ao número de regiões listadas em resource_group_locations."
+  default     = 1
+  description = "Quantidade de VMs a serem criadas. Há limites de CPUs nas regiões listadas em resource_group_locations."
 }
 
 variable "resource_group_locations" {
@@ -23,7 +23,8 @@ variable "shutdown" {
 variable "vm_size" {
   description = "Tipo de instância"
   type        = string
-  default     = "Standard_D2s_v6"
+  default     = "Standard_B2s"
+  #default     = "Standard_D2s_v6"
 }
 
 variable "vm_name" {
