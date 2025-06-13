@@ -16,7 +16,7 @@ variable "vm_size" {
   # default     = "Standard_B1ms"
   # default     = "Standard_B2ms"
   # default     = "Standard_DS1_v2"
-  default     = "Standard_D2s_v3"
+  default     = "Standard_D2s_v6"
 }
 
 variable "vm_name" {
