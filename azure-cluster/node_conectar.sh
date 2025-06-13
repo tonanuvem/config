@@ -6,7 +6,7 @@ else
   read NODENUM
 fi
 
-NODE=$(terraform output -json ip_externo | jq -r '.[NODENUM]')
+NODE=$(terraform output -json ip_externo | jq -r '.[$NODENUM]')
 
 echo "Conectando.. IP = $NODE"
 ssh -o LogLevel=error -oStrictHostKeyChecking=no -i ~/environment/labsuser.pem ubuntu@$NODE
