@@ -71,7 +71,7 @@ variable "nic_name" {
 variable "storage_account_prefix" {
   description = "Prefixo para o nome da conta de armazenamento"
   type        = string
-  default     = "fiaplabdiag"
+  default     = "clusterlabdiag"
 }
 
 variable "username" {
