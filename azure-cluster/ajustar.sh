@@ -36,23 +36,27 @@ echo ""
 
 echo "   Executando playbooks Ansible..."
 
-echo "   1/6 - Configurando hostnames..."
+echo "   1 - Configurando hostnames..."
 ansible-playbook ~/environment/config/ansible/ansible_hostname.yml --inventory inv.hosts -u $user --key-file ~/environment/labsuser.pem
 
-echo "   2/6 - Configurando hosts..."
+echo "   2 - Configurando hosts..."
 ansible-playbook ~/environment/config/ansible/ansible_hosts.yml --inventory inv.hosts -u $user --key-file ~/environment/labsuser.pem
 
-echo "   3/6 - Instalando utilitários..."
+echo "   3 - Instalando utilitários..."
 ansible-playbook ~/environment/config/ansible/ansible_utils.yml --inventory inv.hosts -u $user --key-file ~/environment/labsuser.pem
 
-echo "   4/6 - Instalando Docker..."
+echo "   4 - Instalando Docker..."
 ansible-playbook ~/environment/config/ansible/ansible_docker.yml --inventory inv.hosts -u $user --key-file ~/environment/labsuser.pem
 
-echo "   5/6 - Configurando Kubernetes..."
+echo "   5 - Configurando Kubernetes..."
 ansible-playbook ~/environment/config/ansible/ansible_k8s.yml --inventory inv.hosts -u $user --key-file ~/environment/labsuser.pem
 
-echo "   6/6 - Configurando storage, Helm e WordPress..."
+echo "   6 - Configurando storage, Helm..."
 ansible-playbook ~/environment/config/ansible/k8s_storage_helm_wordpress.yml --inventory inv.hosts -u $user --key-file ~/environment/labsuser.pem
+
+echo "   7 - Configurando VSCode Server e Azure CLI..."
+ansible-playbook ~/environment/config/ansible/ansible_code_server_ubuntu.yml --inventory hosts -u ubuntu --key-file ~/environment/labsuser.pem
+ansible-playbook ~/environment/config/ansible/ansible_azure_cli.yml --inventory hosts -u ubuntu --key-file ~/environment/labsuser.pem
 
 echo ""
 echo "   Configuração concluída!"
