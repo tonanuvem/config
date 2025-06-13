@@ -9,7 +9,7 @@ variable "resource_group_locations" {
   description = "Lista de regiões da Azure onde os recursos serão criados"
   default     = [
     "southcentralus",
-    "east2",
+    "eastus2",
     "westus2"
   ]
 }
