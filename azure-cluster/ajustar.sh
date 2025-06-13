@@ -55,8 +55,8 @@ echo "   6 - Configurando storage, Helm..."
 ansible-playbook ~/environment/config/ansible/k8s_storage_helm_wordpress.yml --inventory inv.hosts -u $user --key-file ~/environment/labsuser.pem
 
 echo "   7 - Configurando VSCode Server e Azure CLI..."
-ansible-playbook ~/environment/config/ansible/ansible_code_server_ubuntu.yml --inventory hosts -u ubuntu --key-file ~/environment/labsuser.pem
-ansible-playbook ~/environment/config/ansible/ansible_azure_cli.yml --inventory hosts -u ubuntu --key-file ~/environment/labsuser.pem
+ansible-playbook ~/environment/config/ansible/ansible_code_server_ubuntu.yml --inventory inv.hosts -u ubuntu --key-file ~/environment/labsuser.pem
+ansible-playbook ~/environment/config/ansible/ansible_azure_cli.yml --inventory inv.hosts -u ubuntu --key-file ~/environment/labsuser.pem
 
 echo ""
 echo "   Configuração concluída!"
