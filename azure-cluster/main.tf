@@ -30,7 +30,7 @@ resource "azurerm_resource_group" "rg" {
 resource "azurerm_virtual_network" "fiaplab_network" {
   count               = var.quantidade
   name                = "${var.vnet_name}-${count.index}"
-  address_space       = ["10.0.${count.index}.0/16"]
+  address_space       = ["10.${count.index}.0.0/16"]  # Corrigido: usa 10.X.0.0/16
   location            = var.resource_group_locations[count.index]
   resource_group_name = azurerm_resource_group.rg[count.index].name
 }
@@ -40,7 +40,7 @@ resource "azurerm_subnet" "fiaplab_subnet" {
   name                 = "${var.subnet_name}-${count.index}"
   resource_group_name  = azurerm_resource_group.rg[count.index].name
   virtual_network_name = azurerm_virtual_network.fiaplab_network[count.index].name
-  address_prefixes     = ["10.0.${count.index}.0/24"]
+  address_prefixes     = ["10.${count.index}.0.0/24"]  # Corrigido: usa 10.X.0.0/24
 }
 
 resource "azurerm_public_ip" "fiaplab_public_ip" {
