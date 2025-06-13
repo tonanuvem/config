@@ -1,6 +1,6 @@
 variable "quantidade" {
   type        = number
-  default     = 1
+  default     = 3
   description = "Quantidade de VMs a serem criadas. Há limites de CPUs nas regiões listadas em resource_group_locations."
 }
 
