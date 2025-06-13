@@ -23,7 +23,7 @@ variable "shutdown" {
 variable "vm_size" {
   description = "Tipo de instância"
   type        = string
-  default     = "Standard_B1ms"
+  default     = "Standard_D2s_v6"
 }
 
 variable "vm_name" {
