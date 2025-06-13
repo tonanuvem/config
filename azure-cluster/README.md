@@ -1,6 +1,6 @@
 # 📘 Comparativo de Regiões Azure
 
-![Mapa das Regiões Azure](./A_2D_digital_map_displays_Microsoft_Azure's_global.png)
+![Mapa das Regiões Azure](./mapa_Azure.png)
 
 Este documento apresenta uma visão comparativa de diversas regiões da Microsoft Azure, considerando custo, latência, disponibilidade de serviços e suporte a recursos avançados como GPU e Spot VMs. Isso ajuda a escolher a melhor região para implantar sua infraestrutura, considerando fatores de desempenho e orçamento.
 
