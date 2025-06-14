@@ -93,6 +93,9 @@
         - name: Instalar kubelet kubeadm kubectl (ubuntu)
           become: yes
           shell: |
+            
+            export DOWNLOAD_DIR: "/usr/local/bin"
+            
             #Install CNI plugins (required for most pod network):
             CNI_PLUGINS_VERSION="v1.3.0"
             ARCH="amd64"
