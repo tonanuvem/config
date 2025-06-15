@@ -90,10 +90,45 @@
             executable: /bin/bash
           when: ansible_os_family == "RedHat"
 
-        - name: Instalar kubelet kubeadm kubectl (ubuntu)
+        - name: Instalar kubelet kubeadm kubectl (ubuntu >= 22.04 : rodar instalação via apt-get install)
           become: yes
           shell: |
-            
+            # rodar instalação via apt-get install
+            sudo apt-get update
+            sudo apt-get install -y apt-transport-https ca-certificates curl gpg
+            curl -fsSL https://pkgs.k8s.io/core:/stable:/v1.33/deb/Release.key | sudo gpg --dearmor -o /etc/apt/keyrings/kubernetes-apt-keyring.gpg
+            echo 'deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.gpg] https://pkgs.k8s.io/core:/stable:/v1.33/deb/ /' | sudo tee /etc/apt/sources.list.d/kubernetes.list
+
+            sudo apt-get update
+            sudo apt-get install -y kubelet kubeadm kubectl
+            sudo apt-mark hold kubelet kubeadm kubectl
+           
+            systemctl enable --now kubelet
+
+            ## cgroupd
+            cat <<EOF | sudo tee ~/kubeadm-config.yaml
+            # kubeadm-config.yaml
+            kind: ClusterConfiguration
+            apiVersion: kubeadm.k8s.io/v1beta3
+            kubernetesVersion: v1.21.0
+            ---
+            kind: KubeletConfiguration
+            apiVersion: kubelet.config.k8s.io/v1beta1
+            cgroupDriver: systemd
+            EOF
+            sudo systemctl enable kubelet.service
+          args:
+            executable: /bin/bash
+          debug:
+            msg: "Este host está rodando Ubuntu {{ ansible_distribution_version }}"
+          when:
+            - ansible_distribution == "Ubuntu"
+            - ansible_distribution_version is version('22.04', '>=')
+
+        - name: Instalar kubelet kubeadm kubectl (ubuntu < v 22 : rodar versão baseada em script)
+          become: yes
+          shell: |            
+            # SCRIPT VERSION
             export DOWNLOAD_DIR: "/usr/local/bin"
             
             #Install CNI plugins (required for most pod network):
@@ -149,8 +184,12 @@
             sudo systemctl enable kubelet.service
           args:
             executable: /bin/bash
-          when: ansible_os_family == "Debian"
-          
+          debug:
+            msg: "Este host está rodando Ubuntu {{ ansible_distribution_version }}"
+          when:
+            - ansible_distribution == "Ubuntu"
+            - ansible_distribution_version is version('22.04', '<')
+
         - name: Instalar helm
           shell: |
             #curl -s https://get.helm.sh/helm-v3.1.2-linux-amd64.tar.gz -o helm-linux-amd64.tar.gz
