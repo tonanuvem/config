@@ -42,7 +42,7 @@ echo "   TOKEN ACIMA : KUBEADM JOIN"
 printf "\n\n"
 echo "Master do Cluster foi inicializado. Agora vamos configurar a rede do cluster."
 # Configurar a rede do cluster:
-ssh -oStrictHostKeyChecking=no -i ~/environment/labsuser.pem ubuntu@$MASTER 'bash -s' < k8s_config_network_cilium.sh
+ssh -oStrictHostKeyChecking=no -i ~/environment/labsuser.pem ubuntu@$MASTER 'bash -s' < k8s_config_network.sh
 
 ### CONFIGURANDO OS NODES utilizando o KUBEADM JOIN:
 
