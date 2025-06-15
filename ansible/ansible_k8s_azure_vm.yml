@@ -53,7 +53,13 @@
           ansible.builtin.copy:
             dest: "/etc/docker/daemon.json"
             content: '{ "exec-opts": ["native.cgroupdriver=systemd"] }'
-            
+
+        - name: Mostrar versão do Ubuntu
+          debug:
+            msg: "Este host está rodando Ubuntu versão: {{ ansible_distribution_version }}"
+          when:
+            - ansible_distribution == "Ubuntu"
+
         - name: Instalar kubelet kubeadm kubectl (amazon linux 2)
           become: yes
           shell: |
@@ -119,8 +125,6 @@
             sudo systemctl enable kubelet.service
           args:
             executable: /bin/bash
-          debug:
-            msg: "Este host está rodando Ubuntu {{ ansible_distribution_version }}"
           when:
             - ansible_distribution == "Ubuntu"
             - ansible_distribution_version is version('22.04', '>=')
@@ -184,8 +188,6 @@
             sudo systemctl enable kubelet.service
           args:
             executable: /bin/bash
-          debug:
-            msg: "Este host está rodando Ubuntu {{ ansible_distribution_version }}"
           when:
             - ansible_distribution == "Ubuntu"
             - ansible_distribution_version is version('22.04', '<')
