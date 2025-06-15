@@ -90,7 +90,7 @@
             executable: /bin/bash
           when: ansible_os_family == "RedHat"
 
-        - name: Instalar kubelet kubeadm kubectl (ubuntu >= 22.04 : rodar instalação via apt-get install)
+        - name: Instalar kubelet kubeadm kubectl (ubuntu v22.04 com instalação via apt-get install)
           become: yes
           shell: |
             # rodar instalação via apt-get install
@@ -125,7 +125,7 @@
             - ansible_distribution == "Ubuntu"
             - ansible_distribution_version is version('22.04', '>=')
 
-        - name: Instalar kubelet kubeadm kubectl (ubuntu < v 22 : rodar versão baseada em script)
+        - name: Instalar kubelet kubeadm kubectl (ubuntu anterior v22 com instalação baseada em script)
           become: yes
           shell: |            
             # SCRIPT VERSION
