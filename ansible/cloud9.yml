@@ -65,6 +65,11 @@
       sudo curl -L "https://github.com/docker/compose/releases/download/v2.35.1/docker-compose-linux-x86_64" -o /usr/local/bin/docker-compose
       sudo chmod +x /usr/local/bin/docker-compose
 
+  - name: Instalar o Yarn
+    become: yes
+    shell: curl -o- -L https://yarnpkg.com/install.sh | bash
+    # export PATH="$HOME/.yarn/bin:$HOME/.config/yarn/global/node_modules/.bin:$PATH"
+
   - name: Instalar o Terraform
     become: yes
     shell: |
