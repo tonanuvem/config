@@ -44,6 +44,67 @@ echo "⚙️ Instalando Amazon Q CLI (~/.local/bin)..."
 bash ./q/install.sh --no-confirm
 export PATH="$HOME/.local/bin:$PATH"
 
+
+
+echo "⚙️ Aplicando Configurações do Amazon Q CLI..."
+AGENTS_DIR="$HOME/.aws/amazonq/cli-agents"
+mkdir -p "$AGENTS_DIR"
+
+# Agente lab-permissive: máximo de usabilidade com poucos guard-rails
+cat > "$AGENTS_DIR/lab-permissive.json" <<'JSON'
+{
+  "name": "lab-permissive",
+  "description": "Agente permissivo para laboratório: todas as ferramentas pré-aprovadas; bash com mínimos bloqueios.",
+  "tools": [
+    "execute_bash",
+    "fs_read",
+    "fs_write",
+    "introspect",
+    "report_issue",
+    "use_aws"
+  ],
+  "allowedTools": [
+    "execute_bash",
+    "fs_read",
+    "fs_write",
+    "introspect",
+    "report_issue",
+    "use_aws"
+  ],
+  "toolsSettings": {
+    "execute_bash": {
+      "allowReadOnly": true,
+      "deniedCommands": [
+        "\\Arm\\s+-rf\\s+/(\\s|$).*\\z",
+        "\\Add\\s+if=/dev/.*\\z",
+        "\\Amkfs\\..*\\z",
+        "\\A(sudo\\s+)?shred\\b.*\\z",
+        "\\A(sudo\\s+)?dd\\s+of=/dev/.*\\z",
+        "\\A(sudo\\s+)?(shutdown|reboot)\\b.*\\z"
+      ]
+    }
+  }
+}
+JSON
+
+echo "✅ Agente criado: $AGENTS_DIR/lab-permissive.json"
+
+# Torna o agente o padrão (não requer login)
+q settings chat.defaultAgent lab-permissive
+
+# Usabilidade do CLI
+q inline enable                         # sugestões inline (ghost text)
+q theme system                          # tema do dropdown segue o sistema
+q settings autocomplete.disable false   # garante dropdown de autocomplete ligado
+
+# Experimentos (os que têm chave em q settings)
+q settings chat.enableKnowledge true    # persistência de contexto (/knowledge)
+q settings chat.enableTangentMode true  # checkpoints de conversa (/tangent)
+
+# Integração SSH local (cliente). Servidor remoto ainda precisa de ajuste em sshd_config (root).
+q integrations install ssh || true
+
+
 echo "🔎 Versão:"
 q --version || true
 # echo "🩺 Diagnóstico:"
