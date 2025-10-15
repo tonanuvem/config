@@ -46,8 +46,8 @@ export PATH="$HOME/.local/bin:$PATH"
 
 echo "🔎 Versão:"
 q --version || true
-echo "🩺 Diagnóstico:"
-q doctor || true
+# echo "🩺 Diagnóstico:"
+# q doctor || true
 
 echo "✅ Instalação concluída!"
 echo "  Próximos passos:"
