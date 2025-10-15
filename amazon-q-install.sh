@@ -3,21 +3,41 @@ set -euxo pipefail
 
 LOG="amazon-q-install_$(date +%F_%H-%M-%S).log"
 exec > >(tee -a "$LOG") 2>&1
-DEB="${1:-amazon-q.deb}"
 
-if [[ ! -f "$DEB" ]]; then
-  echo "❌ Arquivo '$DEB' não encontrado no diretório atual."
-  echo "   Use:  ./install-amazon-q.sh caminho/para/amazon-q.deb"
-  exit 1
-fi
+# URL oficial do pacote .deb mais recente
+URL="${URL:-https://desktop-release.q.us-east-1.amazonaws.com/latest/amazon-q.deb}"
+# Caminho do arquivo .deb que será baixado (no diretório atual)
+DEB="${DEB:-amazon-q.deb}"
+
 export DEBIAN_FRONTEND=noninteractive
 
-# Mantém sudo ativo
+# Mantém sudo ativo (não falha se não tiver sudo)
 sudo -v || true
 
 # Info do SO
 if [[ -r /etc/os-release ]]; then
   . /etc/os-release || true
+fi
+
+echo "🌐 Garantindo 'wget' e certificados…"
+if ! command -v wget >/dev/null 2>&1; then
+  sudo apt-get update -y
+  sudo apt-get install -y wget ca-certificates
+fi
+
+echo "⬇️  Baixando Amazon Q Desktop: $URL"
+# Opções de robustez em redes instáveis
+WGET_OPTS=(--retry-connrefused --waitretry=2 --tries=5 --timeout=30 --show-progress -O "$DEB")
+wget "${WGET_OPTS[@]}" "$URL"
+
+# Verificações básicas do artefato baixado
+if [[ ! -s "$DEB" ]]; then
+  echo "❌ Download falhou: arquivo vazio ou inexistente: $DEB"
+  exit 1
+fi
+if ! dpkg-deb --info "$DEB" >/dev/null 2>&1; then
+  echo "❌ O arquivo baixado não parece um .deb válido: $DEB"
+  exit 1
 fi
 
 echo "🧩 Atualizando índices de pacotes…"
@@ -44,7 +64,7 @@ deps=(libayatana-appindicator3-1 libwebkit2gtk-4.1-0 libgtk-3-0)
 
 # Fallbacks possíveis para distros/versões diferentes
 declare -A fallbacks
-# WebKitGTK: alguns releases têm 4.0-37/49 em vez de 4.1-0
+# WebKitGTK: alguns releases têm 4.0-37/49/4 em vez de 4.1-0
 fallbacks[libwebkit2gtk-4.1-0]="libwebkit2gtk-4.0-37 libwebkit2gtk-4.0-49 libwebkit2gtk-4.0-4"
 # GTK3: em versões recentes pode ser sufixo t64
 fallbacks[libgtk-3-0]="libgtk-3-0t64"
@@ -70,7 +90,6 @@ install_one() {
       fi
     done
   fi
-
   echo "⚠️ Não foi possível instalar '$pkg' (nem alternativas)."
   return 1
 }
@@ -79,6 +98,7 @@ echo "🧩 Instalando dependências…"
 for p in "${deps[@]}"; do
   install_one "$p" || true
 done
+
 echo "🧩 Correção de pacotes quebrados (se houver)…"
 sudo apt-get -f install -y -V -o Dpkg::Use-Pty=0 || true
 
