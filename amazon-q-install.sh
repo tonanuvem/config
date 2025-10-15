@@ -1,120 +1,138 @@
 #!/usr/bin/env bash
-set -euxo pipefail
+set -euo pipefail
 
-LOG="amazon-q-install_$(date +%F_%H-%M-%S).log"
-exec > >(tee -a "$LOG") 2>&1
+# ========= Config =========
+LOG="amazon-q-cli_install_$(date +%F_%H-%M-%S).log"
+WORKDIR="${TMPDIR:-/tmp}/amazonq_cli.$$"
+ZIP="q.zip"
 
-# URL oficial do pacote .deb mais recente
-URL="${URL:-https://desktop-release.q.us-east-1.amazonaws.com/latest/amazon-q.deb}"
-# Caminho do arquivo .deb que será baixado (no diretório atual)
-DEB="${DEB:-amazon-q.deb}"
+# ========= Funções utilitárias =========
+say() { printf '%s\n' "$*" | tee -a "$LOG"; }
 
-export DEBIAN_FRONTEND=noninteractive
+# Cria diretório de trabalho e log
+mkdir -p "$WORKDIR"
+touch "$LOG"
 
-# Mantém sudo ativo (não falha se não tiver sudo)
-sudo -v || true
+say "📄 Log: $LOG"
+say "📂 Workdir: $WORKDIR"
 
-# Info do SO
-if [[ -r /etc/os-release ]]; then
-  . /etc/os-release || true
-fi
+# Detecta arquitetura
+ARCH="$(uname -m)"
+case "$ARCH" in
+  x86_64|amd64) ARCHID="x86_64" ;;
+  aarch64|arm64) ARCHID="aarch64" ;;
+  *) say "❌ Arquitetura não suportada: $ARCH"; exit 1 ;;
+esac
+say "🧭 Arquitetura detectada: $ARCHID"
 
-echo "🌐 Garantindo 'wget' e certificados…"
-if ! command -v wget >/dev/null 2>&1; then
-  sudo apt-get update -y
-  sudo apt-get install -y wget ca-certificates
-fi
-
-echo "⬇️  Baixando Amazon Q Desktop: $URL"
-# Opções de robustez em redes instáveis
-WGET_OPTS=(--retry-connrefused --waitretry=2 --tries=5 --timeout=30 --show-progress -O "$DEB")
-wget "${WGET_OPTS[@]}" "$URL"
-
-# Verificações básicas do artefato baixado
-if [[ ! -s "$DEB" ]]; then
-  echo "❌ Download falhou: arquivo vazio ou inexistente: $DEB"
-  exit 1
-fi
-if ! dpkg-deb --info "$DEB" >/dev/null 2>&1; then
-  echo "❌ O arquivo baixado não parece um .deb válido: $DEB"
-  exit 1
-fi
-
-echo "🧩 Atualizando índices de pacotes…"
-sudo apt-get update -y
-
-# Em alguns Ubuntu, libayatana-appindicator3-1 fica no 'universe'
-ensure_universe_repo() {
-  if [[ "${ID:-}" == "ubuntu" ]]; then
-    if ! apt-cache show libayatana-appindicator3-1 >/dev/null 2>&1; then
-      echo "ℹ️ Habilitando repositório 'universe' (Ubuntu)…"
-      if ! command -v add-apt-repository >/dev/null 2>&1; then
-        sudo apt-get install -y software-properties-common
-      fi
-      sudo add-apt-repository -y universe || true
-      sudo apt-get update -y
-    fi
+# Detecta glibc (>= 2.34 usa 'standard'; menor usa 'musl')
+GLIBC_VER=""
+if command -v ldd >/dev/null 2>&1; then
+  # Extrai a última “palavra” da 1ª linha: normalmente a versão da glibc
+  GLIBC_VER="$(ldd --version 2>/dev/null | head -n1 | awk '{print $NF}')"
+  # fallback se formato diferente
+  if ! [[ "$GLIBC_VER" =~ ^[0-9]+\.[0-9]+ ]]; then
+    GLIBC_VER="$(ldd --version 2>/dev/null | grep -Eo '[0-9]+\.[0-9]+' | head -n1 || true)"
   fi
-}
-
-ensure_universe_repo
-
-# Dependências primárias exigidas pelo .deb
-deps=(libayatana-appindicator3-1 libwebkit2gtk-4.1-0 libgtk-3-0)
-
-# Fallbacks possíveis para distros/versões diferentes
-declare -A fallbacks
-# WebKitGTK: alguns releases têm 4.0-37/49/4 em vez de 4.1-0
-fallbacks[libwebkit2gtk-4.1-0]="libwebkit2gtk-4.0-37 libwebkit2gtk-4.0-49 libwebkit2gtk-4.0-4"
-# GTK3: em versões recentes pode ser sufixo t64
-fallbacks[libgtk-3-0]="libgtk-3-0t64"
-
-install_one() {
-  local pkg="$1"
-
-  # Se pacote existir no índice, tenta instalar
-  if apt-cache show "$pkg" >/dev/null 2>&1; then
-    if sudo apt-get install -y -V -o Dpkg::Use-Pty=0 "$pkg"; then
-      return 0
-    fi
-  fi
-
-  # Tenta fallbacks, se configurados
-  if [[ -n "${fallbacks[$pkg]:-}" ]]; then
-    for alt in ${fallbacks[$pkg]}; do
-      if apt-cache show "$alt" >/dev/null 2>&1; then
-        echo "⚠️ Tentando alternativa para '$pkg': '$alt'"
-        if sudo apt-get install -y -V -o Dpkg::Use-Pty=0 "$alt"; then
-          return 0
-        fi
-      fi
-    done
-  fi
-  echo "⚠️ Não foi possível instalar '$pkg' (nem alternativas)."
-  return 1
-}
-
-echo "🧩 Instalando dependências…"
-for p in "${deps[@]}"; do
-  install_one "$p" || true
-done
-
-echo "🧩 Correção de pacotes quebrados (se houver)…"
-sudo apt-get -f install -y -V -o Dpkg::Use-Pty=0 || true
-
-echo "📦 Instalando o pacote .deb: $DEB"
-if ! sudo dpkg -i "$DEB"; then
-  echo "🔁 Ajustando dependências e tentando novamente…"
-  sudo apt-get -f install -y
-  sudo dpkg -i "$DEB"
 fi
-echo "🔎 Verificando status final do pacote…"
-if dpkg -s amazon-q >/dev/null 2>&1; then
-  dpkg -s amazon-q | awk -F': ' '/^(Status|Version):/{print}'
-  echo "✅ Instalação concluída com sucesso."
-  echo "🗂️ Log salvo em: $LOG"
+use_musl=0
+if [[ -n "${GLIBC_VER:-}" ]]; then
+  # Compara versões com sort -V
+  first="$(printf '%s\n' "$GLIBC_VER" "2.34" | sort -V | head -n1)"
+  if [[ "$first" != "2.34" ]]; then
+    # GLIBC_VER < 2.34
+    use_musl=1
+  fi
 else
-  echo "❌ O pacote 'amazon-q' não foi configurado corretamente."
-  echo "   Consulte o log detalhado: $LOG"
-  exit 2
+  say "⚠️ Não foi possível detectar glibc; adotando variante padrão."
 fi
+
+# Monta URL oficial (documentação AWS)
+BASE="https://desktop-release.q.us-east-1.amazonaws.com/latest"
+if [[ $use_musl -eq 1 ]]; then
+  URL="${BASE}/q-${ARCHID}-linux-musl.zip"
+  say "🔧 glibc < 2.34 detectada → usando build MUSL"
+else
+  URL="${BASE}/q-${ARCHID}-linux.zip"
+  say "✅ glibc ≥ 2.34 (ou indetectável) → usando build padrão"
+fi
+say "🌐 URL do pacote: $URL"
+
+# Baixa com curl ou wget
+cd "$WORKDIR"
+if command -v curl >/dev/null 2>&1; then
+  say "⬇️ Baixando com curl..."
+  curl --proto '=https' --tlsv1.2 -fL -o "$ZIP" "$URL"
+elif command -v wget >/dev/null 2>&1; then
+  say "⬇️ Baixando com wget..."
+  wget -O "$ZIP" "$URL"
+else
+  say "❌ Nem curl nem wget disponíveis."
+  exit 1
+fi
+
+# Verificação básica
+if [[ ! -s "$ZIP" ]]; then
+  say "❌ Download falhou (arquivo vazio): $ZIP"
+  exit 1
+fi
+# Descompacta (usa unzip ou fallback em Python)
+say "📦 Extraindo instalador..."
+if command -v unzip >/dev/null 2>&1; then
+  unzip -q "$ZIP"
+else
+  if command -v python3 >/dev/null 2>&1; then
+    python3 - <<'PY'
+import zipfile, sys
+zipfile.ZipFile("q.zip").extractall(".")
+PY
+  else
+    say "❌ Precisa de 'unzip' ou 'python3' para extrair."
+    exit 1
+  fi
+fi
+
+# Executa instalador (não interativo)
+if [[ ! -x "./q/install.sh" ]]; then
+  say "❌ Arquivo ./q/install.sh não encontrado após extração."
+  exit 1
+fi
+
+say "⚙️  Instalando Amazon Q CLI no diretório do usuário (~/.local/bin)..."
+bash ./q/install.sh --no-confirm
+
+# Garante PATH nesta sessão
+export PATH="$HOME/.local/bin:$PATH"
+
+# Verificações pós-instalação
+say "🔎 Verificando versão:"
+if ! command -v q >/dev/null 2>&1; then
+  say "⚠️ 'q' não está no PATH desta sessão. Adicione manualmente:"
+  say "    export PATH=\"\$HOME/.local/bin:\$PATH\""
+else
+  q --version || true
+fi
+
+say "🩺 Executando 'q doctor' (diagnóstico rápido):"
+q doctor || true
+
+say "🔐 Para autenticar, rode: q login"
+say "💬 Para conversar: q chat \"Olá, Q!\""
+say "⚙️ Configurações: q settings all  |  Inline suggestions (zsh): q inline enable"
+
+# Notas sobre SSH (opcional)
+cat <<'SSH_NOTES' | tee -a "$LOG"
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🔗 Integração SSH (opcional; requer root no servidor remoto)
+- No servidor remoto, edite /etc/ssh/sshd_config e adicione:
+    AcceptEnv Q_SET_PARENT
+    AllowStreamLocalForwarding yes
+  Reinicie o sshd e reconecte via SSH. Em seguida:
+    q login
+    q doctor
+Referência: docs AWS (SSH remoto).
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+SSH_NOTES
+
+say "✅ Concluído. Log salvo em: $LOG"
