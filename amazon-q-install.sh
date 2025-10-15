@@ -50,11 +50,11 @@ echo "⚙️ Aplicando Configurações do Amazon Q CLI..."
 AGENTS_DIR="$HOME/.aws/amazonq/cli-agents"
 mkdir -p "$AGENTS_DIR"
 
-# Agente lab-permissive: máximo de usabilidade com poucos guard-rails
-cat > "$AGENTS_DIR/lab-permissive.json" <<'JSON'
+# Agente lab-fiap: máximo de usabilidade com poucos guard-rails
+cat > "$AGENTS_DIR/lab-fiap.json" <<'JSON'
 {
-  "name": "lab-permissive",
-  "description": "Agente permissivo para laboratório: todas as ferramentas pré-aprovadas; bash com mínimos bloqueios.",
+  "name": "lab-fiap",
+  "description": "Agente para laboratório: todas as ferramentas pré-aprovadas; bash com mínimos bloqueios.",
   "tools": [
     "execute_bash",
     "fs_read",
@@ -87,10 +87,10 @@ cat > "$AGENTS_DIR/lab-permissive.json" <<'JSON'
 }
 JSON
 
-echo "✅ Agente criado: $AGENTS_DIR/lab-permissive.json"
+echo "✅ Agente criado: $AGENTS_DIR/lab-fiap.json"
 
 # Torna o agente o padrão (não requer login)
-q settings chat.defaultAgent lab-permissive
+q settings chat.defaultAgent lab-fiap
 
 # Usabilidade do CLI
 q inline enable                         # sugestões inline (ghost text)
