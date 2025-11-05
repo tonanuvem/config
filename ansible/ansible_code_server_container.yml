@@ -23,7 +23,7 @@
       # https://docs.ansible.com/ansible/2.9/modules/docker_container_module.html
       # https://hub.docker.com/r/linuxserver/code-server
       # Ubuntu mapeia VOLUME para o diretorio /home/ubuntu
-      - name: Executar o Code server em conteiner
+      - name: Executar no UBUNTU o Code server em conteiner
         docker_container:
           name: codeserver
           image: lscr.io/linuxserver/code-server:latest
@@ -41,7 +41,7 @@
         when: ansible_os_family == "Debian"
 
       # Amazon Linux mapeia VOLUME para o diretorio /home/ec2-user
-      - name: Executar o Code server em conteiner
+      - name: Executar no AMAZON LINUX o Code server em conteiner
         docker_container:
           name: codeserver
           image: lscr.io/linuxserver/code-server:latest
