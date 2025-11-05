@@ -42,6 +42,7 @@
 
       # Amazon Linux mapeia VOLUME para o diretorio /home/ec2-user
       - name: Executar no AMAZON LINUX o Code server em conteiner
+        become: yes
         docker_container:
           name: codeserver
           image: lscr.io/linuxserver/code-server:latest
