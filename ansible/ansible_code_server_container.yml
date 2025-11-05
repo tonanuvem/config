@@ -22,6 +22,7 @@
 
       # https://docs.ansible.com/ansible/2.9/modules/docker_container_module.html
       # https://hub.docker.com/r/linuxserver/code-server
+      # Ubuntu mapeia VOLUME para o diretorio /home/ubuntu
       - name: Executar o Code server em conteiner
         docker_container:
           name: codeserver
@@ -37,3 +38,22 @@
             - /opt/codeserver:/config
             - /home/ubuntu:/config/workspace
           restart_policy: unless-stopped
+        when: ansible_os_family == "Debian"
+
+      # Amazon Linux mapeia VOLUME para o diretorio /home/ec2-user
+      - name: Executar o Code server em conteiner
+        docker_container:
+          name: codeserver
+          image: lscr.io/linuxserver/code-server:latest
+          ports:
+            - "8099:8443"
+          env:
+            PUID: "1000"
+            PGID: "1000"
+            PASSWORD: "fiap"
+            TZ: "America/Sao_Paulo"
+          volumes:
+            - /opt/codeserver:/config
+            - /home/ec2-user:/config/workspace
+          restart_policy: unless-stopped
+        when: ansible_os_family == "RedHat"
