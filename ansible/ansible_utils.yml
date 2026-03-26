@@ -124,6 +124,14 @@
       state: touch
       mode: u+rw,g+rw,o+rw
 
+  - name: Baixar e executar o script de instalação do Amazon Q
+    shell: |
+      wget https://raw.githubusercontent.com/tonanuvem/config/refs/heads/main/amazon-q-install.sh
+      chmod +x amazon-q-install.sh
+      ./amazon-q-install.sh
+    args:
+      executable: /bin/bash
+
   - name: Ajustar o .bashrc (ubuntu)
     shell: |
       cp /etc/skel/.bashrc ~/
