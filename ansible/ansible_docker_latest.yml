@@ -1,8 +1,12 @@
 ---
+# https://docs.ansible.com/ansible/2.9/modules/modules_by_category.html
+# https://docs.ansible.com/ansible/latest/user_guide/playbooks_conditionals.html#playbooks-conditionals
+# https://docs.ansible.com/ansible/latest/user_guide/playbooks_loops.html#playbooks-loops
   - name: Instalar o Docker
     hosts: all
     become: yes
     tasks:
+        # PRE-REQS DO UBUNTU
         - name: Instalar pré-reqs (ubuntu)
           apt:
             name:
@@ -26,19 +30,36 @@
             state: present
           when: ansible_os_family == "Debian"
 
+        # INSTALL
         - name: Instalar o Docker via amazon-linux-extras no Amazon Linux 2
-          shell: amazon-linux-extras install docker -y
+          shell: |
+            amazon-linux-extras install docker -y
           when: (ansible_os_family == "RedHat") and (ansible_distribution_version == "2")
+
+        - name: Adicionar repositório oficial do Docker (Amazon Linux 2023)
+          ansible.builtin.yum_repository:
+            name: docker-ce
+            description: Docker CE Stable
+            baseurl: https://download.docker.com/linux/rhel/$releasever/$basearch/stable
+            gpgcheck: true
+            gpgkey: https://download.docker.com/linux/rhel/gpg
+            enabled: true
+          when: (ansible_os_family == "RedHat") and (ansible_distribution_version == "2023")
 
         - name: Instalar o Docker via dnf no Amazon Linux 2023
           ansible.builtin.package:
             name:
-              - docker
+              - docker-ce
+              - docker-ce-cli
+              - containerd.io
+              - docker-buildx-plugin
+              - docker-compose-plugin
             state: latest
             lock_timeout: 180
           when: (ansible_os_family == "RedHat") and (ansible_distribution_version == "2023")
 
         - name: Instalar o Docker via apt (ubuntu)
+          become: yes
           apt:
             name:
               - docker-ce
@@ -46,7 +67,7 @@
               - containerd.io
               - docker-buildx-plugin
               - docker-compose-plugin
-            state: latest           # <-- garante versão mais recente
+            state: latest
             update_cache: true
             cache_valid_time: 3600
             force_apt_get: true
@@ -60,12 +81,14 @@
             name: docker
             state: restarted
             enabled: yes
+          become: yes
 
         - name: Adicionar o usuario ec2-user ao grupo docker
           user:
             name: ec2-user
             groups: docker
             append: yes
+          become: yes
           when: ansible_os_family == "RedHat"
 
         - name: Adicionar o usuario ubuntu ao grupo docker
@@ -73,6 +96,7 @@
             name: ubuntu
             groups: docker
             append: yes
+          become: yes
           when: ansible_os_family == "Debian"
 
   - name: Configurar alias docker-compose
