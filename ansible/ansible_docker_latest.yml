@@ -1,0 +1,88 @@
+---
+  - name: Instalar o Docker
+    hosts: all
+    become: yes
+    tasks:
+        - name: Instalar pré-reqs (ubuntu)
+          apt:
+            name:
+              - apt-transport-https
+              - ca-certificates
+              - curl
+              - software-properties-common
+            state: present
+            update_cache: true
+          when: ansible_os_family == "Debian"
+
+        - name: Adicionar Docker GPG key (ubuntu)
+          apt_key:
+            url: https://download.docker.com/linux/ubuntu/gpg
+            state: present
+          when: ansible_os_family == "Debian"
+
+        - name: Adicionar Docker repo (ubuntu)
+          apt_repository:
+            repo: "deb https://download.docker.com/linux/ubuntu {{ ansible_distribution_release }} stable"
+            state: present
+          when: ansible_os_family == "Debian"
+
+        - name: Instalar o Docker via amazon-linux-extras no Amazon Linux 2
+          shell: amazon-linux-extras install docker -y
+          when: (ansible_os_family == "RedHat") and (ansible_distribution_version == "2")
+
+        - name: Instalar o Docker via dnf no Amazon Linux 2023
+          ansible.builtin.package:
+            name:
+              - docker
+            state: latest
+            lock_timeout: 180
+          when: (ansible_os_family == "RedHat") and (ansible_distribution_version == "2023")
+
+        - name: Instalar o Docker via apt (ubuntu)
+          apt:
+            name:
+              - docker-ce
+              - docker-ce-cli
+              - containerd.io
+              - docker-buildx-plugin
+              - docker-compose-plugin
+            state: latest           # <-- garante versão mais recente
+            update_cache: true
+            cache_valid_time: 3600
+            force_apt_get: true
+          register: apt_action
+          retries: 100
+          until: apt_action is success or ('Failed to lock apt for exclusive operation' not in apt_action.msg and '/var/lib/dpkg/lock' not in apt_action.msg)
+          when: ansible_os_family == "Debian"
+
+        - name: Restartar o Docker service
+          service:
+            name: docker
+            state: restarted
+            enabled: yes
+
+        - name: Adicionar o usuario ec2-user ao grupo docker
+          user:
+            name: ec2-user
+            groups: docker
+            append: yes
+          when: ansible_os_family == "RedHat"
+
+        - name: Adicionar o usuario ubuntu ao grupo docker
+          user:
+            name: ubuntu
+            groups: docker
+            append: yes
+          when: ansible_os_family == "Debian"
+
+  - name: Configurar alias docker-compose
+    hosts: all
+    become: yes
+    tasks:
+        - name: Criar wrapper docker-compose como alias para docker compose
+          copy:
+            dest: /usr/local/bin/docker-compose
+            mode: '0755'
+            content: |
+              #!/bin/sh
+              exec docker compose "$@"
