@@ -11,7 +11,7 @@ export ANSIBLE_DISPLAY_SKIPPED_HOSTS=false
 
 ansible-playbook ~/environment/config/ansible/ansible_hostname.yml --inventory hosts -u ec2-user --key-file ~/environment/labsuser.pem # --extra-vars "checar_Ambiente=sim"
 ansible-playbook ~/environment/config/ansible/ansible_utils.yml --inventory hosts -u ec2-user --key-file ~/environment/labsuser.pem
-ansible-playbook ~/environment/config/ansible/ansible_docker.yml --inventory hosts -u ec2-user --key-file ~/environment/labsuser.pem
+ansible-playbook ~/environment/config/ansible/ansible_docker_latest.yml --inventory hosts -u ec2-user --key-file ~/environment/labsuser.pem
 ansible-playbook ~/environment/config/ansible/ansible_k8s.yml --inventory hosts -u ec2-user --key-file ~/environment/labsuser.pem
 ansible-playbook ~/environment/config/ansible/ansible_dev_java.yml --inventory hosts -u ec2-user --key-file ~/environment/labsuser.pem
 ansible-playbook ~/environment/config/ansible/ansible_code_server_container.yml --inventory hosts -u ec2-user --key-file ~/environment/labsuser.pem
