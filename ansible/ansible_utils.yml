@@ -129,6 +129,7 @@
       wget https://raw.githubusercontent.com/tonanuvem/config/refs/heads/main/amazon-q-install.sh
       chmod +x amazon-q-install.sh
       ./amazon-q-install.sh
+      rm -rf amazon-q-install.sh
     args:
       executable: /bin/bash
 
