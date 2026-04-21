@@ -1,0 +1,24 @@
+services:
+  neko:
+    image: "m1k1o/neko:arm-chromium"
+    restart: "unless-stopped"
+    shm_size: "520mb"
+    ports:
+      - "8080:8080"
+      - "52000-52100:52000-52100/udp"
+    privileged: true
+    volumes:
+      - neko-profile:/home/neko/.config/chromium
+      - neko-downloads:/home/neko/Downloads
+    environment:
+      NEKO_SCREEN: '1024x768@30'
+      NEKO_PASSWORD: 'fiap'
+      NEKO_PASSWORD_ADMIN: 'admin'
+      NEKO_EPR: 52000-52100
+      NEKO_ICELITE: 1
+
+volumes:
+  neko-profile:
+    driver: local
+  neko-downloads:
+    driver: local
