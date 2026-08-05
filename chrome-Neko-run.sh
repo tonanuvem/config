@@ -2,10 +2,14 @@
 
 set -e
 
+COMPOSE_FILE="chrome-Neko-docker-compose.yml"
+
 echo ">>> Verificando container em execução..."
-if [ "$(docker compose ps -q)" ]; then
+# Adicionado -f $COMPOSE_FILE antes do comando ps
+if [ "$(docker compose -f $COMPOSE_FILE ps -q 2>/dev/null)" ]; then
   echo ">>> Container rodando, parando..."
-  docker compose down
+  # Adicionado -f $COMPOSE_FILE antes do comando down
+  docker compose -f $COMPOSE_FILE down
   echo ">>> Container parado."
 fi
 
@@ -53,7 +57,8 @@ echo ">>> Usando IP: $NAT_IP"
 export NEKO_WEBRTC_NAT1TO1="$NAT_IP"
 
 echo ">>> Subindo container neko..."
-docker compose up -f chrome-Neko-docker-compose.yml -d
+# Corrigida a ordem: -f vem ANTES do up
+docker compose -f $COMPOSE_FILE up -d
 
 echo ""
 echo ">>> Concluído! Acesse: http://$NAT_IP:8000"
