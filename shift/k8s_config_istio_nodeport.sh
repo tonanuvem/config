@@ -92,9 +92,4 @@ echo "   CONFIGURAÇÕES REALIZADAS. FIM."
 echo "========================================"
 echo ""
 
-ssh -oStrictHostKeyChecking=no \
-    -i ~/environment/labsuser.pem \
-    ec2-user@$MASTER \
-    'kubectl get nodes'
-
 printf "\n\n"
