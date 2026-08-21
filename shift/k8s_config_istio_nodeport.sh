@@ -55,8 +55,16 @@ kubectl get svc kiali -n istio-system | grep 20001 || true
 
 echo ""
 echo "========================================"
-echo "        ISTIO INSTALADO"
+echo "        ACESSO AO KIALI"
 echo "========================================"
+echo ""
+
+KIALI_PORT=$(kubectl get svc kiali -n istio-system \
+  -o jsonpath='{.spec.ports[?(@.port==20001)].nodePort}')
+
+echo ""
+echo "Acessar Kiali:"
+echo "http://$KIALI_IP:$KIALI_PORT"
 echo ""
 EOF
 
