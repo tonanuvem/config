@@ -1,42 +1,92 @@
 #!/bin/sh
 
-# conectar no master e configurar
+# IP do MASTER
+MASTER=$(terraform output -json ip_externo | jq -r '.[0][0]')
 
-MASTER=$(terraform output -json ip_externo | jq .[] | jq .[0] | sed 's/"//g')
-
-# Criando arquivos vazios para receber os comandos
+# Criando arquivo de comandos
 > istio.sh
 
-echo "IPs configurados :"
+echo "IPs configurados:"
 echo "MASTER = $MASTER"
 
-# CONFIGURANDO O MASTER:
+cat > istio.sh <<'EOF'
+#!/bin/bash
+
+set -e
 
 echo ""
-echo "Iniciando a instalação do Istio:"
+echo "========================================"
+echo "        INSTALANDO ISTIO"
+echo "========================================"
 echo ""
-echo "curl -L https://istio.io/downloadIstio | sh -" >> istio.sh
-echo "cd istio-* && export PATH=$PWD/bin:$PATH" >> istio.sh
-echo "istioctl install --set profile=demo --skip-confirmation" >> istio.sh
+
+curl -L https://istio.io/downloadIstio | sh -
+
+cd istio-*
+
+export PATH=$PWD/bin:$PATH
+
 echo ""
-echo "Configurando o Istio:"
+echo "Instalando Istio com profile demo..."
 echo ""
-echo "kubectl create -f samples/addons" >> istio.sh
-echo "kubectl label namespace default istio-injection=enabled" >> istio.sh
-echo "kubectl patch svc kiali -n istio-system -p '{"spec": {"type": "NodePort"}}' && kubectl get svc kiali -n istio-system" >> istio.sh
+
+istioctl install --set profile=demo --skip-confirmation
+
 echo ""
-echo "Verificando a porta do Kiali a instalação do Istio:" >> istio.sh
-echo "kubectl get svc kiali -n istio-system| grep 20001" >> istio.sh
+echo "========================================"
+echo "        CONFIGURANDO ISTIO"
+echo "========================================"
+echo ""
 
+kubectl create -f samples/addons
 
-### CONFIGURANDO O MASTER via SSH
-ssh -oStrictHostKeyChecking=no -i ~/environment/labsuser.pem ec2-user@$MASTER 'bash -s' < istio.sh
+kubectl label namespace default istio-injection=enabled --overwrite
 
+kubectl patch svc kiali -n istio-system \
+  -p '{"spec":{"type":"NodePort"}}'
 
-### CONFIGURANDO O DAHBOARD 
-ssh -oStrictHostKeyChecking=no -i ~/environment/labsuser.pem ec2-user@$MASTER 'bash -s' < k8s_dashboard_token.sh
+echo ""
+echo "Serviço Kiali:"
+kubectl get svc kiali -n istio-system
+
+echo ""
+echo "Porta do Kiali:"
+kubectl get svc kiali -n istio-system | grep 20001 || true
+
+echo ""
+echo "========================================"
+echo "        ISTIO INSTALADO"
+echo "========================================"
+echo ""
+EOF
+
+chmod +x istio.sh
+
+echo ""
+echo "Configurando o MASTER via SSH..."
+echo ""
+
+ssh -oStrictHostKeyChecking=no \
+    -i ~/environment/labsuser.pem \
+    ec2-user@$MASTER 'bash -s' < istio.sh
+
+echo ""
+echo "Configurando o Dashboard..."
+echo ""
+
+ssh -oStrictHostKeyChecking=no \
+    -i ~/environment/labsuser.pem \
+    ec2-user@$MASTER 'bash -s' < k8s_dashboard_token.sh
 
 printf "\n\n"
+echo "========================================"
 echo "   CONFIGURAÇÕES REALIZADAS. FIM."
-ssh -oStrictHostKeyChecking=no -i ~/environment/labsuser.pem ec2-user@$MASTER 'kubectl get nodes'
+echo "========================================"
+echo ""
+
+ssh -oStrictHostKeyChecking=no \
+    -i ~/environment/labsuser.pem \
+    ec2-user@$MASTER \
+    'kubectl get nodes'
+
 printf "\n\n"
