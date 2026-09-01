@@ -131,9 +131,76 @@ for region in us-east-1 us-west-2
 EOF
 
 
+cat > ~/ligar.sh <<'EOF'
+#!/bin/bash
+
+cd ~/environment/config/vm-fiap || exit 1
+
+INSTANCE_ID=$(terraform output -raw instance_id 2>/dev/null)
+
+if [ -z "$INSTANCE_ID" ]; then
+    echo "❌ Não foi possível obter o Instance ID pelo Terraform."
+    exit 1
+fi
+
+echo "🚀 Ligando EC2: $INSTANCE_ID"
+
+aws ec2 start-instances \
+    --instance-ids "$INSTANCE_ID"
+
+echo ""
+echo "Aguardando a máquina iniciar..."
+
+aws ec2 wait instance-running \
+    --instance-ids "$INSTANCE_ID"
+
+echo ""
+echo "✅ Máquina ligada!"
+
+aws ec2 describe-instances \
+    --instance-ids "$INSTANCE_ID" \
+    --query 'Reservations[0].Instances[0].[InstanceId,State.Name,PublicIpAddress,PrivateIpAddress]' \
+    --output table
+EOF
+
+cat > ~/suspender.sh <<'EOF'
+#!/bin/bash
+
+cd ~/environment/config/vm-fiap || exit 1
+
+INSTANCE_ID=$(terraform output -raw instance_id 2>/dev/null)
+
+if [ -z "$INSTANCE_ID" ]; then
+    echo "❌ Não foi possível obter o Instance ID pelo Terraform."
+    exit 1
+fi
+
+echo "🛑 Parando EC2: $INSTANCE_ID"
+
+aws ec2 stop-instances \
+    --instance-ids "$INSTANCE_ID"
+
+echo ""
+echo "Aguardando a máquina parar..."
+
+aws ec2 wait instance-stopped \
+    --instance-ids "$INSTANCE_ID"
+
+echo ""
+echo "✅ Máquina suspensa!"
+
+aws ec2 describe-instances \
+    --instance-ids "$INSTANCE_ID" \
+    --query 'Reservations[0].Instances[0].[InstanceId,State.Name]' \
+    --output table
+EOF
+
+
 chmod +x "$HOME/iniciar.sh"
 chmod +x "$HOME/destruir.sh"
 chmod +x "$HOME/ip"
+chmod +x "$HOME/ligar.sh"
+chmod +x "$HOME/suspender.sh"
 
 # ------------------------------------------------------------
 # TERRAFORM
