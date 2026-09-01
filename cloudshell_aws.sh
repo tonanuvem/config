@@ -18,6 +18,10 @@ echo "============================================================"
 echo ""
 
 # ------------------------------------------------------------
+# CHAVE SSH labsuser.pem
+# ------------------------------------------------------------
+
+# ------------------------------------------------------------
 # CONFIGURAÇÃO DE DIRETÓRIOS
 # ------------------------------------------------------------
 
@@ -27,6 +31,40 @@ PASTA_CONFIG="$PASTA_ENV/config"
 echo "📁 Verificando diretórios..."
 
 mkdir -p "$PASTA_ENV"
+
+
+echo ""
+echo ""
+echo "============================================================"
+echo "        CONFIGURANDO CHAVE SSH labsuser.pem"
+echo "============================================================"
+echo ""
+
+printf "\tVERIFICANDO ARQUIVO labsuser.pem:\n\n"
+
+if [ -f "$HOME/labsuser.pem" ]; then
+
+    printf "\t\t✅ ARQUIVO labsuser.pem OK!\n\n"
+
+    cp "$HOME/labsuser.pem" "$PASTA_ENV/labsuser.pem"
+    chmod 400 "$PASTA_ENV/labsuser.pem"
+
+    printf "\t\tPermissão configurada: 400\n"
+    printf "\t\tArquivo: $PASTA_ENV/labsuser.pem\n\n"
+
+else
+
+    echo ""
+    echo "❌ Arquivo labsuser.pem não encontrado!"
+    echo ""
+    echo "Você deve fazer o upload do arquivo"
+    echo "labsuser.pem para o AWS CloudShell."
+    echo ""
+
+    exit 1
+
+fi
+
 
 # ------------------------------------------------------------
 # CLONAR CONFIG
