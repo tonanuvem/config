@@ -170,9 +170,9 @@ else
     echo "⬇️ Ansible não encontrado. Instalando..."
     echo ""
 
-    python3 -m pip install --user ansible
+    python3 -m pip install ansible
 
-    export PATH="$HOME/.local/bin:$PATH"
+    #export PATH="$HOME/.local/bin:$PATH"
 
     echo ""
     echo "✅ Ansible instalado."
