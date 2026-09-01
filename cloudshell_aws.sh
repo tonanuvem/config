@@ -108,7 +108,7 @@ else
     cd "$TMP_DIR"
 
     curl -fsSL \
-      "https://releases.hashicorp.com/terraform/1.9.5/terraform_1.9.5_linux_amd64.zip" \
+      "https://releases.hashicorp.com/terraform/1.16.0/terraform_1.16.0_linux_amd64.zip" \
       -o terraform.zip
 
     unzip -q terraform.zip
