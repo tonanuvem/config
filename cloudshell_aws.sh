@@ -4,7 +4,9 @@
 # AWS CLOUDSHELL - CONFIGURAÇÃO TONANUVEM
 #
 # Execução:
+
 # curl -s https://raw.githubusercontent.com/tonanuvem/config/refs/heads/main/cloudshell_aws.sh | bash
+
 # ============================================================
 
 set -e
@@ -108,7 +110,7 @@ else
     cd "$TMP_DIR"
 
     curl -fsSL \
-      "https://releases.hashicorp.com/terraform/1.16.0/terraform_1.16.0_linux_amd64.zip" \
+      "https://releases.hashicorp.com/terraform/1.9.5/terraform_1.9.5_linux_amd64.zip" \
       -o terraform.zip
 
     unzip -q terraform.zip
@@ -149,6 +151,43 @@ echo ""
 
 echo ""
 echo "============================================================"
+echo "        CONFIGURANDO ANSIBLE"
+echo "============================================================"
+echo ""
+
+export ANSIBLE_PYTHON_INTERPRETER=auto_silent
+export ANSIBLE_DEPRECATION_WARNINGS=false
+export ANSIBLE_DISPLAY_SKIPPED_HOSTS=false
+
+if command -v ansible >/dev/null 2>&1; then
+
+    echo "✅ Ansible já está instalado."
+    echo ""
+    ansible --version
+
+else
+
+    echo "⬇️ Ansible não encontrado. Instalando..."
+    echo ""
+
+    python3 -m pip install --user ansible
+
+    export PATH="$HOME/.local/bin:$PATH"
+
+    echo ""
+    echo "✅ Ansible instalado."
+    echo ""
+
+    ansible --version
+
+fi
+
+# ------------------------------------------------------------
+# PRÉ-REQUISITOS ANSIBLE
+# ------------------------------------------------------------
+
+echo ""
+echo "============================================================"
 echo "        CONFIGURANDO PRÉ-REQUISITOS ANSIBLE"
 echo "============================================================"
 echo ""
@@ -165,40 +204,15 @@ cat > "$PASTA_CONFIG/hosts" <<EOF
 cloudshell ansible_connection=local
 EOF
 
-export ANSIBLE_PYTHON_INTERPRETER=auto_silent
-export ANSIBLE_DEPRECATION_WARNINGS=false
-export ANSIBLE_DISPLAY_SKIPPED_HOSTS=false
-
 echo "Inventário criado:"
 echo ""
 
 cat "$PASTA_CONFIG/hosts"
 
 # ------------------------------------------------------------
-# ANSIBLE
-# ------------------------------------------------------------
-
-echo ""
-echo "============================================================"
-echo "        CONFIGURANDO ANSIBLE"
-echo "============================================================"
-echo ""
-
-if [ -f "$PASTA_CONFIG/ansible.sh" ]; then
-
-    bash "$PASTA_CONFIG/ansible.sh"
-
-else
-
-    echo "⚠️ ansible.sh não encontrado."
-
-fi
-
-# ------------------------------------------------------------
 # FINAL
 # ------------------------------------------------------------
 
-echo ""
 echo ""
 echo "============================================================"
 echo "        CLOUDSHELL CONFIGURADO"
