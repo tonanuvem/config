@@ -101,52 +101,20 @@ fi
 echo ""
 echo "📝 Criando scripts iniciar.sh e destruir.sh..."
 
-cat > "$HOME/iniciar.sh" <<'EOF'
-#!/bin/bash
-
-cd ~/environment/config/vm-fiap/
-
-sh iniciar.sh
-echo ""
-export VM=$(terraform output -raw ip_externo)
-echo ""
-echo "✅  Acessar : http://$VM:8099              ( senha = fiap )"
-echo ""
-EOF
-
-cat > "$HOME/destruir.sh" <<'EOF'
-#!/bin/bash
-
-cd ~/environment/config/vm-fiap/
-
-sh destruir.sh
-EOF
-
-cat > "$HOME/conectar.sh" <<'EOF'
-#!/bin/bash
-
-cd ~/environment/config/vm-fiap/
-
-sh conectar.sh
-EOF
-
-cat > "$HOME/ip" <<'EOF'
-for region in us-east-1 us-west-2
-        do
-          aws ec2 describe-instances --region $region --query "Reservations[*].Instances[*].[PublicIpAddress, Tags[?Key=='Name'].Value|[0]]" --output text | grep -v None
-        done
-EOF
-
 
 cat > ~/ligar.sh <<'EOF'
 #!/bin/bash
 
 cd ~/environment/config/vm-fiap || exit 1
 
-INSTANCE_ID=$(terraform output -raw instance_id 2>/dev/null)
+# Obtém o Instance ID diretamente do Terraform State
+INSTANCE_ID=$(terraform show -json 2>/dev/null | \
+  jq -r '.values.root_module.resources[] |
+  select(.address=="aws_instance.web") |
+  .values.id')
 
-if [ -z "$INSTANCE_ID" ]; then
-    echo "❌ Não foi possível obter o Instance ID pelo Terraform."
+if [ -z "$INSTANCE_ID" ] || [ "$INSTANCE_ID" = "null" ]; then
+    echo "❌ Não foi possível obter o Instance ID pelo Terraform State."
     exit 1
 fi
 
@@ -168,22 +136,42 @@ aws ec2 describe-instances \
     --instance-ids "$INSTANCE_ID" \
     --query 'Reservations[0].Instances[0].[InstanceId,State.Name,PublicIpAddress,PrivateIpAddress]' \
     --output table
+
+# ------------------------------------------------------------
+# IP PÚBLICO ATUAL
+# ------------------------------------------------------------
+
+VM=$(aws ec2 describe-instances \
+    --instance-ids "$INSTANCE_ID" \
+    --query 'Reservations[0].Instances[0].PublicIpAddress' \
+    --output text)
+
 echo ""
-export VM=$(terraform output -raw ip_externo)
+echo "============================================================"
+echo "🌐 ACESSO À APLICAÇÃO"
+echo "============================================================"
 echo ""
-echo "✅  Acessar : http://$VM:8099              ( senha = fiap )"
+echo "✅ Acessar : http://$VM:8099"
+echo "   Senha   : fiap"
+echo ""
+echo "============================================================"
 echo ""
 EOF
+
 
 cat > ~/suspender.sh <<'EOF'
 #!/bin/bash
 
 cd ~/environment/config/vm-fiap || exit 1
 
-INSTANCE_ID=$(terraform output -raw instance_id 2>/dev/null)
+# Obtém o Instance ID diretamente do Terraform State
+INSTANCE_ID=$(terraform show -json 2>/dev/null | \
+  jq -r '.values.root_module.resources[] |
+  select(.address=="aws_instance.web") |
+  .values.id')
 
-if [ -z "$INSTANCE_ID" ]; then
-    echo "❌ Não foi possível obter o Instance ID pelo Terraform."
+if [ -z "$INSTANCE_ID" ] || [ "$INSTANCE_ID" = "null" ]; then
+    echo "❌ Não foi possível obter o Instance ID pelo Terraform State."
     exit 1
 fi
 
@@ -205,8 +193,9 @@ aws ec2 describe-instances \
     --instance-ids "$INSTANCE_ID" \
     --query 'Reservations[0].Instances[0].[InstanceId,State.Name]' \
     --output table
-EOF
 
+echo ""
+EOF
 
 chmod +x "$HOME/iniciar.sh"
 chmod +x "$HOME/destruir.sh"
