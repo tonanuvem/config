@@ -68,9 +68,7 @@ cat > "$HOME/iniciar.sh" <<'EOF'
 
 cd ~/environment/config/vm-fiap/
 
-terraform init
-terraform plan
-terraform apply -auto-approve
+sh iniciar.sh
 EOF
 
 cat > "$HOME/destruir.sh" <<'EOF'
@@ -78,7 +76,7 @@ cat > "$HOME/destruir.sh" <<'EOF'
 
 cd ~/environment/config/vm-fiap/
 
-terraform destroy -auto-approve
+sh destruir.sh
 EOF
 
 chmod +x "$HOME/iniciar.sh"
@@ -141,9 +139,9 @@ echo ""
 
 df -h "$HOME"
 
-echo ""
-echo "ℹ️ Resize de disco não será executado no AWS CloudShell."
-echo ""
+# echo ""
+# echo "ℹ️ Resize de disco não será executado no AWS CloudShell."
+# echo ""
 
 # ------------------------------------------------------------
 # ANSIBLE
@@ -194,8 +192,8 @@ echo ""
 
 export VM=$(curl -s checkip.amazonaws.com)
 
-echo "IP público detectado:"
-echo "$VM"
+#echo "IP público detectado:"
+#echo "$VM"
 
 echo ""
 
