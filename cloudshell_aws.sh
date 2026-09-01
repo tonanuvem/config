@@ -122,6 +122,13 @@ cd ~/environment/config/vm-fiap/
 sh destruir.sh
 EOF
 
+cat > "$HOME/conectar.sh" <<'EOF'
+#!/bin/bash
+
+cd ~/environment/config/vm-fiap/
+
+sh conectar.sh
+EOF
 
 cat > "$HOME/ip" <<'EOF'
 for region in us-east-1 us-west-2
@@ -161,6 +168,11 @@ aws ec2 describe-instances \
     --instance-ids "$INSTANCE_ID" \
     --query 'Reservations[0].Instances[0].[InstanceId,State.Name,PublicIpAddress,PrivateIpAddress]' \
     --output table
+echo ""
+export VM=$(terraform output -raw ip_externo)
+echo ""
+echo "✅  Acessar : http://$VM:8099              ( senha = fiap )"
+echo ""
 EOF
 
 cat > ~/suspender.sh <<'EOF'
@@ -198,6 +210,7 @@ EOF
 
 chmod +x "$HOME/iniciar.sh"
 chmod +x "$HOME/destruir.sh"
+chmod +x "$HOME/conectar.sh"
 chmod +x "$HOME/ip"
 chmod +x "$HOME/ligar.sh"
 chmod +x "$HOME/suspender.sh"
