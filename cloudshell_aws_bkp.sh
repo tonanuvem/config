@@ -1,0 +1,352 @@
+#!/bin/bash
+
+# ============================================================
+# AWS CLOUDSHELL - CONFIGURAÇÃO TONANUVEM
+#
+# Execução:
+
+# curl -s https://raw.githubusercontent.com/tonanuvem/config/refs/heads/main/cloudshell_aws.sh | bash
+
+# ============================================================
+
+set -e
+
+echo ""
+echo "============================================================"
+echo "        CONFIGURANDO AWS CLOUDSHELL"
+echo "============================================================"
+echo ""
+
+# ------------------------------------------------------------
+# CHAVE SSH labsuser.pem
+# ------------------------------------------------------------
+
+# ------------------------------------------------------------
+# CONFIGURAÇÃO DE DIRETÓRIOS
+# ------------------------------------------------------------
+
+PASTA_ENV="$HOME/environment"
+PASTA_CONFIG="$PASTA_ENV/config"
+
+echo "📁 Verificando diretórios..."
+
+mkdir -p "$PASTA_ENV"
+
+
+echo ""
+echo ""
+echo "============================================================"
+echo "        CONFIGURANDO CHAVE SSH labsuser.pem"
+echo "============================================================"
+echo ""
+
+printf "\tVERIFICANDO ARQUIVO labsuser.pem:\n\n"
+
+if [ -f "$HOME/labsuser.pem" ]; then
+
+    printf "\t\t✅ ARQUIVO labsuser.pem OK!\n\n"
+
+    cp "$HOME/labsuser.pem" "$PASTA_ENV/labsuser.pem"
+    chmod 400 "$PASTA_ENV/labsuser.pem"
+
+    printf "\t\tPermissão configurada: 400\n"
+    printf "\t\tArquivo: $PASTA_ENV/labsuser.pem\n\n"
+
+else
+
+    echo ""
+    echo "❌ Arquivo labsuser.pem não encontrado!"
+    echo ""
+    echo "Você deve fazer o upload do arquivo"
+    echo "labsuser.pem para o AWS CloudShell."
+    echo ""
+
+    exit 1
+
+fi
+
+
+# ------------------------------------------------------------
+# CLONAR CONFIG
+# ------------------------------------------------------------
+
+if [ ! -d "$PASTA_CONFIG/.git" ]; then
+
+    echo ""
+    echo "📦 Clonando repositório tonanuvem/config..."
+
+    rm -rf "$PASTA_CONFIG"
+
+    git clone \
+        https://github.com/tonanuvem/config \
+        "$PASTA_CONFIG"
+
+else
+
+    echo ""
+    echo "📦 Repositório config já existe."
+
+    cd "$PASTA_CONFIG"
+
+    echo "🔄 Atualizando repositório..."
+
+    git pull --ff-only || true
+
+fi
+
+# ------------------------------------------------------------
+# SCRIPTS AUXILIARES
+# ------------------------------------------------------------
+
+echo ""
+echo "📝 Criando scripts iniciar.sh e destruir.sh..."
+
+
+cat > $HOME/ligar.sh <<'EOF'
+#!/bin/bash
+
+cd "$PASTA_CONFIG/environment/config/vm-fiap" || exit 1
+
+# Obtém o Instance ID diretamente do Terraform State
+INSTANCE_ID=$(terraform show -json 2>/dev/null | \
+  jq -r '.values.root_module.resources[] |
+  select(.address=="aws_instance.web") |
+  .values.id')
+
+if [ -z "$INSTANCE_ID" ] || [ "$INSTANCE_ID" = "null" ]; then
+    echo "❌ Não foi possível obter o Instance ID pelo Terraform State."
+    exit 1
+fi
+
+echo "🚀 Ligando EC2: $INSTANCE_ID"
+
+aws ec2 start-instances \
+    --instance-ids "$INSTANCE_ID"
+
+echo ""
+echo "Aguardando a máquina iniciar..."
+
+aws ec2 wait instance-running \
+    --instance-ids "$INSTANCE_ID"
+
+echo ""
+echo "✅ Máquina ligada!"
+
+aws ec2 describe-instances \
+    --instance-ids "$INSTANCE_ID" \
+    --query 'Reservations[0].Instances[0].[InstanceId,State.Name,PublicIpAddress,PrivateIpAddress]' \
+    --output table
+
+# ------------------------------------------------------------
+# IP PÚBLICO ATUAL
+# ------------------------------------------------------------
+
+VM=$(aws ec2 describe-instances \
+    --instance-ids "$INSTANCE_ID" \
+    --query 'Reservations[0].Instances[0].PublicIpAddress' \
+    --output text)
+
+echo ""
+echo "============================================================"
+echo "🌐 ACESSO À APLICAÇÃO"
+echo "============================================================"
+echo ""
+echo "✅ Acessar : http://$VM:8099"
+echo "   Senha   : fiap"
+echo ""
+echo "============================================================"
+echo ""
+EOF
+
+
+cat > ~/suspender.sh <<'EOF'
+#!/bin/bash
+
+cd ~/environment/config/vm-fiap || exit 1
+
+# Obtém o Instance ID diretamente do Terraform State
+INSTANCE_ID=$(terraform show -json 2>/dev/null | \
+  jq -r '.values.root_module.resources[] |
+  select(.address=="aws_instance.web") |
+  .values.id')
+
+if [ -z "$INSTANCE_ID" ] || [ "$INSTANCE_ID" = "null" ]; then
+    echo "❌ Não foi possível obter o Instance ID pelo Terraform State."
+    exit 1
+fi
+
+echo "🛑 Parando EC2: $INSTANCE_ID"
+
+aws ec2 stop-instances \
+    --instance-ids "$INSTANCE_ID"
+
+echo ""
+echo "Aguardando a máquina parar..."
+
+aws ec2 wait instance-stopped \
+    --instance-ids "$INSTANCE_ID"
+
+echo ""
+echo "✅ Máquina suspensa!"
+
+aws ec2 describe-instances \
+    --instance-ids "$INSTANCE_ID" \
+    --query 'Reservations[0].Instances[0].[InstanceId,State.Name]' \
+    --output table
+
+echo ""
+EOF
+
+chmod +x "$HOME/iniciar.sh"
+chmod +x "$HOME/destruir.sh"
+chmod +x "$HOME/conectar.sh"
+chmod +x "$HOME/ip"
+chmod +x "$HOME/ligar.sh"
+chmod +x "$HOME/suspender.sh"
+
+# ------------------------------------------------------------
+# TERRAFORM
+# ------------------------------------------------------------
+
+echo ""
+echo "============================================================"
+echo "        CONFIGURANDO TERRAFORM"
+echo "============================================================"
+echo ""
+
+if command -v terraform >/dev/null 2>&1; then
+
+    echo "✅ Terraform já está instalado."
+    echo ""
+    terraform --version
+
+else
+
+    echo "⬇️ Terraform não encontrado. Instalando Terraform 1.9.5..."
+    echo ""
+
+    TMP_DIR=$(mktemp -d)
+
+    cd "$TMP_DIR"
+
+    curl -fsSL \
+      "https://releases.hashicorp.com/terraform/1.9.5/terraform_1.9.5_linux_amd64.zip" \
+      -o terraform.zip
+
+    unzip -q terraform.zip
+
+    sudo install -m 0755 terraform /usr/local/bin/terraform
+
+    cd ~
+
+    rm -rf "$TMP_DIR"
+
+    echo ""
+    echo "✅ Terraform instalado."
+    echo ""
+
+    terraform --version
+
+fi
+
+# ------------------------------------------------------------
+# VERIFICAR DISCO
+# ------------------------------------------------------------
+
+echo ""
+echo "============================================================"
+echo "        VERIFICANDO DISCO DO CLOUDSHELL"
+echo "============================================================"
+echo ""
+
+df -h "$HOME"
+
+# echo ""
+# echo "ℹ️ Resize de disco não será executado no AWS CloudShell."
+# echo ""
+
+# ------------------------------------------------------------
+# ANSIBLE
+# ------------------------------------------------------------
+
+echo ""
+echo "============================================================"
+echo "        CONFIGURANDO ANSIBLE"
+echo "============================================================"
+echo ""
+
+export ANSIBLE_PYTHON_INTERPRETER=auto_silent
+export ANSIBLE_DEPRECATION_WARNINGS=false
+export ANSIBLE_DISPLAY_SKIPPED_HOSTS=false
+
+if command -v ansible >/dev/null 2>&1; then
+
+    echo "✅ Ansible já está instalado."
+    echo ""
+    ansible --version
+
+else
+
+    echo "⬇️ Ansible não encontrado. Instalando..."
+    echo ""
+
+    python3 -m pip install ansible
+
+    #export PATH="$HOME/.local/bin:$PATH"
+
+    echo ""
+    echo "✅ Ansible instalado."
+    echo ""
+
+    ansible --version
+    rm -rf ~/.cache/pip
+
+fi
+
+# ------------------------------------------------------------
+# PRÉ-REQUISITOS ANSIBLE
+# ------------------------------------------------------------
+
+echo ""
+echo "============================================================"
+echo "        CONFIGURANDO PRÉ-REQUISITOS ANSIBLE"
+echo "============================================================"
+echo ""
+
+export VM=$(curl -s checkip.amazonaws.com)
+
+#echo "IP público detectado:"
+#echo "$VM"
+
+echo ""
+
+cat > "$PASTA_CONFIG/hosts" <<EOF
+[nodes]
+cloudshell ansible_connection=local
+EOF
+
+echo "Inventário criado:"
+echo ""
+
+cat "$PASTA_CONFIG/hosts"
+
+# ------------------------------------------------------------
+# FINAL
+# ------------------------------------------------------------
+
+echo ""
+echo "============================================================"
+echo "        CLOUDSHELL CONFIGURADO"
+echo "============================================================"
+echo ""
+echo "🚀 Iniciar Terraform:"
+echo "   ~/iniciar.sh"
+echo ""
+echo "📁 Conectar:"
+echo "   ~/conectar.sh"
+echo ""
+echo "💥 Destruir Terraform:"
+echo "   ~/destruir.sh"
+echo ""
+echo "============================================================"
+echo ""
