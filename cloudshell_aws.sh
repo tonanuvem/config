@@ -1,3 +1,4 @@
+```bash
 #!/bin/bash
 
 # ============================================================
@@ -83,18 +84,6 @@ chmod +x "$HOME/iniciar.sh"
 chmod +x "$HOME/destruir.sh"
 
 # ------------------------------------------------------------
-# ENTRAR NO CONFIG
-# ------------------------------------------------------------
-
-cd "$PASTA_CONFIG"
-
-echo ""
-echo "📁 Pasta configurada:"
-echo ""
-echo "   $PASTA_CONFIG"
-echo ""
-
-# ------------------------------------------------------------
 # TERRAFORM
 # ------------------------------------------------------------
 
@@ -104,14 +93,43 @@ echo "        CONFIGURANDO TERRAFORM"
 echo "============================================================"
 echo ""
 
-if [ -f "$PASTA_CONFIG/terraform.sh" ]; then
-    bash "$PASTA_CONFIG/terraform.sh"
+if command -v terraform >/dev/null 2>&1; then
+
+    echo "✅ Terraform já está instalado."
+    echo ""
+    terraform --version
+
 else
-    echo "⚠️ terraform.sh não encontrado."
+
+    echo "⬇️ Terraform não encontrado. Instalando Terraform 1.9.5..."
+    echo ""
+
+    TMP_DIR=$(mktemp -d)
+
+    cd "$TMP_DIR"
+
+    curl -fsSL \
+      "https://releases.hashicorp.com/terraform/1.9.5/terraform_1.9.5_linux_amd64.zip" \
+      -o terraform.zip
+
+    unzip -q terraform.zip
+
+    sudo install -m 0755 terraform /usr/local/bin/terraform
+
+    cd ~
+
+    rm -rf "$TMP_DIR"
+
+    echo ""
+    echo "✅ Terraform instalado."
+    echo ""
+
+    terraform --version
+
 fi
 
 # ------------------------------------------------------------
-# DISCO
+# VERIFICAR DISCO
 # ------------------------------------------------------------
 
 echo ""
@@ -198,3 +216,4 @@ echo "   ~/destruir.sh"
 echo ""
 echo "============================================================"
 echo ""
+```
