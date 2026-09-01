@@ -107,6 +107,11 @@ cat > "$HOME/iniciar.sh" <<'EOF'
 cd ~/environment/config/vm-fiap/
 
 sh iniciar.sh
+echo ""
+export VM=$(terraform output -raw ip_externo)
+echo ""
+echo "✅  Acessar : http://$VM:8099              ( senha = fiap )"
+echo ""
 EOF
 
 cat > "$HOME/destruir.sh" <<'EOF'
