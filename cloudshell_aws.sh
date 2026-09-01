@@ -215,6 +215,7 @@ else
     echo ""
 
     ansible --version
+    rm -rf ~/.cache/pip
 
 fi
 
