@@ -122,8 +122,18 @@ cd ~/environment/config/vm-fiap/
 sh destruir.sh
 EOF
 
+
+cat > "$HOME/ip" <<'EOF'
+for region in us-east-1 us-west-2
+        do
+          aws ec2 describe-instances --region $region --query "Reservations[*].Instances[*].[PublicIpAddress, Tags[?Key=='Name'].Value|[0]]" --output text | grep -v None
+        done
+EOF
+
+
 chmod +x "$HOME/iniciar.sh"
 chmod +x "$HOME/destruir.sh"
+chmod +x "$HOME/ip"
 
 # ------------------------------------------------------------
 # TERRAFORM
