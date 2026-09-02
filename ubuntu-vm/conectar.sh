@@ -4,6 +4,8 @@
 echo "Conectando ..." 
 terraform apply --auto-approve > /dev/null
 
+scp -i ~/environment/labsuser.pem -r ~/environment/credenciais ubuntu@$NODE:/home/ubuntu/.aws/credentials
+
 NODENUM=0
 
 IP=$(terraform output -json ip_externo | jq .[] | jq .[$NODENUM] | sed 's/"//g')
