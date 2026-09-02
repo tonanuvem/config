@@ -1,31 +1,151 @@
-# Aguardando:
-echo "Ajustando configurações:"
+#!/bin/bash
+
+set -e
+
+# ============================================================
+# CONFIGURAÇÕES
+# ============================================================
+
 export ANSIBLE_PYTHON_INTERPRETER=auto_silent
 export ANSIBLE_DEPRECATION_WARNINGS=false
 export ANSIBLE_DISPLAY_SKIPPED_HOSTS=false
-#sleep 10
 
-export QTD_NODES=$(terraform output -json ip_externo | jq '.[] | length')
-export WORKER_NODES=$(expr $QTD_NODES - 1)
+cd ~/environment/config/ubuntu-vm || exit 1
 
-# configurar inventario ansible
+# ============================================================
+# LOCALIZAR ANSIBLE
+# ============================================================
+
+ANSIBLE_PLAYBOOK="$(command -v ansible-playbook 2>/dev/null || true)"
+
+if [ -z "$ANSIBLE_PLAYBOOK" ]; then
+
+    if [ -x "/tmp/fiap/ansible_venv/bin/ansible-playbook" ]; then
+        ANSIBLE_PLAYBOOK="/tmp/fiap/ansible_venv/bin/ansible-playbook"
+    else
+        echo ""
+        echo "❌ ansible-playbook não encontrado!"
+        echo ""
+        echo "Verifique a instalação do Ansible no CloudShell."
+        exit 1
+    fi
+
+fi
+
+echo ""
+echo "ANSIBLE:"
+echo "$ANSIBLE_PLAYBOOK"
+echo ""
+
+# ============================================================
+# OBTENDO NODES
+# ============================================================
+
+QTD_NODES=$(terraform output -json ip_externo | jq '.[] | length')
+WORKER_NODES=$(expr "$QTD_NODES" - 1)
+
+echo "Quantidade de Nodes: $QTD_NODES"
+echo ""
+
+# ============================================================
+# INVENTÁRIO ANSIBLE
+# ============================================================
+
 echo '[nodes]' > inv.hosts
 
-for N in $(seq 0 $WORKER_NODES); do
-    NODE=$(terraform output -json ip_externo | jq .[] | jq .[$N] | sed 's/"//g')
+for N in $(seq 0 "$WORKER_NODES"); do
+
+    NODE=$(terraform output -json ip_externo |
+        jq -r ".[] | .[$N]")
+
     echo "node$N ansible_ssh_host=$NODE" >> inv.hosts
+
 done
 
-### AJUSTANDO via SSH
+echo "Inventário:"
+cat inv.hosts
 echo ""
-echo "AJUSTANDO via SSH ($NODE)"
-echo ""
-scp -i ~/environment/labsuser.pem -r ~/environment/ ubuntu@$NODE:/home/ubuntu/
-ssh -i ~/environment/labsuser.pem ubuntu@$NODE "mkdir -p /home/ubuntu/.aws/"
-scp -i ~/environment/labsuser.pem -r ~/environment/credenciais ubuntu@$NODE:/home/ubuntu/.aws/credentials
 
-### AJUSTANDO via ANSIBLE
-echo "AJUSTANDO via ANSIBLE ($NODE)"
+# ============================================================
+# SCP
+# ============================================================
+
+echo ""
+echo "============================================================"
+echo "        COPIANDO ARQUIVOS PARA A EC2"
+echo "============================================================"
+echo ""
+
+for N in $(seq 0 "$WORKER_NODES"); do
+
+    NODE=$(terraform output -json ip_externo |
+        jq -r ".[] | .[$N]")
+
+    echo "Copiando arquivos para $NODE..."
+
+    # Cria diretórios necessários
+    ssh -o StrictHostKeyChecking=no \
+        -i ~/environment/labsuser.pem \
+        ubuntu@"$NODE" \
+        "mkdir -p /home/ubuntu/environment /home/ubuntu/.aws"
+
+    # Copia SOMENTE config
+    scp -q \
+        -i ~/environment/labsuser.pem \
+        -r ~/environment/config \
+        ubuntu@"$NODE":/home/ubuntu/environment/
+
+    # Copia credenciais AWS
+    scp -q \
+        -i ~/environment/labsuser.pem \
+        ~/environment/credenciais/credentials \
+        ubuntu@"$NODE":/home/ubuntu/.aws/credentials
+
+    echo "✅ Arquivos copiados para $NODE"
+    echo ""
+
+
+
+
+    echo "Copiando labsuser.pem para $NODE..."
+
+    # Garante que o diretório exista
+    ssh -o StrictHostKeyChecking=no \
+        -i ~/environment/labsuser.pem \
+        ubuntu@"$NODE" \
+        "mkdir -p /home/ubuntu/environment"
+
+    # Remove eventual chave antiga que esteja protegida
+    ssh -o StrictHostKeyChecking=no \
+        -i ~/environment/labsuser.pem \
+        ubuntu@"$NODE" \
+        "rm -f /home/ubuntu/environment/labsuser.pem"
+
+    # Copia somente o PEM
+    scp \
+        -i ~/environment/labsuser.pem \
+        ~/environment/labsuser.pem \
+        ubuntu@"$NODE":/home/ubuntu/environment/labsuser.pem
+
+    # Ajusta permissão
+    ssh -o StrictHostKeyChecking=no \
+        -i ~/environment/labsuser.pem \
+        ubuntu@"$NODE" \
+        "chmod 400 /home/ubuntu/environment/labsuser.pem"
+
+    echo "✅ labsuser.pem copiado para $NODE"
+    echo ""
+done
+
+# ============================================================
+# ANSIBLE
+# ============================================================
+
+echo ""
+echo "============================================================"
+echo "        AJUSTANDO VIA ANSIBLE"
+echo "============================================================"
+echo ""
 
 ansible-playbook ~/environment/config/ansible/ansible_hostname.yml --inventory hosts -u ubuntu --key-file ~/environment/labsuser.pem # --extra-vars "checar_Ambiente=sim"
 ansible-playbook ~/environment/config/ansible/ansible_desligamento.yml --inventory hosts -u ubuntu --key-file ~/environment/labsuser.pem
@@ -35,17 +155,9 @@ ansible-playbook ~/environment/config/ansible/ansible_k8s.yml --inventory hosts 
 ansible-playbook ~/environment/config/ansible/ansible_dev_java.yml --inventory hosts -u ubuntu --key-file ~/environment/labsuser.pem
 ansible-playbook ~/environment/config/ansible/ansible_code_server_ubuntu.yml --inventory hosts -u ubuntu --key-file ~/environment/labsuser.pem
 
-# OLD:
-#ssh -oStrictHostKeyChecking=no -i ~/environment/labsuser.pem ubuntu@$NODE 'bash -s' < 'rm /home/ubuntu/environment/credentials'
-#ssh -oStrictHostKeyChecking=no -i ~/environment/labsuser.pem ubuntu@$NODE 'bash -s' < 'ln /home/ubuntu/.aws/credentials /home/ubuntu/environment/credentials'
-#ssh -oStrictHostKeyChecking=no -i ~/environment/labsuser.pem ubuntu@$NODE 'bash -s' < '../codeserver.sh'
 
-#ansible-playbook ~/environment/config/ansible/ansible_hostname.yml --inventory inv.hosts -u ubuntu --key-file ~/environment/labsuser.pem
-#ansible-playbook ~/environment/config/ansible/ansible_hosts.yml --inventory inv.hosts -u ubuntu --key-file ~/environment/labsuser.pem
-#ansible-playbook ~/environment/config/ansible/ansible_utils.yml --inventory inv.hosts -u ubuntu --key-file ~/environment/labsuser.pem
-#ansible-playbook ~/environment/config/ansible/ansible_docker.yml --inventory inv.hosts -u ubuntu --key-file ~/environment/labsuser.pem
-#ansible-galaxy collection install community.general
-#ansible-playbook ~/environment/config/ansible/ansible_k8s.yml --inventory inv.hosts -u ubuntu --key-file ~/environment/labsuser.pem
-#ansible-playbook ~/environment/config/ansible/ansible_microk8s.yml --inventory inv.hosts -u ubuntu --key-file ~/environment/labsuser.pem
-
-
+echo ""
+echo "============================================================"
+echo "        ✅ LAB CONFIGURADO"
+echo "============================================================"
+echo ""
