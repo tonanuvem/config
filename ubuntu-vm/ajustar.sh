@@ -81,19 +81,23 @@ echo ""
 for N in $(seq 0 "$WORKER_NODES"); do
     NODE="${IPS[$N]}"
 
-    echo "Copiando arquivos para $NODE..."
+    echo "Sincronizando repositório Git em $NODE..."
 
-    # Cria diretórios necessários
+    # Garante que os diretórios base existam
     ssh -o StrictHostKeyChecking=no \
         -i ~/environment/labsuser.pem \
         ubuntu@"$NODE" \
         "mkdir -p /home/ubuntu/environment /home/ubuntu/.aws"
 
-    # Copia SOMENTE config
-    scp -q \
+    # Clona ou atualiza a pasta config via Git direto na VM
+    ssh -o StrictHostKeyChecking=no \
         -i ~/environment/labsuser.pem \
-        -r ~/environment/config \
-        ubuntu@"$NODE":/home/ubuntu/environment/
+        ubuntu@"$NODE" \
+        "if [ -d '/home/ubuntu/environment/config/.git' ]; then
+            cd /home/ubuntu/environment/config && git pull;
+         else
+            git clone https://github.com/tonanuvem/config /home/ubuntu/environment/config;
+         fi"
 
     # Copia credenciais AWS
     scp -q \
@@ -101,36 +105,31 @@ for N in $(seq 0 "$WORKER_NODES"); do
         ~/environment/credenciais/credentials \
         ubuntu@"$NODE":/home/ubuntu/.aws/credentials
 
-    echo "✅ Arquivos copiados para $NODE"
+    echo "✅ Repositório e credenciais atualizados em $NODE"
     echo ""
 
     echo "Copiando labsuser.pem para $NODE..."
 
-    # Garante que o diretório exista
+    # TRATAMENTO DE PERMISSÃO DA CHAVE:
+    # Garante permissão de escrita no arquivo antigo (se existir) antes de sobrescrever
     ssh -o StrictHostKeyChecking=no \
         -i ~/environment/labsuser.pem \
         ubuntu@"$NODE" \
-        "mkdir -p /home/ubuntu/environment"
+        "test -f /home/ubuntu/environment/labsuser.pem && chmod 600 /home/ubuntu/environment/labsuser.pem || true"
 
-    # Remove eventual chave antiga que esteja protegida
-    ssh -o StrictHostKeyChecking=no \
-        -i ~/environment/labsuser.pem \
-        ubuntu@"$NODE" \
-        "rm -f /home/ubuntu/environment/labsuser.pem"
-
-    # Copia somente o PEM
+    # Copia a chave
     scp \
         -i ~/environment/labsuser.pem \
         ~/environment/labsuser.pem \
         ubuntu@"$NODE":/home/ubuntu/environment/labsuser.pem
 
-    # Ajusta permissão
+    # Protege a chave novamente
     ssh -o StrictHostKeyChecking=no \
         -i ~/environment/labsuser.pem \
         ubuntu@"$NODE" \
         "chmod 400 /home/ubuntu/environment/labsuser.pem"
 
-    echo "✅ labsuser.pem copiado para $NODE"
+    echo "✅ labsuser.pem copiado com sucesso para $NODE"
     echo ""
 done
 
