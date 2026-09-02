@@ -34,14 +34,6 @@ resource "aws_security_group" "default" {
   description = "Grupo de seguranca do EC2"
   vpc_id      = aws_vpc.default.id
 
-  # Acesso SSH de qualquer um
-  ingress {
-    from_port   = 22
-    to_port     = 22
-    protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
   # Acesso TOTAL de qualquer um
   ingress {
     from_port   = 0
