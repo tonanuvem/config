@@ -8,7 +8,7 @@ resource "aws_vpc" "default" {
   cidr_block = "10.0.0.0/16"
   enable_dns_hostnames = true
   tags = {
-    Name = "codeshell-vpc"
+    Name = "${var.prefix_name}-vpc"
   }
 }
 # Cria um Internet Gateway que possibilita a comunicação do VPN com o mundo externo
@@ -84,22 +84,27 @@ resource "aws_instance" "web" {
   
   # Define o nome da VM : "${format("%s_%d_%s", "aluno", count.index, var.ec2_name)}"
   tags = {
-    Name = "${format("%s_%d_%s", "ubuntu_codeserver_", count.index, var.ec2_name)}"
-    # Name = "${format("%s_%d_%s", "vm", count.index+1, var.ec2_name)}"
+    Name = "${var.prefix_name}-${count.index + 1}-${var.ec2_name}"
   }  
   
   # Define tipo da VM (CPU e Memoria)
   instance_type = var.instance_type
 
-  # Criar um disco com 30 GB
+  # Criar 2 discos: root + ebs
   root_block_device {
-    volume_size = var.tamanho_disco
+    volume_size           = var.tamanho_disco
+    volume_type           = "gp3"
+    delete_on_termination = true
+    encrypted             = true
   }
   
-  # Volume Elastic Block Service: EBS volumes (remote storage devices)
+  # Volume Elastic Block Service: EBS volumes (remote storage devices)  
   ebs_block_device {
-    device_name = "/dev/xvdb"
-    volume_size = var.tamanho_disco
+    device_name           = "/dev/xvdb"
+    volume_size           = var.tamanho_disco
+    volume_type           = "gp3"
+    delete_on_termination = true
+    encrypted             = true
   }
   
   # Versão do Sistema Operacional (Ubuntu)
