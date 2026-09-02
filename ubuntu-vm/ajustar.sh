@@ -1,7 +1,5 @@
 #!/bin/bash
 
-set -e
-
 # ============================================================
 # CONFIGURAÇÕES
 # ============================================================
@@ -41,8 +39,16 @@ echo ""
 # OBTENDO NODES
 # ============================================================
 
-QTD_NODES=$(terraform output -json ip_externo | jq '.[] | length')
-WORKER_NODES=$(expr "$QTD_NODES" - 1)
+# Achata o array (mesmo que venha bidimensional [["IP"]]) para obter todos os IPs
+IPS=($(terraform output -json ip_externo | jq -r '.[][]'))
+QTD_NODES=${#IPS[@]}
+
+if [ "$QTD_NODES" -eq 0 ]; then
+    echo "❌ Erro: Nenhum IP encontrado no output do Terraform."
+    exit 1
+fi
+
+WORKER_NODES=$((QTD_NODES - 1))
 
 echo "Quantidade de Nodes: $QTD_NODES"
 echo ""
@@ -54,12 +60,8 @@ echo ""
 echo '[nodes]' > inv.hosts
 
 for N in $(seq 0 "$WORKER_NODES"); do
-
-    NODE=$(terraform output -json ip_externo |
-        jq -r ".[] | .[$N]")
-
+    NODE="${IPS[$N]}"
     echo "node$N ansible_ssh_host=$NODE" >> inv.hosts
-
 done
 
 echo "Inventário:"
@@ -77,9 +79,7 @@ echo "============================================================"
 echo ""
 
 for N in $(seq 0 "$WORKER_NODES"); do
-
-    NODE=$(terraform output -json ip_externo |
-        jq -r ".[] | .[$N]")
+    NODE="${IPS[$N]}"
 
     echo "Copiando arquivos para $NODE..."
 
@@ -103,9 +103,6 @@ for N in $(seq 0 "$WORKER_NODES"); do
 
     echo "✅ Arquivos copiados para $NODE"
     echo ""
-
-
-
 
     echo "Copiando labsuser.pem para $NODE..."
 
@@ -181,7 +178,6 @@ echo ""
     --inventory inv.hosts \
     -u ubuntu \
     --key-file ~/environment/labsuser.pem
-
 
 echo ""
 echo "============================================================"
