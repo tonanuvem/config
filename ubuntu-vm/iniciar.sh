@@ -1,4 +1,5 @@
-terraform init; terraform plan; terraform apply -auto-approve
+terraform init -backend-config="bucket=tfstate-cloudshell-$(aws sts get-caller-identity --query Account --output text)"
+terraform plan; terraform apply -auto-approve
 echo ""
 echo " Iniciando configurações: "
 
