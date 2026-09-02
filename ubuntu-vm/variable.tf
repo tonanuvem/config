@@ -1,23 +1,39 @@
 variable "instance_type" {
   # default     = "t2.micro"
   # default     = "t2.medium"
-  default     = "t2.large" # 4	CPUs e 16 GB
-  # default     = "t2.xlarge" # 8	CPUs e 32 GB  
+  default     = "t2.large" # 2	CPUs e 8 GB
+  # default     = "t2.xlarge" # 4	CPUs e 16 GB  
+  # default     = "t2.2xlarge" # 8	CPUs e 32 GB  
 }
 
 variable "quantidade" {
-  type        = number
-  default     = "1"
+  type    = number
+  default = 1
+
+  validation {
+    condition     = var.quantidade >= 1
+    error_message = "A quantidade deve ser maior ou igual a 1."
+  }
 }
 
 variable "tamanho_disco" {
-  type        = number
-  default     = "100"
+  type    = number
+  default = 50
+
+  validation {
+    condition     = var.tamanho_disco >= 8
+    error_message = "O tamanho do disco deve ser de pelo menos 8 GiB."
+  }
+}
+
+variable "prefix_name" {
+  type        = string
+  default     = "fiaplab"
 }
 
 variable "ec2_name" {
   type        = string
-  default     = "fiap_aluno"
+  default     = "aluno"
 }
 
 variable "key_name" {
@@ -27,7 +43,8 @@ variable "key_name" {
 }
 
 variable "aws_region" {
-  description = "Regiao do AWS Educate padrao."
+  type        = string
+  description = "Região AWS onde os recursos serão criados."
   default     = "us-east-1"
 }
 
