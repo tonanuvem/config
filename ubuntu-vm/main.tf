@@ -11,7 +11,7 @@ resource "aws_vpc" "default" {
     Name = "${var.prefix_name}-vpc"
   }
 }
-# Cria um Internet Gateway que possibilita a comunicação do VPN com o mundo externo
+# Cria um Internet Gateway que possibilita a comunicação da VPC com o mundo externo
 resource "aws_internet_gateway" "default" {
   vpc_id = aws_vpc.default.id
 }
@@ -40,14 +40,6 @@ resource "aws_security_group" "default" {
     to_port     = 22
     protocol    = "tcp"
     cidr_blocks = ["0.0.0.0/0"]
-  }
-
-  # Acesso HTTP a partir do VPC
-  ingress {
-    from_port   = 80
-    to_port     = 80
-    protocol    = "tcp"
-    cidr_blocks = ["10.0.0.0/16"]
   }
 
   # Acesso TOTAL de qualquer um
@@ -111,7 +103,7 @@ resource "aws_instance" "web" {
   ami = lookup(var.aws_amis, var.aws_region)
 
   # Security group to allow HTTP and SSH access
-  vpc_security_group_ids = ["${aws_security_group.default.id}"]
+  vpc_security_group_ids = [aws_security_group.default.id]
 
   # We're going to launch into the same subnet as our ELB. In a production
   # environment it's more common to have a separate private subnet for
