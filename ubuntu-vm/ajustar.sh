@@ -18,14 +18,27 @@ done
 
 ### AJUSTANDO via SSH
 echo ""
-echo "AJUSTANDO via SSH o CODESERVER ($NODE)"
+echo "AJUSTANDO via SSH ($NODE)"
 echo ""
 scp -i ~/environment/labsuser.pem -r ~/environment/ ubuntu@$NODE:/home/ubuntu/
 ssh -i ~/environment/labsuser.pem ubuntu@$NODE "mkdir -p /home/ubuntu/.aws/"
-scp -i ~/environment/labsuser.pem -r ~/environment/credentials ubuntu@$NODE:/home/ubuntu/.aws/credentials
+scp -i ~/environment/labsuser.pem -r ~/environment/credenciais ubuntu@$NODE:/home/ubuntu/.aws/credentials
+
+### AJUSTANDO via ANSIBLE
+echo "AJUSTANDO via ANSIBLE ($NODE)"
+
+ansible-playbook ~/environment/config/ansible/ansible_hostname.yml --inventory hosts -u ubuntu --key-file ~/environment/labsuser.pem # --extra-vars "checar_Ambiente=sim"
+ansible-playbook ~/environment/config/ansible/ansible_desligamento.yml --inventory hosts -u ubuntu --key-file ~/environment/labsuser.pem
+ansible-playbook ~/environment/config/ansible/ansible_utils.yml --inventory hosts -u ubuntu --key-file ~/environment/labsuser.pem
+ansible-playbook ~/environment/config/ansible/ansible_docker.yml --inventory hosts -u ubuntu --key-file ~/environment/labsuser.pem
+ansible-playbook ~/environment/config/ansible/ansible_k8s.yml --inventory hosts -u ubuntu --key-file ~/environment/labsuser.pem
+ansible-playbook ~/environment/config/ansible/ansible_dev_java.yml --inventory hosts -u ubuntu --key-file ~/environment/labsuser.pem
+ansible-playbook ~/environment/config/ansible/ansible_code_server_ubuntu.yml --inventory hosts -u ubuntu --key-file ~/environment/labsuser.pem
+
+# OLD:
 #ssh -oStrictHostKeyChecking=no -i ~/environment/labsuser.pem ubuntu@$NODE 'bash -s' < 'rm /home/ubuntu/environment/credentials'
 #ssh -oStrictHostKeyChecking=no -i ~/environment/labsuser.pem ubuntu@$NODE 'bash -s' < 'ln /home/ubuntu/.aws/credentials /home/ubuntu/environment/credentials'
-ssh -oStrictHostKeyChecking=no -i ~/environment/labsuser.pem ubuntu@$NODE 'bash -s' < '../codeserver.sh'
+#ssh -oStrictHostKeyChecking=no -i ~/environment/labsuser.pem ubuntu@$NODE 'bash -s' < '../codeserver.sh'
 
 #ansible-playbook ~/environment/config/ansible/ansible_hostname.yml --inventory inv.hosts -u ubuntu --key-file ~/environment/labsuser.pem
 #ansible-playbook ~/environment/config/ansible/ansible_hosts.yml --inventory inv.hosts -u ubuntu --key-file ~/environment/labsuser.pem
@@ -34,3 +47,5 @@ ssh -oStrictHostKeyChecking=no -i ~/environment/labsuser.pem ubuntu@$NODE 'bash 
 #ansible-galaxy collection install community.general
 #ansible-playbook ~/environment/config/ansible/ansible_k8s.yml --inventory inv.hosts -u ubuntu --key-file ~/environment/labsuser.pem
 #ansible-playbook ~/environment/config/ansible/ansible_microk8s.yml --inventory inv.hosts -u ubuntu --key-file ~/environment/labsuser.pem
+
+
