@@ -23,6 +23,7 @@ variable "ec2_name" {
 variable "key_name" {
   type        = string
   default     = "vockey"
+  # default     = "chave-fiaplab-vm"
 }
 
 variable "aws_region" {
