@@ -13,6 +13,6 @@ resource "aws_key_pair" "generated_key" {
 # 3. Salva a chave PRIVADA no diretório ~/.ssh do CloudShell
 resource "local_file" "private_key_pem" {
   content         = tls_private_key.ssh_key.private_key_pem
-  filename        = "$HOME/.ssh/id_rsa_ec2.pem" # Salva no $HOME/.ssh/
+  filename        = "$HOME/enviroment/chave-fiaplab-vm.pem" # Salva no $HOME/.ssh/
   file_permission = "0600" # Permissão estrita necessária para o SSH/Ansible
 }
