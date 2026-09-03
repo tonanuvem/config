@@ -26,6 +26,9 @@ resource "aws_subnet" "default" {
   vpc_id                  = aws_vpc.default.id
   cidr_block              = "10.0.1.0/24"
   map_public_ip_on_launch = true
+  # Fixa a AZ (como no vm-fiap) para nao correr o risco de a AWS
+  # sortear uma zona onde o instance_type nao esteja disponivel.
+  availability_zone       = "us-east-1a"
 }
 
 # Cria um "security group" para o EC2 visando permitir o acesso Web
