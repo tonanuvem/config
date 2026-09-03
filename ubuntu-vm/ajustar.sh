@@ -70,7 +70,25 @@ echo ""
 
 # ============================================================
 # SCP
+#
+# Cada ssh/scp tem o codigo de retorno verificado: sem isso, uma
+# falha ao copiar credenciais ou a chave so aparecia muito depois,
+# como um erro incompreensivel no meio de um playbook.
 # ============================================================
+
+SSH_OPTS=(-o StrictHostKeyChecking=no -o ConnectTimeout=10 -o LogLevel=error)
+CHAVE="$HOME/environment/labsuser.pem"
+CREDENCIAIS="$HOME/environment/credenciais/credentials"
+
+if [ ! -f "$CHAVE" ]; then
+    echo "❌ Chave SSH não encontrada: $CHAVE"
+    exit 1
+fi
+
+if [ ! -f "$CREDENCIAIS" ]; then
+    echo "❌ Credenciais AWS não encontradas: $CREDENCIAIS"
+    exit 1
+fi
 
 echo ""
 echo "============================================================"
@@ -78,56 +96,57 @@ echo "        COPIANDO ARQUIVOS PARA A EC2"
 echo "============================================================"
 echo ""
 
+falhar() {
+    echo ""
+    echo "❌ $1"
+    echo ""
+    exit 1
+}
+
 for N in $(seq 0 "$WORKER_NODES"); do
+
     NODE="${IPS[$N]}"
 
     echo "Sincronizando repositório Git em $NODE..."
 
-    # Garante que os diretórios base existam
-    ssh -o StrictHostKeyChecking=no \
-        -i ~/environment/labsuser.pem \
-        ubuntu@"$NODE" \
-        "mkdir -p /home/ubuntu/environment /home/ubuntu/.aws"
+    ssh "${SSH_OPTS[@]}" -i "$CHAVE" ubuntu@"$NODE" \
+        "mkdir -p /home/ubuntu/environment /home/ubuntu/.aws" \
+        || falhar "Não foi possível conectar em $NODE."
 
-    # Clona ou atualiza a pasta config via Git direto na VM
-    ssh -o StrictHostKeyChecking=no \
-        -i ~/environment/labsuser.pem \
-        ubuntu@"$NODE" \
+    ssh "${SSH_OPTS[@]}" -i "$CHAVE" ubuntu@"$NODE" \
         "if [ -d '/home/ubuntu/environment/config/.git' ]; then
-            cd /home/ubuntu/environment/config && git pull;
+            cd /home/ubuntu/environment/config && git pull --ff-only;
          else
             git clone https://github.com/tonanuvem/config /home/ubuntu/environment/config;
-         fi"
+         fi" \
+        || falhar "Não foi possível sincronizar o repositório config em $NODE."
 
-    # Copia credenciais AWS
-    scp -q \
-        -i ~/environment/labsuser.pem \
-        ~/environment/credenciais/credentials \
-        ubuntu@"$NODE":/home/ubuntu/.aws/credentials
+    scp -q "${SSH_OPTS[@]}" -i "$CHAVE" \
+        "$CREDENCIAIS" \
+        ubuntu@"$NODE":/home/ubuntu/.aws/credentials \
+        || falhar "Não foi possível copiar as credenciais AWS para $NODE."
+
+    ssh "${SSH_OPTS[@]}" -i "$CHAVE" ubuntu@"$NODE" \
+        "chmod 600 /home/ubuntu/.aws/credentials" \
+        || falhar "Não foi possível proteger as credenciais em $NODE."
 
     echo "✅ Repositório e credenciais atualizados em $NODE"
     echo ""
 
     echo "Copiando labsuser.pem para $NODE..."
 
-    # TRATAMENTO DE PERMISSÃO DA CHAVE:
-    # Garante permissão de escrita no arquivo antigo (se existir) antes de sobrescrever
-    ssh -o StrictHostKeyChecking=no \
-        -i ~/environment/labsuser.pem \
-        ubuntu@"$NODE" \
+    # Garante permissao de escrita no arquivo antigo antes de sobrescrever.
+    ssh "${SSH_OPTS[@]}" -i "$CHAVE" ubuntu@"$NODE" \
         "test -f /home/ubuntu/environment/labsuser.pem && chmod 600 /home/ubuntu/environment/labsuser.pem || true"
 
-    # Copia a chave
-    scp \
-        -i ~/environment/labsuser.pem \
-        ~/environment/labsuser.pem \
-        ubuntu@"$NODE":/home/ubuntu/environment/labsuser.pem
+    scp -q "${SSH_OPTS[@]}" -i "$CHAVE" \
+        "$CHAVE" \
+        ubuntu@"$NODE":/home/ubuntu/environment/labsuser.pem \
+        || falhar "Não foi possível copiar a chave SSH para $NODE."
 
-    # Protege a chave novamente
-    ssh -o StrictHostKeyChecking=no \
-        -i ~/environment/labsuser.pem \
-        ubuntu@"$NODE" \
-        "chmod 400 /home/ubuntu/environment/labsuser.pem"
+    ssh "${SSH_OPTS[@]}" -i "$CHAVE" ubuntu@"$NODE" \
+        "chmod 400 /home/ubuntu/environment/labsuser.pem" \
+        || falhar "Não foi possível proteger a chave SSH em $NODE."
 
     echo "✅ labsuser.pem copiado com sucesso para $NODE"
     echo ""
@@ -135,48 +154,72 @@ done
 
 # ============================================================
 # ANSIBLE
+#
+# Os playbooks rodam em sequencia e cada um tem o codigo de retorno
+# verificado. Antes, os 7 eram invocados soltos e o exit code do
+# script era apenas o do ultimo (code_server): uma falha em k8s ou
+# docker passava como sucesso para o criar.sh.
 # ============================================================
 
+PLAYBOOKS=(
+    hostname
+    desligamento
+    utils
+    docker
+    k8s
+    dev_java
+    code_server_ubuntu
+)
+
+TOTAL="${#PLAYBOOKS[@]}"
+
 echo ""
 echo "============================================================"
-echo "        AJUSTANDO VIA ANSIBLE"
+echo "        AJUSTANDO VIA ANSIBLE ($TOTAL etapas)"
 echo "============================================================"
 echo ""
 
-"$ANSIBLE_PLAYBOOK" ~/environment/config/ansible/ansible_hostname.yml \
-    --inventory inv.hosts \
-    -u ubuntu \
-    --key-file ~/environment/labsuser.pem
+for I in "${!PLAYBOOKS[@]}"; do
 
-"$ANSIBLE_PLAYBOOK" ~/environment/config/ansible/ansible_desligamento.yml \
-    --inventory inv.hosts \
-    -u ubuntu \
-    --key-file ~/environment/labsuser.pem
+    NOME="${PLAYBOOKS[$I]}"
+    ARQUIVO="$HOME/environment/config/ansible/ansible_${NOME}.yml"
 
-"$ANSIBLE_PLAYBOOK" ~/environment/config/ansible/ansible_utils.yml \
-    --inventory inv.hosts \
-    -u ubuntu \
-    --key-file ~/environment/labsuser.pem
+    echo "------------------------------------------------------------"
+    echo " Etapa $((I + 1))/$TOTAL : $NOME"
+    echo "------------------------------------------------------------"
 
-"$ANSIBLE_PLAYBOOK" ~/environment/config/ansible/ansible_docker.yml \
-    --inventory inv.hosts \
-    -u ubuntu \
-    --key-file ~/environment/labsuser.pem
+    if [ ! -f "$ARQUIVO" ]; then
+        echo ""
+        echo "❌ Playbook não encontrado:"
+        echo "   $ARQUIVO"
+        echo ""
+        exit 1
+    fi
 
-"$ANSIBLE_PLAYBOOK" ~/environment/config/ansible/ansible_k8s.yml \
-    --inventory inv.hosts \
-    -u ubuntu \
-    --key-file ~/environment/labsuser.pem
+    "$ANSIBLE_PLAYBOOK" "$ARQUIVO" \
+        --inventory inv.hosts \
+        -u ubuntu \
+        --key-file ~/environment/labsuser.pem
 
-"$ANSIBLE_PLAYBOOK" ~/environment/config/ansible/ansible_dev_java.yml \
-    --inventory inv.hosts \
-    -u ubuntu \
-    --key-file ~/environment/labsuser.pem
+    RC=$?
 
-"$ANSIBLE_PLAYBOOK" ~/environment/config/ansible/ansible_code_server_ubuntu.yml \
-    --inventory inv.hosts \
-    -u ubuntu \
-    --key-file ~/environment/labsuser.pem
+    if [ "$RC" -ne 0 ]; then
+        echo ""
+        echo "============================================================"
+        echo " ❌ FALHA NA ETAPA: $NOME"
+        echo "============================================================"
+        echo ""
+        echo "As etapas anteriores foram aplicadas, mas a configuração"
+        echo "está incompleta. O code-server pode não estar disponível."
+        echo ""
+        echo "Para tentar novamente, execute no menu:"
+        echo "   1) Criar infraestrutura"
+        echo ""
+        exit "$RC"
+    fi
+
+    echo ""
+done
 
 echo ""
 echo "============================================================"

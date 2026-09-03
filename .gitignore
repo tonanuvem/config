@@ -1,0 +1,15 @@
+# Chaves privadas nunca devem ser versionadas.
+*.pem
+*.key
+
+# Resíduo do bug de interpolação "$HOME" no Terraform (ver key.tf removido).
+$HOME/
+
+# Artefatos gerados pelos scripts do CloudShell dentro do clone.
+backend.tf
+inv.hosts
+hosts
+.terraform/
+.terraform.lock.hcl
+terraform.tfstate
+terraform.tfstate.backup

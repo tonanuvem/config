@@ -74,17 +74,12 @@ resource "aws_instance" "web" {
   # Define tipo da VM (CPU e Memoria)
   instance_type = var.instance_type
 
-  # Criar 2 discos: root + ebs
+  # Disco root.
+  #
+  # O volume EBS secundario (/dev/xvdb) foi removido: nenhum playbook
+  # em config/ansible chegava a formata-lo ou monta-lo, entao eram 50 GB
+  # gp3 provisionados e pagos por aluno sem qualquer uso.
   root_block_device {
-    volume_size           = var.tamanho_disco
-    volume_type           = "gp3"
-    delete_on_termination = true
-    encrypted             = true
-  }
-  
-  # Volume Elastic Block Service: EBS volumes (remote storage devices)  
-  ebs_block_device {
-    device_name           = "/dev/xvdb"
     volume_size           = var.tamanho_disco
     volume_type           = "gp3"
     delete_on_termination = true
