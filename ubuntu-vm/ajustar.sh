@@ -61,7 +61,7 @@ echo '[nodes]' > inv.hosts
 
 for N in $(seq 0 "$WORKER_NODES"); do
     NODE="${IPS[$N]}"
-    echo "fiaplab_$N ansible_ssh_host=$NODE" >> inv.hosts
+    echo "fiaplab-$N ansible_ssh_host=$NODE" >> inv.hosts
 done
 
 echo "Inventário:"
