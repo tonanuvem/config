@@ -6,19 +6,27 @@ export ANSIBLE_DISPLAY_SKIPPED_HOSTS=false
 #sleep 10
 
 # configurar inventario ansible
-echo '' > inv.hosts
-echo '[nodes]' >> inv.hosts
+# O inventario e gravado fora do clone deste repositorio quando o
+# fiaplab.sh informa FIAPLAB_INVENTORY (aponta para /tmp/fiap/inventory).
+# O default preserva o comportamento antigo para quem roda o script
+# direto, na mao.
+INV="${FIAPLAB_INVENTORY:-inv.hosts}"
+
+mkdir -p "$(dirname "$INV")"
+
+echo '' > "$INV"
+echo '[nodes]' >> "$INV"
 NODE1=$(terraform output -raw Node_1_ip_externo)
-echo "node1 ansible_ssh_host=$NODE1" >> inv.hosts
+echo "node1 ansible_ssh_host=$NODE1" >> "$INV"
 NODE2=$(terraform output -raw Node_2_ip_externo)
-echo "node2 ansible_ssh_host=$NODE2" >> inv.hosts
+echo "node2 ansible_ssh_host=$NODE2" >> "$INV"
 NODE3=$(terraform output -raw Node_3_ip_externo)
-echo "node3 ansible_ssh_host=$NODE3" >> inv.hosts
+echo "node3 ansible_ssh_host=$NODE3" >> "$INV"
 
 # aplicar configurações
-ansible-playbook ~/environment/config/ansible/ansible_hostname.yml --inventory inv.hosts -u ec2-user --key-file ~/environment/labsuser.pem # --extra-vars "checar_Ambiente=sim"
-ansible-playbook ~/environment/config/ansible/ansible_hosts.yml --inventory inv.hosts -u ec2-user --key-file ~/environment/labsuser.pem
-ansible-playbook ~/environment/config/ansible/ansible_utils.yml --inventory inv.hosts -u ec2-user --key-file ~/environment/labsuser.pem
-ansible-playbook ~/environment/config/ansible/ansible_docker.yml --inventory inv.hosts -u ec2-user --key-file ~/environment/labsuser.pem
-ansible-playbook ~/environment/config/ansible/ansible_k8s.yml --inventory inv.hosts -u ec2-user --key-file ~/environment/labsuser.pem
-ansible-playbook ~/environment/config/ansible/k8s_storage_helm_wordpress.yml  --inventory inv.hosts -u ec2-user --key-file ~/environment/labsuser.pem
+ansible-playbook ~/environment/config/ansible/ansible_hostname.yml --inventory "$INV" -u ec2-user --key-file ~/environment/labsuser.pem # --extra-vars "checar_Ambiente=sim"
+ansible-playbook ~/environment/config/ansible/ansible_hosts.yml --inventory "$INV" -u ec2-user --key-file ~/environment/labsuser.pem
+ansible-playbook ~/environment/config/ansible/ansible_utils.yml --inventory "$INV" -u ec2-user --key-file ~/environment/labsuser.pem
+ansible-playbook ~/environment/config/ansible/ansible_docker.yml --inventory "$INV" -u ec2-user --key-file ~/environment/labsuser.pem
+ansible-playbook ~/environment/config/ansible/ansible_k8s.yml --inventory "$INV" -u ec2-user --key-file ~/environment/labsuser.pem
+ansible-playbook ~/environment/config/ansible/k8s_storage_helm_wordpress.yml  --inventory "$INV" -u ec2-user --key-file ~/environment/labsuser.pem

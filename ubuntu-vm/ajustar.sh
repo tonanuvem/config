@@ -57,15 +57,23 @@ echo ""
 # INVENTÁRIO ANSIBLE
 # ============================================================
 
-echo '[nodes]' > inv.hosts
+# O inventario e gravado fora do clone deste repositorio quando o
+# fiaplab.sh informa FIAPLAB_INVENTORY (aponta para /tmp/fiap/inventory).
+# O default preserva o comportamento antigo para quem roda o script
+# direto, na mao.
+INV="${FIAPLAB_INVENTORY:-inv.hosts}"
+
+mkdir -p "$(dirname "$INV")"
+
+echo '[nodes]' > "$INV"
 
 for N in $(seq 0 "$WORKER_NODES"); do
     NODE="${IPS[$N]}"
-    echo "node$N ansible_ssh_host=$NODE" >> inv.hosts
+    echo "node$N ansible_ssh_host=$NODE" >> "$INV"
 done
 
 echo "Inventário:"
-cat inv.hosts
+cat "$INV"
 echo ""
 
 # ============================================================
@@ -197,7 +205,7 @@ for I in "${!PLAYBOOKS[@]}"; do
     fi
 
     "$ANSIBLE_PLAYBOOK" "$ARQUIVO" \
-        --inventory inv.hosts \
+        --inventory "$INV" \
         -u ubuntu \
         --key-file ~/environment/labsuser.pem
 
