@@ -8,6 +8,10 @@ export ANSIBLE_PYTHON_INTERPRETER=auto_silent
 export ANSIBLE_DEPRECATION_WARNINGS=false
 export ANSIBLE_DISPLAY_SKIPPED_HOSTS=false
 
+# VM de lab e efemera e reaproveita IPs: sem isto o Ansible aborta
+# com "Host key verification failed" por chave antiga no known_hosts.
+export ANSIBLE_HOST_KEY_CHECKING=false
+
 cd ~/environment/config/ubuntu-vm || exit 1
 
 # ============================================================
@@ -93,7 +97,7 @@ echo ""
 # como um erro incompreensivel no meio de um playbook.
 # ============================================================
 
-SSH_OPTS=(-o StrictHostKeyChecking=no -o ConnectTimeout=10 -o LogLevel=error)
+SSH_OPTS=(-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o ConnectTimeout=10 -o LogLevel=error)
 CHAVE="$HOME/environment/labsuser.pem"
 CREDENCIAIS="$HOME/environment/credenciais/credentials"
 
