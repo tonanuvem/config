@@ -39,8 +39,17 @@ echo ""
 # OBTENDO NODES
 # ============================================================
 
-# Achata o array (mesmo que venha bidimensional [["IP"]]) para obter todos os IPs
-IPS=($(terraform output -json ip_externo | jq -r '.[][]'))
+# O filtro aceita as tres formas que o ip_externo ja teve: string,
+# lista e lista aninhada. Isso importa na transicao -- o state
+# existente so passa a devolver a forma nova no proximo apply.
+LER_IPS='if type=="string" then . else (.. | strings) end'
+
+mapfile -t IPS < <(
+    terraform output -json ip_externo 2>/dev/null |
+    jq -r "$LER_IPS" |
+    grep -v '^[[:space:]]*$'
+)
+
 QTD_NODES=${#IPS[@]}
 
 if [ "$QTD_NODES" -eq 0 ]; then

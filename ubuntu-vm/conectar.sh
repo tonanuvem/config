@@ -12,8 +12,17 @@ terraform refresh > /dev/null
 
 NODENUM=0
 
-# Extrai o IP atualizado de forma segura tratando arrays simples ou aninhados
-IPS=($(terraform output -json ip_externo 2>/dev/null | jq -r '.[][]'))
+# O filtro aceita as tres formas que o ip_externo ja teve: string,
+# lista e lista aninhada. Isso importa na transicao -- o state
+# existente so passa a devolver a forma nova no proximo apply.
+LER_IPS='if type=="string" then . else (.. | strings) end'
+
+mapfile -t IPS < <(
+    terraform output -json ip_externo 2>/dev/null |
+    jq -r "$LER_IPS" |
+    grep -v '^[[:space:]]*$'
+)
+
 IP="${IPS[$NODENUM]}"
 
 if [ -z "$IP" ] || [ "$IP" = "null" ]; then
