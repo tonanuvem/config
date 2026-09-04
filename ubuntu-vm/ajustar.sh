@@ -124,6 +124,62 @@ falhar() {
     exit 1
 }
 
+# ============================================================
+# HEARTBEAT
+#
+# O Ansible nao imprime nada durante uma task longa, entao "lento" e
+# "morto" ficam indistinguiveis. Foi o que custou mais tempo aqui: o
+# openjdk/maven baixando e o dpkg desempacotando 80+ pacotes pareciam
+# um travamento identico ao do mirror quebrado. Este amostrador roda em
+# paralelo a cada etapa e mostra o que o no esta realmente fazendo.
+# ============================================================
+
+HB_PID=""
+
+heartbeat_inicia() {
+
+    local NODE="$1"
+    local ETAPA="$2"
+
+    (
+        while true; do
+
+            sleep 30
+
+            INFO=$(ssh "${SSH_OPTS[@]}" -i "$CHAVE" ubuntu@"$NODE" '
+                if pgrep -x apt-get >/dev/null 2>&1; then
+                    PROC=apt-get
+                elif pgrep -x dpkg >/dev/null 2>&1; then
+                    PROC=dpkg
+                else
+                    PROC=-
+                fi
+                BAIXANDO=$(sudo du -sb /var/cache/apt/archives/partial 2>/dev/null | cut -f1)
+                ULTIMO=$(sudo tail -n 1 /var/log/apt/term.log 2>/dev/null | tr -d "\r" | cut -c1-70)
+                echo "proc=$PROC baixado=${BAIXANDO:-0}B | $ULTIMO"
+            ' 2>/dev/null)
+
+            [ -n "$INFO" ] && echo "      ⏱  [$ETAPA] $INFO"
+
+        done
+    ) &
+
+    HB_PID=$!
+}
+
+heartbeat_para() {
+
+    [ -n "$HB_PID" ] || return 0
+
+    kill "$HB_PID" 2>/dev/null
+    wait "$HB_PID" 2>/dev/null
+
+    HB_PID=""
+}
+
+# Sem isto um Ctrl+C deixaria o amostrador orfao rodando em background.
+trap 'heartbeat_para; exit 130' INT TERM
+
 for N in $(seq 0 "$WORKER_NODES"); do
 
     NODE="${IPS[$N]}"
@@ -141,10 +197,33 @@ for N in $(seq 0 "$WORKER_NODES"); do
     # o lock ser liberado -- e o que o ambiente do Cloud9 nao precisa por
     # ja estar ligado ha tempo.
     echo "Aguardando cloud-init/unattended-upgrades liberar o apt em $NODE..."
-    ssh "${SSH_OPTS[@]}" -i "$CHAVE" ubuntu@"$NODE" \
-        "cloud-init status --wait >/dev/null 2>&1 || true; \
-         while sudo fuser /var/lib/dpkg/lock-frontend /var/lib/dpkg/lock >/dev/null 2>&1; do sleep 5; done" \
-        || falhar "Timeout aguardando o boot de $NODE."
+    ssh "${SSH_OPTS[@]}" -i "$CHAVE" ubuntu@"$NODE" 'bash -s' <<'REMOTO' \
+        || falhar "Boot de $NODE nao concluiu no prazo (lock do apt preso)."
+# Os dois tetos abaixo sao o ponto: uma espera sem limite apenas troca
+# "apt travado" por "ajustar.sh travado", que e exatamente o defeito que
+# viemos corrigir. A versao anterior prometia "Timeout" na mensagem de
+# erro mas tinha um while infinito.
+timeout 600 cloud-init status --wait >/dev/null 2>&1 || true
+
+N=0
+
+while sudo fuser /var/lib/dpkg/lock-frontend /var/lib/dpkg/lock >/dev/null 2>&1; do
+
+    N=$((N + 1))
+
+    if [ "$N" -gt 120 ]; then
+        echo "   ❌ lock do apt/dpkg nao liberou em 10 min"
+        exit 1
+    fi
+
+    # Um sinal de vida a cada minuto, para a espera nao parecer travamento.
+    if [ $((N % 12)) -eq 0 ]; then
+        echo "   ... ainda aguardando o lock do apt ($((N * 5))s)"
+    fi
+
+    sleep 5
+done
+REMOTO
 
     # O mirror do apt e escolhido testando cada candidato, nao fixado:
     # fixar um so trocaria um ponto unico de falha por outro. O teste de
@@ -309,12 +388,18 @@ for I in "${!PLAYBOOKS[@]}"; do
         exit 1
     fi
 
+    # Amostra sempre o primeiro no: e suficiente para diferenciar uma
+    # etapa lenta de uma travada, sem multiplicar SSH por node.
+    heartbeat_inicia "${IPS[0]}" "$NOME"
+
     "$ANSIBLE_PLAYBOOK" "$ARQUIVO" \
         --inventory "$INV" \
         -u ubuntu \
         --key-file ~/environment/labsuser.pem
 
     RC=$?
+
+    heartbeat_para
 
     if [ "$RC" -ne 0 ]; then
         echo ""

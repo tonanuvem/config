@@ -78,6 +78,13 @@
       cache_valid_time: 3600
       force_apt_get: true
     register: apt_action
+    # Teto de tempo por tentativa. O retries/until so ajuda quando o apt
+    # FALHA; se ele PENDURA (mirror que para de enviar dados no meio do
+    # download) nada aqui dispara. 1800s e folgado de proposito: um
+    # install pesado (openjdk+maven, dpkg desempacotando 80+ pacotes)
+    # leva minutos de forma legitima, entao isto so corta travamento real.
+    async: 1800
+    poll: 10
     retries: 100
     delay: 10
     until: apt_action is success or ('Failed to lock apt for exclusive operation' not in apt_action.msg and '/var/lib/dpkg/lock' not in apt_action.msg)
