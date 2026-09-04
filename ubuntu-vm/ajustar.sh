@@ -158,7 +158,7 @@ for N in $(seq 0 "$WORKER_NODES"); do
     # passaria mesmo com o mirror quebrado.
     echo "Escolhendo mirror do apt em $NODE..."
     ssh "${SSH_OPTS[@]}" -i "$CHAVE" ubuntu@"$NODE" 'bash -s' <<'REMOTO' \
-        || falhar "Nenhum mirror do apt respondeu em $NODE."
+        || falhar "Não foi possível preparar o apt (mirror/listas) em $NODE."
 set -u
 
 CODENAME="$(. /etc/os-release && echo "$VERSION_CODENAME")"
@@ -195,6 +195,20 @@ sudo sed -i -E "s#http://[^ ]*archive\.ubuntu\.com/ubuntu#$ESCOLHIDO#g" \
 # da sondagem, o apt aborta e re-tenta em vez de pendurar.
 printf 'Acquire::http::Timeout "20";\nAcquire::https::Timeout "20";\nAcquire::Retries "3";\n' \
     | sudo tee /etc/apt/apt.conf.d/99fiap-timeout >/dev/null
+
+# As listas em cache podem ter vindo, incompletas, do mirror quebrado --
+# e os playbooks usam cache_valid_time, entao NAO refariam o update
+# sozinhos. Sem isto o install falha com "held broken packages",
+# reclamando que pacotes que existem "nao sao instalaveis".
+echo "   Atualizando listas do apt a partir do mirror escolhido..."
+sudo rm -rf /var/lib/apt/lists/*
+
+if ! sudo apt-get update -qq; then
+    echo "   ⚠️  apt-get update falhou, tentando novamente..."
+    sudo apt-get update -qq || { echo "   ❌ apt-get update falhou"; exit 1; }
+fi
+
+echo "   ✅ listas do apt atualizadas"
 REMOTO
 
     ssh "${SSH_OPTS[@]}" -i "$CHAVE" ubuntu@"$NODE" \
