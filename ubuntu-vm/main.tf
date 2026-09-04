@@ -3,6 +3,28 @@ provider "aws" {
   region = var.aws_region
 }
 
+# Descobre a AMI Ubuntu 24.04 mais recente publicada pela Canonical
+# (099720109477 e a conta oficial dela). Serve para o output apontar
+# quando o pin envelheceu: a troca continua deliberada, nao automatica.
+data "aws_ami" "ubuntu_recente" {
+  most_recent = true
+  owners      = ["099720109477"]
+
+  filter {
+    name   = "name"
+    values = ["ubuntu/images/hvm-ssd*/ubuntu-noble-24.04-amd64-server-*"]
+  }
+
+  filter {
+    name   = "virtualization-type"
+    values = ["hvm"]
+  }
+}
+
+locals {
+  ami_escolhida = var.usar_ami_mais_recente ? data.aws_ami.ubuntu_recente.id : lookup(var.aws_amis, var.aws_region)
+}
+
 # Cria um VPC que receberá as instâncias e recursos
 resource "aws_vpc" "default" {
   cidr_block = "10.0.0.0/16"
@@ -90,7 +112,7 @@ resource "aws_instance" "web" {
   }
   
   # Versão do Sistema Operacional (Ubuntu)
-  ami = lookup(var.aws_amis, var.aws_region)
+  ami = local.ami_escolhida
 
   # Security group to allow HTTP and SSH access
   vpc_security_group_ids = [aws_security_group.default.id]

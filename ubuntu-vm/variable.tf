@@ -48,7 +48,22 @@ variable "aws_region" {
   default     = "us-east-1"
 }
 
+# Por padrao o lab usa a AMI fixada em aws_amis, para que a imagem nao
+# mude sob os alunos no meio do semestre. Ligue esta flag apenas para
+# validar uma imagem nova antes de promover o pin abaixo.
+variable "usar_ami_mais_recente" {
+  type        = bool
+  default     = false
+  description = "Usa a AMI Ubuntu 24.04 mais recente da Canonical em vez do ID fixado em aws_amis."
+}
+
 # Ubuntu
+#
+# O ID e fixado de proposito, mas envelhece: uma AMI construida ha meses
+# chega com muitas atualizacoes de seguranca pendentes, e o
+# unattended-upgrades do primeiro boot segura o lock do apt por mais
+# tempo -- um dos travamentos que enfrentamos. O output
+# "ami_mais_recente_disponivel" avisa quando este pin ficou para tras.
 variable "aws_amis" {
   default = {
     us-east-1 = "ami-0e86e20dae9224db8" # Ubuntu Server 24.04 LTS (HVM),EBS General Purpose (SSD) Volume Type. 

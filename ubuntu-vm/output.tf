@@ -9,3 +9,14 @@ output "dns_externo" {
 output "ip_externo" {
   value = aws_instance.web[*].public_ip
 }
+
+# Compare os dois: se divergirem, o pin em variable.tf ficou para tras.
+# Vale atualizar entre semestres -- imagem mais fresca encurta a janela
+# em que o unattended-upgrades do boot segura o lock do apt.
+output "ami_em_uso" {
+  value = local.ami_escolhida
+}
+
+output "ami_mais_recente_disponivel" {
+  value = "${data.aws_ami.ubuntu_recente.id} (${data.aws_ami.ubuntu_recente.creation_date})"
+}
