@@ -59,14 +59,28 @@ variable "usar_ami_mais_recente" {
 
 # Ubuntu
 #
-# O ID e fixado de proposito, mas envelhece: uma AMI construida ha meses
-# chega com muitas atualizacoes de seguranca pendentes, e o
-# unattended-upgrades do primeiro boot segura o lock do apt por mais
-# tempo -- um dos travamentos que enfrentamos. O output
-# "ami_mais_recente_disponivel" avisa quando este pin ficou para tras.
+# O ID e fixado de proposito, para a imagem nao mudar sob os alunos no
+# meio do semestre -- mas ele envelhece, e isso custa tempo: uma imagem
+# antiga chega com pacotes base desatualizados, e o apt precisa baixar
+# a diferenca em toda execucao. Medido em 2026-09-04: trocar uma imagem
+# de meses atras por uma do dia derrubou o lab de 223s para 198s.
+#
+# A hipotese inicial era outra -- que o unattended-upgrades do primeiro
+# boot fosse segurar o lock do apt -- mas isso nunca se manifestou em
+# nenhuma das medicoes. O custo real e o volume de download.
+#
+# O output "ami_mais_recente_disponivel" avisa quando este pin ficou
+# para tras; a flag usar_ami_mais_recente permite validar a nova antes
+# de promover o ID aqui.
 variable "aws_amis" {
   default = {
-    us-east-1 = "ami-0e86e20dae9224db8" # Ubuntu Server 24.04 LTS (HVM),EBS General Purpose (SSD) Volume Type. 
+    # Promovido em 2026-09-04 apos medicao: o lab inteiro caiu de 223s
+    # para 198s so trocando a imagem. O ganho ficou todo nas tasks que
+    # instalam pacotes base do Ubuntu -- utils -16s e pre-reqs do docker
+    # -5s -- porque numa imagem recente eles ja estao atualizados e o apt
+    # baixa menos. Traz kernel 7.0.0-1012-aws no lugar do 6.8.0-1012-aws.
+    us-east-1 = "ami-025d99823a4caad37" # Ubuntu Server 24.04 LTS, build de 2026-09-04
+    # us-east-1 = "ami-0e86e20dae9224db8" # Uso anterior, build antigo: ~25s mais lento
     # us-east-1 = "ami-00bd2fe1439631665" # Uso anterior
     # us-east-1 = "ami-0bf6b162dbe07782b" # ubuntu do cloud9 (precisaria rodar cloud-init para configurar)
   }
