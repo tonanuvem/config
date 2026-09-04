@@ -11,8 +11,9 @@ output "ip_externo" {
 }
 
 # Compare os dois: se divergirem, o pin em variable.tf ficou para tras.
-# Vale atualizar entre semestres -- imagem mais fresca encurta a janela
-# em que o unattended-upgrades do boot segura o lock do apt.
+# Vale revisitar entre semestres -- medido em 2026-09-04, uma imagem do
+# dia no lugar de uma de meses atras derrubou o lab de 223s para 198s,
+# porque os pacotes base ja vem atualizados e o apt baixa menos.
 output "ami_em_uso" {
   value = local.ami_escolhida
 }
