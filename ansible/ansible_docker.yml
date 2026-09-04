@@ -101,7 +101,10 @@
           # leva minutos de forma legitima, entao isto so corta travamento real.
           async: 1800
           poll: 10
-          retries: 100
+          # retries: 100 era heranca de quando a task nao tinha teto. Com o
+          # async acima, cada tentativa ja e limitada, e 100 delas multiplicariam
+          # o pior caso por 100 sem ganho nenhum.
+          retries: 2
           delay: 10
           until: apt_action is success or ('Failed to lock apt for exclusive operation' not in apt_action.msg and '/var/lib/dpkg/lock' not in apt_action.msg)
           when: ansible_os_family == "Debian"

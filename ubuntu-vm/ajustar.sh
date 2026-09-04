@@ -12,6 +12,12 @@ export ANSIBLE_DISPLAY_SKIPPED_HOSTS=false
 # com "Host key verification failed" por chave antiga no known_hosts.
 export ANSIBLE_HOST_KEY_CHECKING=false
 
+# Tempo por task e total por playbook. Se a colecao ansible.posix nao
+# estiver instalada o Ansible apenas avisa e segue, entao isto e best
+# effort -- a medicao confiavel e a do proprio script, mais abaixo.
+export ANSIBLE_CALLBACKS_ENABLED=ansible.posix.profile_tasks,ansible.posix.timer
+export ANSIBLE_CALLBACK_WHITELIST=ansible.posix.profile_tasks,ansible.posix.timer
+
 cd ~/environment/config/ubuntu-vm || exit 1
 
 # ============================================================
@@ -62,6 +68,8 @@ if [ "$QTD_NODES" -eq 0 ]; then
 fi
 
 WORKER_NODES=$((QTD_NODES - 1))
+
+T_INICIO=$(date +%s)
 
 echo "Quantidade de Nodes: $QTD_NODES"
 echo ""
@@ -177,6 +185,24 @@ heartbeat_para() {
     HB_PID=""
 }
 
+resumo_tempos() {
+
+    local T_TOTAL=$(( $(date +%s) - T_INICIO ))
+    local D
+
+    echo ""
+    echo "============================================================"
+    echo "        TEMPOS (para dimensionar os tetos)"
+    echo "============================================================"
+    printf "   %-24s %6ss\n" "preparação" "${T_PREPARO:-0}"
+
+    for D in "${DURACOES[@]}"; do
+        printf "   %-24s %6ss\n" "${D%%:*}" "${D##*:}"
+    done
+
+    printf "   %-24s %6ss\n" "TOTAL" "$T_TOTAL"
+}
+
 # Sem isto um Ctrl+C deixaria o amostrador orfao rodando em background.
 trap 'heartbeat_para; exit 130' INT TERM
 
@@ -203,7 +229,11 @@ for N in $(seq 0 "$WORKER_NODES"); do
 # "apt travado" por "ajustar.sh travado", que e exatamente o defeito que
 # viemos corrigir. A versao anterior prometia "Timeout" na mensagem de
 # erro mas tinha um while infinito.
-timeout 600 cloud-init status --wait >/dev/null 2>&1 || true
+#
+# 3 min em cada um, nao 10: isto e um lab de aula, e uma VM que nao
+# termina o boot nesse prazo esta doente -- melhor falhar cedo e o aluno
+# reexecutar do que consumir metade da aula esperando.
+timeout 180 cloud-init status --wait >/dev/null 2>&1 || true
 
 N=0
 
@@ -211,8 +241,8 @@ while sudo fuser /var/lib/dpkg/lock-frontend /var/lib/dpkg/lock >/dev/null 2>&1;
 
     N=$((N + 1))
 
-    if [ "$N" -gt 120 ]; then
-        echo "   ❌ lock do apt/dpkg nao liberou em 10 min"
+    if [ "$N" -gt 36 ]; then
+        echo "   ❌ lock do apt/dpkg nao liberou em 3 min"
         exit 1
     fi
 
@@ -290,7 +320,10 @@ for M in $MIRRORS; do
 
     sudo rm -rf /var/lib/apt/lists/*
 
-    if sudo timeout -k 10 120 apt-get update -qq; then
+    # 60s por candidato: o mirror saudavel conclui o update bem antes
+    # disso, e com o bom em primeiro lugar o caso tipico e uma tentativa
+    # so. Os tres candidatos no pior caso somam 3 min, nao 6,5.
+    if sudo timeout -k 10 60 apt-get update -qq; then
         ESCOLHIDO="$M"
         echo "   ✅ mirror OK (apt-get update concluido): $M"
         break
@@ -344,6 +377,9 @@ REMOTO
     echo ""
 done
 
+T_PREPARO=$(( $(date +%s) - T_INICIO ))
+echo "⏱  preparação (mirror, git, credenciais): ${T_PREPARO}s"
+
 # ============================================================
 # ANSIBLE
 #
@@ -364,6 +400,11 @@ PLAYBOOKS=(
 )
 
 TOTAL="${#PLAYBOOKS[@]}"
+
+# Guarda "nome:segundos" por etapa. O objetivo e dimensionar os tetos
+# (async, sobretudo) a partir de medicao, em vez de palpite: hoje o
+# async esta folgado justamente por nao sabermos o tempo real.
+DURACOES=()
 
 echo ""
 echo "============================================================"
@@ -392,6 +433,8 @@ for I in "${!PLAYBOOKS[@]}"; do
     # etapa lenta de uma travada, sem multiplicar SSH por node.
     heartbeat_inicia "${IPS[0]}" "$NOME"
 
+    T_ETAPA=$(date +%s)
+
     "$ANSIBLE_PLAYBOOK" "$ARQUIVO" \
         --inventory "$INV" \
         -u ubuntu \
@@ -400,6 +443,10 @@ for I in "${!PLAYBOOKS[@]}"; do
     RC=$?
 
     heartbeat_para
+
+    D_ETAPA=$(( $(date +%s) - T_ETAPA ))
+    DURACOES+=("$NOME:$D_ETAPA")
+    echo "⏱  etapa '$NOME' levou ${D_ETAPA}s"
 
     if [ "$RC" -ne 0 ]; then
         echo ""
@@ -413,11 +460,18 @@ for I in "${!PLAYBOOKS[@]}"; do
         echo "Para tentar novamente, execute no menu:"
         echo "   1) Criar infraestrutura"
         echo ""
+
+        # Numa rodada de medicao a falha e justamente quando os tempos
+        # mais interessam, entao o resumo sai aqui tambem.
+        resumo_tempos
+
         exit "$RC"
     fi
 
     echo ""
 done
+
+resumo_tempos
 
 echo ""
 echo "============================================================"
