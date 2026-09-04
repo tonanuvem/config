@@ -146,6 +146,16 @@ for N in $(seq 0 "$WORKER_NODES"); do
          while sudo fuser /var/lib/dpkg/lock-frontend /var/lib/dpkg/lock >/dev/null 2>&1; do sleep 5; done" \
         || falhar "Timeout aguardando o boot de $NODE."
 
+    # O mirror regional us-east-1.ec2.archive.ubuntu.com as vezes deixa a
+    # conexao ESTABELECIDA mas para de enviar dados no meio do download; sem
+    # timeout o apt fica pendurado indefinidamente. Aqui damos timeout curto
+    # + retries para o apt abortar a conexao morta e re-tentar, em vez de
+    # travar todo o ajustar.sh.
+    printf 'Acquire::http::Timeout "20";\nAcquire::https::Timeout "20";\nAcquire::Retries "3";\n' | \
+        ssh "${SSH_OPTS[@]}" -i "$CHAVE" ubuntu@"$NODE" \
+            "sudo tee /etc/apt/apt.conf.d/99fiap-timeout >/dev/null" \
+        || falhar "Não foi possível configurar timeout do apt em $NODE."
+
     ssh "${SSH_OPTS[@]}" -i "$CHAVE" ubuntu@"$NODE" \
         "if [ -d '/home/ubuntu/environment/config/.git' ]; then
             cd /home/ubuntu/environment/config && git pull --ff-only;
