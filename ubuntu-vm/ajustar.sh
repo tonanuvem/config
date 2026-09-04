@@ -146,22 +146,56 @@ for N in $(seq 0 "$WORKER_NODES"); do
          while sudo fuser /var/lib/dpkg/lock-frontend /var/lib/dpkg/lock >/dev/null 2>&1; do sleep 5; done" \
         || falhar "Timeout aguardando o boot de $NODE."
 
-    # O mirror regional *.ec2.archive.ubuntu.com da AWS empaca de forma
-    # consistente: a conexao fica ESTABELECIDA mas para de enviar dados no
-    # meio do download, pendurando o apt. Trocamos para o archive.ubuntu.com
-    # (CDN da Canonical, a mesma do security.ubuntu.com, que responde bem).
-    echo "Ajustando mirror do apt e timeout em $NODE..."
-    ssh "${SSH_OPTS[@]}" -i "$CHAVE" ubuntu@"$NODE" \
-        "sudo sed -i -E 's#http://[a-z0-9-]+\\.ec2\\.archive\\.ubuntu\\.com/ubuntu#http://archive.ubuntu.com/ubuntu#g' \
-            /etc/apt/sources.list.d/ubuntu.sources /etc/apt/sources.list 2>/dev/null || true" \
-        || falhar "Não foi possível ajustar o mirror do apt em $NODE."
+    # O mirror do apt e escolhido por sondagem, nao fixado: o regional da
+    # AWS as vezes deixa a conexao ESTABELECIDA mas para de enviar dados no
+    # meio do download, pendurando o apt indefinidamente. Fixar um outro
+    # mirror so trocaria um ponto unico de falha por outro, entao testamos
+    # a lista e ficamos com o primeiro que realmente entrega bytes.
+    #
+    # O regional vem primeiro por ser o mais rapido e nao gerar egress
+    # quando esta saudavel; a sondagem baixa um indice de verdade (alguns
+    # MB), porque o defeito e no meio da transferencia -- um HEAD na raiz
+    # passaria mesmo com o mirror quebrado.
+    echo "Escolhendo mirror do apt em $NODE..."
+    ssh "${SSH_OPTS[@]}" -i "$CHAVE" ubuntu@"$NODE" 'bash -s' <<'REMOTO' \
+        || falhar "Nenhum mirror do apt respondeu em $NODE."
+set -u
 
-    # Defesa extra: timeout curto + retries para o apt abortar qualquer
-    # conexao morta e re-tentar, em vez de travar todo o ajustar.sh.
-    printf 'Acquire::http::Timeout "20";\nAcquire::https::Timeout "20";\nAcquire::Retries "3";\n' | \
-        ssh "${SSH_OPTS[@]}" -i "$CHAVE" ubuntu@"$NODE" \
-            "sudo tee /etc/apt/apt.conf.d/99fiap-timeout >/dev/null" \
-        || falhar "Não foi possível configurar timeout do apt em $NODE."
+CODENAME="$(. /etc/os-release && echo "$VERSION_CODENAME")"
+
+MIRRORS="
+http://us-east-1.ec2.archive.ubuntu.com/ubuntu
+http://archive.ubuntu.com/ubuntu
+http://br.archive.ubuntu.com/ubuntu
+"
+
+ESCOLHIDO=""
+
+for M in $MIRRORS; do
+    if timeout 15 curl -sf -o /dev/null "$M/dists/$CODENAME/main/binary-amd64/Packages.gz"; then
+        ESCOLHIDO="$M"
+        echo "   ✅ mirror OK: $M"
+        break
+    fi
+    echo "   ⚠️  mirror sem resposta: $M"
+done
+
+if [ -z "$ESCOLHIDO" ]; then
+    echo "   ❌ nenhum mirror respondeu"
+    exit 1
+fi
+
+# Troca so as URIs de archive (o security.ubuntu.com nao casa com o
+# padrao e fica intacto). O padrao tambem casa br.archive/archive, para
+# que uma reexecucao possa mudar de mirror de novo se preciso.
+sudo sed -i -E "s#http://[^ ]*archive\.ubuntu\.com/ubuntu#$ESCOLHIDO#g" \
+    /etc/apt/sources.list.d/ubuntu.sources /etc/apt/sources.list 2>/dev/null || true
+
+# Defesa extra: se o mirror escolhido travar no meio do caminho depois
+# da sondagem, o apt aborta e re-tenta em vez de pendurar.
+printf 'Acquire::http::Timeout "20";\nAcquire::https::Timeout "20";\nAcquire::Retries "3";\n' \
+    | sudo tee /etc/apt/apt.conf.d/99fiap-timeout >/dev/null
+REMOTO
 
     ssh "${SSH_OPTS[@]}" -i "$CHAVE" ubuntu@"$NODE" \
         "if [ -d '/home/ubuntu/environment/config/.git' ]; then
