@@ -6,6 +6,9 @@ provider "aws" {
 # Descobre a AMI Ubuntu 24.04 mais recente publicada pela Canonical
 # (099720109477 e a conta oficial dela). Serve para o output apontar
 # quando o pin envelheceu: a troca continua deliberada, nao automatica.
+#
+# A explicacao completa de pin fixo vs imagem mais recente, e o ciclo
+# para atualizar, esta no cabecalho da secao de AMI em variable.tf.
 data "aws_ami" "ubuntu_recente" {
   most_recent = true
   owners      = ["099720109477"]
@@ -21,6 +24,9 @@ data "aws_ami" "ubuntu_recente" {
   }
 }
 
+# Quem decide de fato qual imagem sobe. Com a flag em false, que e o
+# padrao, usa o ID fixado em aws_amis; com true, a recem-consultada
+# acima. O data source sozinho nao troca imagem nenhuma.
 locals {
   ami_escolhida = var.usar_ami_mais_recente ? data.aws_ami.ubuntu_recente.id : lookup(var.aws_amis, var.aws_region)
 }

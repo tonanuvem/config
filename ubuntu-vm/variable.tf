@@ -48,9 +48,45 @@ variable "aws_region" {
   default     = "us-east-1"
 }
 
-# Por padrao o lab usa a AMI fixada em aws_amis, para que a imagem nao
-# mude sob os alunos no meio do semestre. Ligue esta flag apenas para
-# validar uma imagem nova antes de promover o pin abaixo.
+# ============================================================
+# AMI: pin fixo vs imagem mais recente
+#
+# Uma AMI tem ID imutavel. A Canonical publica uma AMI NOVA, com ID
+# novo, toda vez que reconstroi a imagem do Ubuntu 24.04 -- mesmo sendo
+# a "mesma" versao. Dai as duas posturas possiveis:
+#
+#   com pin  (o que este lab usa): o ID fica escrito no codigo, em
+#            aws_amis mais abaixo. Todo aluno sobe exatamente a mesma
+#            imagem, hoje e daqui a tres meses. Previsivel, mas
+#            envelhece.
+#
+#   sem pin  (most_recent = true): sempre a mais nova. Fresca, mas a
+#            imagem muda sozinha -- um aluno na terca pode pegar uma
+#            diferente da de quinta, e um build ruim da Canonical
+#            quebraria a turma inteira sem ninguem ter mexido em nada.
+#
+# Para sala de aula o pin e o certo. O risco dele e ninguem perceber que
+# envelheceu, e e por isso que existem as outras duas pecas:
+#
+#   main.tf    data.aws_ami.ubuntu_recente consulta qual e a mais nova
+#              (so consulta, nao troca nada), e locals.ami_escolhida
+#              decide entre ela e o pin conforme a flag abaixo.
+#   output.tf  ami_em_uso, ami_mais_recente_disponivel e ami_status
+#              avisam quando os dois divergiram.
+#
+# Ciclo para atualizar a imagem:
+#
+#   1. rode normal; o output ami_status avisa se o pin ficou para tras
+#   2. export TF_VAR_usar_ami_mais_recente=true && terraform apply
+#      -- testa a imagem nova sem editar arquivo nenhum
+#   3. aprovada, promova o ID em aws_amis e rode
+#      unset TF_VAR_usar_ami_mais_recente
+#
+# A flag e um bool comum do Terraform, entao aceita a forma
+# TF_VAR_<nome> como variavel de ambiente. Sem o unset do passo 3 voce
+# continua flutuando na mais recente, e o pin deixa de valer.
+# ============================================================
+
 variable "usar_ami_mais_recente" {
   type        = bool
   default     = false

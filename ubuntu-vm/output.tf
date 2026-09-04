@@ -21,3 +21,15 @@ output "ami_em_uso" {
 output "ami_mais_recente_disponivel" {
   value = "${data.aws_ami.ubuntu_recente.id} (${data.aws_ami.ubuntu_recente.creation_date})"
 }
+
+# O proprio output ensina o caminho, para nao ser preciso lembrar o nome
+# da variavel nem editar arquivo so para experimentar uma imagem nova.
+# A flag usar_ami_mais_recente e um bool comum do Terraform, entao aceita
+# a forma TF_VAR_<nome> como variavel de ambiente.
+output "ami_status" {
+  value = (
+    local.ami_escolhida == data.aws_ami.ubuntu_recente.id
+    ? "pin em dia com a imagem mais recente da Canonical"
+    : "pin DESATUALIZADO. Para testar a nova sem editar arquivo: export TF_VAR_usar_ami_mais_recente=true && terraform apply | Aprovada, promova o ID em variable.tf e rode: unset TF_VAR_usar_ami_mais_recente"
+  )
+}
