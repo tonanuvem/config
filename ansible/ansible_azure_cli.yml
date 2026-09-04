@@ -15,6 +15,20 @@
         state: present
         update_cache: yes
 
+    # PENDENCIA CONHECIDA: apt_key esta depreciado e o binario apt-key
+    # saiu de circulacao nas releases recentes do Ubuntu. Esta task vai
+    # parar de funcionar quando o apt-key sumir de vez.
+    #
+    # A correcao e o padrao de keyring dedicado, ja aplicado em
+    # ansible_docker.yml e ansible_docker_latest.yml: baixar a chave com
+    # get_url para /etc/apt/keyrings/microsoft.asc e referencia-la com
+    # signed-by=... na linha do apt_repository abaixo.
+    #
+    # Nao foi aplicado aqui de proposito, por ser o caso de menor risco
+    # dos tres: a linha do repositorio ja tem arch, filename explicito e
+    # ansible_distribution_release dinamico, entao so o apt_key esta
+    # datado. Trocar exige testar nos fluxos azure-vm e azure-cluster,
+    # que sao os unicos que chamam este playbook.
     - name: Importar chave GPG da Microsoft
       apt_key:
         url: https://packages.microsoft.com/keys/microsoft.asc
