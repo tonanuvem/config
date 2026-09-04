@@ -146,11 +146,18 @@ for N in $(seq 0 "$WORKER_NODES"); do
          while sudo fuser /var/lib/dpkg/lock-frontend /var/lib/dpkg/lock >/dev/null 2>&1; do sleep 5; done" \
         || falhar "Timeout aguardando o boot de $NODE."
 
-    # O mirror regional us-east-1.ec2.archive.ubuntu.com as vezes deixa a
-    # conexao ESTABELECIDA mas para de enviar dados no meio do download; sem
-    # timeout o apt fica pendurado indefinidamente. Aqui damos timeout curto
-    # + retries para o apt abortar a conexao morta e re-tentar, em vez de
-    # travar todo o ajustar.sh.
+    # O mirror regional *.ec2.archive.ubuntu.com da AWS empaca de forma
+    # consistente: a conexao fica ESTABELECIDA mas para de enviar dados no
+    # meio do download, pendurando o apt. Trocamos para o archive.ubuntu.com
+    # (CDN da Canonical, a mesma do security.ubuntu.com, que responde bem).
+    echo "Ajustando mirror do apt e timeout em $NODE..."
+    ssh "${SSH_OPTS[@]}" -i "$CHAVE" ubuntu@"$NODE" \
+        "sudo sed -i -E 's#http://[a-z0-9-]+\\.ec2\\.archive\\.ubuntu\\.com/ubuntu#http://archive.ubuntu.com/ubuntu#g' \
+            /etc/apt/sources.list.d/ubuntu.sources /etc/apt/sources.list 2>/dev/null || true" \
+        || falhar "Não foi possível ajustar o mirror do apt em $NODE."
+
+    # Defesa extra: timeout curto + retries para o apt abortar qualquer
+    # conexao morta e re-tentar, em vez de travar todo o ajustar.sh.
     printf 'Acquire::http::Timeout "20";\nAcquire::https::Timeout "20";\nAcquire::Retries "3";\n' | \
         ssh "${SSH_OPTS[@]}" -i "$CHAVE" ubuntu@"$NODE" \
             "sudo tee /etc/apt/apt.conf.d/99fiap-timeout >/dev/null" \
