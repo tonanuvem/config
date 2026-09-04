@@ -6,17 +6,25 @@
 
 export ANSIBLE_PYTHON_INTERPRETER=auto_silent
 export ANSIBLE_DEPRECATION_WARNINGS=false
+
+# Some tanto "skipping" (task com when que nao bateu) quanto "ok" (task
+# rodou e nao mudou nada): sobra so "changed", "failed" e o PLAY RECAP
+# de cada playbook, que resume por host sem depender das duas linhas
+# acima. E o log fica curto o bastante para acompanhar aula ao vivo.
 export ANSIBLE_DISPLAY_SKIPPED_HOSTS=false
+export ANSIBLE_DISPLAY_OK_HOSTS=false
 
 # VM de lab e efemera e reaproveita IPs: sem isto o Ansible aborta
 # com "Host key verification failed" por chave antiga no known_hosts.
 export ANSIBLE_HOST_KEY_CHECKING=false
 
-# Tempo por task e total por playbook. Se a colecao ansible.posix nao
-# estiver instalada o Ansible apenas avisa e segue, entao isto e best
-# effort -- a medicao confiavel e a do proprio script, mais abaixo.
-export ANSIBLE_CALLBACKS_ENABLED=ansible.posix.profile_tasks,ansible.posix.timer
-export ANSIBLE_CALLBACK_WHITELIST=ansible.posix.profile_tasks,ansible.posix.timer
+# profile_tasks/timer (tempo por task e por playbook) serviram para
+# dimensionar os tetos de async das tasks de apt por medicao, em vez de
+# palpite -- ja aplicado nos playbooks. Deixados ligados, imprimiam um
+# carimbo de horario antes de CADA task e um ranking no fim de CADA
+# playbook, o que dominava o log. O heartbeat e o resumo de tempos
+# abaixo, que sao nossos, cobrem o que importa no dia a dia; para
+# medir de novo, reativar so os dois exports removidos aqui.
 
 cd ~/environment/config/ubuntu-vm || exit 1
 
