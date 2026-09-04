@@ -161,54 +161,50 @@ for N in $(seq 0 "$WORKER_NODES"); do
         || falhar "Não foi possível preparar o apt (mirror/listas) em $NODE."
 set -u
 
-CODENAME="$(. /etc/os-release && echo "$VERSION_CODENAME")"
-
 MIRRORS="
 http://us-east-1.ec2.archive.ubuntu.com/ubuntu
 http://archive.ubuntu.com/ubuntu
 http://br.archive.ubuntu.com/ubuntu
 "
 
-ESCOLHIDO=""
-
-for M in $MIRRORS; do
-    if timeout 15 curl -sf -o /dev/null "$M/dists/$CODENAME/main/binary-amd64/Packages.gz"; then
-        ESCOLHIDO="$M"
-        echo "   ✅ mirror OK: $M"
-        break
-    fi
-    echo "   ⚠️  mirror sem resposta: $M"
-done
-
-if [ -z "$ESCOLHIDO" ]; then
-    echo "   ❌ nenhum mirror respondeu"
-    exit 1
-fi
-
-# Troca so as URIs de archive (o security.ubuntu.com nao casa com o
-# padrao e fica intacto). O padrao tambem casa br.archive/archive, para
-# que uma reexecucao possa mudar de mirror de novo se preciso.
-sudo sed -i -E "s#http://[^ ]*archive\.ubuntu\.com/ubuntu#$ESCOLHIDO#g" \
-    /etc/apt/sources.list.d/ubuntu.sources /etc/apt/sources.list 2>/dev/null || true
-
-# Defesa extra: se o mirror escolhido travar no meio do caminho depois
-# da sondagem, o apt aborta e re-tenta em vez de pendurar.
+# Acquire::Timeout sozinho nao protege: o mirror defeituoso as vezes
+# manda um byte de vez em quando, o que mantem o socket "vivo" e nunca
+# dispara o timeout do apt. So um limite de parede (timeout -k) corta.
 printf 'Acquire::http::Timeout "20";\nAcquire::https::Timeout "20";\nAcquire::Retries "3";\n' \
     | sudo tee /etc/apt/apt.conf.d/99fiap-timeout >/dev/null
 
-# As listas em cache podem ter vindo, incompletas, do mirror quebrado --
-# e os playbooks usam cache_valid_time, entao NAO refariam o update
-# sozinhos. Sem isto o install falha com "held broken packages",
-# reclamando que pacotes que existem "nao sao instalaveis".
-echo "   Atualizando listas do apt a partir do mirror escolhido..."
-sudo rm -rf /var/lib/apt/lists/*
+# O teste de aceitacao do mirror e o proprio apt-get update, nao uma
+# sondagem por fora: o mirror regional ja passou num curl pequeno e
+# travou no update completo logo em seguida. Se o update nao terminar
+# no prazo, o mirror cai e tentamos o proximo.
+#
+# Limpar /var/lib/apt/lists a cada tentativa importa duas vezes: descarta
+# indices parciais do mirror anterior e, como os playbooks usam
+# cache_valid_time, garante que eles nao reaproveitem um cache furado
+# (o que dava "held broken packages" em pacotes que existem).
+ESCOLHIDO=""
 
-if ! sudo apt-get update -qq; then
-    echo "   ⚠️  apt-get update falhou, tentando novamente..."
-    sudo apt-get update -qq || { echo "   ❌ apt-get update falhou"; exit 1; }
+for M in $MIRRORS; do
+    echo "   Testando mirror: $M"
+
+    sudo sed -i -E "s#http://[^ ]*archive\.ubuntu\.com/ubuntu#$M#g" \
+        /etc/apt/sources.list.d/ubuntu.sources /etc/apt/sources.list 2>/dev/null || true
+
+    sudo rm -rf /var/lib/apt/lists/*
+
+    if sudo timeout -k 10 120 apt-get update -qq; then
+        ESCOLHIDO="$M"
+        echo "   ✅ mirror OK (apt-get update concluido): $M"
+        break
+    fi
+
+    echo "   ⚠️  mirror travou ou falhou no update: $M"
+done
+
+if [ -z "$ESCOLHIDO" ]; then
+    echo "   ❌ nenhum mirror concluiu o apt-get update"
+    exit 1
 fi
-
-echo "   ✅ listas do apt atualizadas"
 REMOTO
 
     ssh "${SSH_OPTS[@]}" -i "$CHAVE" ubuntu@"$NODE" \
