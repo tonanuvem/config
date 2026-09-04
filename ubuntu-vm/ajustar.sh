@@ -146,30 +146,49 @@ for N in $(seq 0 "$WORKER_NODES"); do
          while sudo fuser /var/lib/dpkg/lock-frontend /var/lib/dpkg/lock >/dev/null 2>&1; do sleep 5; done" \
         || falhar "Timeout aguardando o boot de $NODE."
 
-    # O mirror do apt e escolhido por sondagem, nao fixado: o regional da
-    # AWS as vezes deixa a conexao ESTABELECIDA mas para de enviar dados no
-    # meio do download, pendurando o apt indefinidamente. Fixar um outro
-    # mirror so trocaria um ponto unico de falha por outro, entao testamos
-    # a lista e ficamos com o primeiro que realmente entrega bytes.
-    #
-    # O regional vem primeiro por ser o mais rapido e nao gerar egress
-    # quando esta saudavel; a sondagem baixa um indice de verdade (alguns
-    # MB), porque o defeito e no meio da transferencia -- um HEAD na raiz
-    # passaria mesmo com o mirror quebrado.
+    # O mirror do apt e escolhido testando cada candidato, nao fixado:
+    # fixar um so trocaria um ponto unico de falha por outro. O teste de
+    # aceitacao e o proprio apt-get update sob limite de parede, porque
+    # sondar por fora nao reproduz o defeito -- o mirror regional chegou
+    # a passar num curl pequeno e travar no update completo em seguida.
     echo "Escolhendo mirror do apt em $NODE..."
     ssh "${SSH_OPTS[@]}" -i "$CHAVE" ubuntu@"$NODE" 'bash -s' <<'REMOTO' \
         || falhar "Não foi possível preparar o apt (mirror/listas) em $NODE."
 set -u
 
+# Um Ctrl+C no CloudShell mata o Ansible, mas nao o apt-get que ficou
+# rodando no no. Esse zumbi nao segura o lock do dpkg (entao passa pela
+# espera acima), mas briga com o rm das listas mais abaixo. Limpamos
+# restos antes de comecar.
+#
+# -x casa o nome exato do processo. Com -f o padrao casaria a linha de
+# comando deste proprio script -- que roda como bash -c com o texto
+# inteiro -- e o script se mataria.
+sudo pkill -9 -x apt-get 2>/dev/null || true
+sudo pkill -9 -x http 2>/dev/null || true
+sudo pkill -9 -x store 2>/dev/null || true
+sudo pkill -9 -x gpgv 2>/dev/null || true
+sleep 1
+
+# Ordem definida por observacao, nao por teoria: o us-east-1.ec2 travou
+# o apt-get update de forma reproduzivel a partir desta VPC (Ign: nos
+# indices e stall ate o limite de parede), enquanto o archive.ubuntu.com
+# baixou 15 MB em 0,35s. O regional seria o mais rapido e sem egress
+# quando saudavel, entao fica como ultimo recurso em vez de sair da
+# lista -- mas nao vale gastar 2 min de cada execucao tentando ele
+# primeiro.
 MIRRORS="
-http://us-east-1.ec2.archive.ubuntu.com/ubuntu
 http://archive.ubuntu.com/ubuntu
 http://br.archive.ubuntu.com/ubuntu
+http://us-east-1.ec2.archive.ubuntu.com/ubuntu
 "
 
-# Acquire::Timeout sozinho nao protege: o mirror defeituoso as vezes
-# manda um byte de vez em quando, o que mantem o socket "vivo" e nunca
-# dispara o timeout do apt. So um limite de parede (timeout -k) corta.
+# Acquire::Timeout sozinho nao protege. Observado no no travado: o
+# metodo http ficava em CLOSE-WAIT (servidor fechou, apt nunca
+# percebeu) com a transferencia parada de vez -- o du de
+# /var/lib/apt/lists/partial nao mexia um byte em 53s. Nesse estado o
+# apt nao esta esperando um read que expira, entao o timeout dele nunca
+# dispara; so um limite de parede (timeout -k) corta.
 printf 'Acquire::http::Timeout "20";\nAcquire::https::Timeout "20";\nAcquire::Retries "3";\n' \
     | sudo tee /etc/apt/apt.conf.d/99fiap-timeout >/dev/null
 
