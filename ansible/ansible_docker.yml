@@ -61,6 +61,7 @@
             force_apt_get: true
           register: apt_action
           retries: 100
+          delay: 10
           until: apt_action is success or ('Failed to lock apt for exclusive operation' not in apt_action.msg and '/var/lib/dpkg/lock' not in apt_action.msg)
           when: ansible_os_family == "Debian"
 

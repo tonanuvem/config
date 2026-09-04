@@ -23,7 +23,24 @@
           args:
             executable: /bin/bash
             
-        - name: Instalar containerD 
+        # No Ubuntu o containerd nao vem embutido no docker (diferente do
+        # Amazon Linux, onde o pacote docker ja traz o containerd). Sem
+        # instalar aqui, a task seguinte quebra com "containerd: command
+        # not found" caso o playbook de docker nao tenha instalado o
+        # containerd.io. Garantimos o pacote antes de configura-lo.
+        - name: Garantir containerd instalado (ubuntu)
+          become: yes
+          apt:
+            name: containerd.io
+            state: present
+            update_cache: true
+          register: apt_action
+          retries: 100
+          delay: 10
+          until: apt_action is success or ('Failed to lock apt for exclusive operation' not in apt_action.msg and '/var/lib/dpkg/lock' not in apt_action.msg)
+          when: ansible_os_family == "Debian"
+
+        - name: Instalar containerD
         # https://kubernetes.io/docs/setup/production-environment/container-runtimes/#containerd
           shell: |
             ## Install and configure prerequisites:

@@ -134,6 +134,18 @@ for N in $(seq 0 "$WORKER_NODES"); do
         "mkdir -p /home/ubuntu/environment /home/ubuntu/.aws" \
         || falhar "Não foi possível conectar em $NODE."
 
+    # VM efemera recem-criada: nos primeiros minutos de boot o cloud-init,
+    # o apt-daily e o unattended-upgrades seguram o lock do apt/dpkg. Sem
+    # esperar, o primeiro "apt install" dos playbooks (utils, docker) fica
+    # travado repetindo em silencio. Aqui bloqueamos ate o boot concluir e
+    # o lock ser liberado -- e o que o ambiente do Cloud9 nao precisa por
+    # ja estar ligado ha tempo.
+    echo "Aguardando cloud-init/unattended-upgrades liberar o apt em $NODE..."
+    ssh "${SSH_OPTS[@]}" -i "$CHAVE" ubuntu@"$NODE" \
+        "cloud-init status --wait >/dev/null 2>&1 || true; \
+         while sudo fuser /var/lib/dpkg/lock-frontend /var/lib/dpkg/lock >/dev/null 2>&1; do sleep 5; done" \
+        || falhar "Timeout aguardando o boot de $NODE."
+
     ssh "${SSH_OPTS[@]}" -i "$CHAVE" ubuntu@"$NODE" \
         "if [ -d '/home/ubuntu/environment/config/.git' ]; then
             cd /home/ubuntu/environment/config && git pull --ff-only;
