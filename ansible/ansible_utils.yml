@@ -78,13 +78,12 @@
       cache_valid_time: 3600
       force_apt_get: true
     register: apt_action
-    # Teto de tempo por tentativa. O retries/until so ajuda quando o apt
-    # FALHA; se ele PENDURA (mirror que para de enviar dados no meio do
-    # download) nada aqui dispara. 1800s e folgado de proposito: um
-    # install pesado (openjdk+maven, dpkg desempacotando 80+ pacotes)
-    # leva minutos de forma legitima, entao isto so corta travamento real.
-    async: 1800
-    poll: 10
+    # Teto dimensionado por medicao, nao por palpite: a maior task de apt
+    # observada levou 42,7s, entao 300s da ~7x de folga para dia de mirror
+    # ruim ou release com mais pacotes, e ainda corta travamento cedo.
+    # O valor anterior, 1800s, era 42x o observado.
+    async: 300
+    poll: 5
     # retries: 100 era heranca de quando a task nao tinha teto. Com o
     # async acima, cada tentativa ja e limitada, e 100 delas multiplicariam
     # o pior caso por 100 sem ganho nenhum.

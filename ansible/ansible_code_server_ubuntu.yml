@@ -12,6 +12,10 @@
 
   tasks:
     - name: Instalar dependências
+      # Mesmo teto das demais tasks de apt: estas tinham ficado de fora, e
+      # um apt pendurado aqui travaria a etapa do mesmo jeito.
+      async: 300
+      poll: 5
       apt:
         name: [curl, wget, gnupg, software-properties-common]
         update_cache: yes
@@ -22,6 +26,10 @@
         dest: /tmp/code-server.deb
 
     - name: Instalar Code Server
+      # Mesmo teto das demais tasks de apt: estas tinham ficado de fora, e
+      # um apt pendurado aqui travaria a etapa do mesmo jeito.
+      async: 300
+      poll: 5
       apt:
         deb: /tmp/code-server.deb
 

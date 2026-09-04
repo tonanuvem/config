@@ -36,6 +36,10 @@
           when: (ansible_os_family == "RedHat") and (ansible_distribution_version == "2023")
 
         - name: Instalar o Java via apt (ubuntu)
+          # Mesmo teto das demais tasks de apt: estas tinham ficado de fora, e
+          # um apt pendurado aqui travaria a etapa do mesmo jeito.
+          async: 300
+          poll: 5
           become: yes
           apt:
             name:
