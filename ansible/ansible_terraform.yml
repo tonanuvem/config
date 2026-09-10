@@ -48,7 +48,7 @@
 
     - name: Baixar Terraform
       get_url:
-        url: "https://releases.hashicorp.com/terraform/1.12.2/terraform_1.12.2_linux_{{ terraform_arch }}.zip"
+        url: "https://releases.hashicorp.com/terraform/1.16.0/terraform_1.16.0_linux_{{ terraform_arch }}.zip"
         dest: /tmp/terraform_linux_{{ terraform_arch }}.zip
         mode: '0644'
       when: terraform_check.rc != 0
