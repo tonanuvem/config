@@ -85,7 +85,10 @@
       when: terraform_check.rc != 0
 
     - name: Verificar instalação do Terraform
-      command: terraform version
+      command:
+        argv:
+          - /usr/local/bin/terraform
+          - version
       register: terraform_version
       changed_when: false
 
