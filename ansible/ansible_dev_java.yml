@@ -2,71 +2,143 @@
 # https://docs.ansible.com/ansible/2.9/modules/modules_by_category.html
 # https://docs.ansible.com/ansible/latest/user_guide/playbooks_conditionals.html#playbooks-conditionals
 # https://docs.ansible.com/ansible/latest/user_guide/playbooks_loops.html#playbooks-loops
-  - name: Instalação das ferramentas DEV
-    hosts: all
-    tasks:
-        - name: Instalar Java 11 no Amazon Linux 2
-          become: yes
-          shell: |
-            sudo amazon-linux-extras install java-openjdk11 -y
-            wget https://downloads.apache.org/maven/maven-3/3.9.8/binaries/apache-maven-3.9.8-bin.tar.gz
-            sudo tar xf apache-maven-*.tar.gz -C /opt
-            rm -f apache-maven-*.tar.gz
-            sudo ln -s /opt/apache-maven-3.9.8 /opt/maven
-            sudo cat >> /etc/environment <<EOL
-            export JAVA_HOME=/usr/lib/jvm/jre-11-openjdk
-            export M2_HOME=/opt/maven
-            export MAVEN_HOME=/opt/maven
-            export SONAR_SCANNER_OPTS="-Xmx512m"
-            EOL
-            echo 'export PATH=/opt/maven/bin:${PATH}' | sudo tee -a /etc/profile
-          args:
-            executable: /bin/bash
-          when: (ansible_os_family == "RedHat") and (ansible_distribution_version == "2")
 
-        - name: Instalação das ferramentas DEV Java 22 no Amazon Linux 2023
-          become: yes
-          ansible.builtin.package:
-            name:
-              - java-22-amazon-corretto-devel
-              - maven
-            state: present
-            disable_gpg_check: yes
-            lock_timeout: 180
-          when: (ansible_os_family == "RedHat") and (ansible_distribution_version == "2023")
+- name: Instalação das ferramentas DEV
+  hosts: all
 
-        - name: Instalar o Java via apt (ubuntu)
-          become: yes
-          apt:
-            name:
-              - openjdk-21-jdk
-              - maven
-              - maven-repo-helper
-            state: present
-            update_cache: true
-            cache_valid_time: 3600
-            force_apt_get: true
-          register: apt_action
-          retries: 100
-          until: apt_action is success or ('Failed to lock apt for exclusive operation' not in apt_action.msg and '/var/lib/dpkg/lock' not in apt_action.msg)
-          when: ansible_os_family == "Debian"
+  tasks:
 
-        - name: Adicionar variáveis de ambiente do JAVA no Ubuntu
-          become: yes
-          blockinfile:
-            path: /etc/environment
-            block: |
-              JAVA_HOME=/usr/lib/jvm/java-22-openjdk-amd64
-              M2_HOME=/opt/maven
-              MAVEN_HOME=/opt/maven
-          when: ansible_os_family == "Debian"
-          
-        - name: Verificar Java e Maven
-          shell: |
-            java --version
-            mvn --version
-          args:
-            executable: /bin/bash
-          register: log
+    # ============================================================
+    # Amazon Linux 2
+    # ============================================================
+
+    - name: Instalar Java 11 e Maven no Amazon Linux 2
+      become: true
+      shell: |
+        amazon-linux-extras install java-openjdk11 -y
+
+        wget -q https://downloads.apache.org/maven/maven-3/3.9.8/binaries/apache-maven-3.9.8-bin.tar.gz
+
+        tar xf apache-maven-3.9.8-bin.tar.gz -C /opt
+
+        rm -f apache-maven-3.9.8-bin.tar.gz
+
+        ln -sfn /opt/apache-maven-3.9.8 /opt/maven
+
+        cat > /etc/profile.d/java-maven.sh <<'EOF'
+        export JAVA_HOME=/usr/lib/jvm/jre-11-openjdk
+        export M2_HOME=/opt/maven
+        export MAVEN_HOME=/opt/maven
+        export PATH=/opt/maven/bin:$PATH
+        export SONAR_SCANNER_OPTS="-Xmx512m"
+        EOF
+      args:
+        executable: /bin/bash
+      when:
+        - ansible_os_family == "RedHat"
+        - ansible_distribution_major_version == "2"
+
+
+    # ============================================================
+    # Amazon Linux 2023
+    # ============================================================
+
+    - name: Instalar Java 22 e Maven no Amazon Linux 2023
+      become: true
+      ansible.builtin.package:
+        name:
+          - java-22-amazon-corretto-devel
+          - maven
+        state: present
+        disable_gpg_check: true
+        lock_timeout: 180
+      when:
+        - ansible_os_family == "RedHat"
+        - ansible_distribution_major_version == "2023"
+
+
+    # ============================================================
+    # Ubuntu / Debian
+    # ============================================================
+
+    - name: Instalar Java 21 e Maven no Ubuntu
+      become: true
+      apt:
+        name:
+          - openjdk-21-jdk
+          - maven
+          - maven-repo-helper
+        state: present
+        update_cache: true
+        cache_valid_time: 3600
+        force_apt_get: true
+      register: apt_action
+      retries: 100
+      until: apt_action is success or (
+        'Failed to lock apt for exclusive operation' not in apt_action.msg
+        and '/var/lib/dpkg/lock' not in apt_action.msg
+      )
+      when: ansible_os_family == "Debian"
+
+
+    - name: Detectar JAVA_HOME no Ubuntu
+      become: true
+      shell: |
+        dirname "$(dirname "$(readlink -f "$(which java)")")"
+      args:
+        executable: /bin/bash
+      register: java_home
+      changed_when: false
+      when: ansible_os_family == "Debian"
+
+
+    - name: Configurar variáveis de ambiente Java e Maven no Ubuntu
+      become: true
+      blockinfile:
+        path: /etc/environment
+        marker: "# {mark} ANSIBLE JAVA/MAVEN"
+        block: |
+          JAVA_HOME={{ java_home.stdout }}
+          M2_HOME=/opt/maven
+          MAVEN_HOME=/opt/maven
+      when: ansible_os_family == "Debian"
+
+
+    - name: Configurar perfil Java e Maven no Ubuntu
+      become: true
+      copy:
+        dest: /etc/profile.d/java-maven.sh
+        mode: "0644"
+        content: |
+          export JAVA_HOME={{ java_home.stdout }}
+          export M2_HOME=/opt/maven
+          export MAVEN_HOME=/opt/maven
+          export PATH=/opt/maven/bin:$PATH
+      when: ansible_os_family == "Debian"
+
+
+    # ============================================================
+    # Verificação
+    # ============================================================
+
+    - name: Verificar Java e Maven
+      shell: |
+        echo "JAVA_HOME=$JAVA_HOME"
+        echo ""
+        java --version
+        echo ""
+        mvn --version
+      args:
+        executable: /bin/bash
+      environment:
+        JAVA_HOME: "{{ java_home.stdout | default('') }}"
+        M2_HOME: /opt/maven
+        MAVEN_HOME: /opt/maven
+        PATH: "/opt/maven/bin:{{ ansible_env.PATH }}"
+      register: java_maven_log
+      changed_when: false
+
+    - name: Mostrar Java e Maven
+      debug:
+        msg: "{{ java_maven_log.stdout }}"
         
-        - debug: msg="{{ log.stdout }}"
