@@ -158,7 +158,7 @@ echo ""
     -u ubuntu \
     --key-file ~/environment/labsuser.pem
 
-"$ANSIBLE_PLAYBOOK" ~/environment/config/ansible/terraform.yml \
+"$ANSIBLE_PLAYBOOK" ~/environment/config/ansible/ansible_terraform.yml \
     --inventory inv.hosts \
     -u ubuntu \
     --key-file ~/environment/labsuser.pem
