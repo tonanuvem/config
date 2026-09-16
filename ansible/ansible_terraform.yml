@@ -135,9 +135,9 @@
     - name: Verificar versão do Ansible
       command:
         cmd: /opt/ansible_venv/bin/ansible --version
-      register: ansible_version
+      register: ansible_version_result
       changed_when: false
 
     - name: Mostrar versão do Ansible
       debug:
-        msg: "{{ ansible_version.stdout }}"
+        msg: "{{ ansible_version_result.stdout }}"
