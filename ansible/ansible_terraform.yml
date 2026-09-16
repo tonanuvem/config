@@ -1,5 +1,5 @@
 ---
-- name: Instalar Terraform CLI
+- name: Instalar Terraform CLI e tambem Ansible CLI
   hosts: all
   become: true
   tasks:
@@ -95,3 +95,49 @@
     - name: Mostrar versão instalada do Terraform
       debug:
         msg: "Terraform instalado com sucesso: {{ terraform_version.stdout }}"
+
+    # ============================================================
+    # Instalar Ansible em ambiente virtual
+    # ============================================================
+
+    - name: Verificar se o Ansible já está instalado
+      stat:
+        path: /opt/ansible_venv/bin/ansible
+      register: ansible_installed
+
+    - name: Instalar dependências do Ansible
+      apt:
+        name:
+          - python3
+          - python3-pip
+          - python3-venv
+        state: present
+        update_cache: true
+      when:
+        - not ansible_installed.stat.exists
+        - ansible_os_family == "Debian"
+
+    - name: Criar ambiente virtual do Ansible
+      command:
+        cmd: python3 -m venv /opt/ansible_venv
+      when: not ansible_installed.stat.exists
+
+    - name: Atualizar pip do ambiente virtual
+      command:
+        cmd: /opt/ansible_venv/bin/pip install --upgrade pip
+      when: not ansible_installed.stat.exists
+
+    - name: Instalar Ansible
+      command:
+        cmd: /opt/ansible_venv/bin/pip install --no-cache-dir ansible
+      when: not ansible_installed.stat.exists
+
+    - name: Verificar versão do Ansible
+      command:
+        cmd: /opt/ansible_venv/bin/ansible --version
+      register: ansible_version
+      changed_when: false
+
+    - name: Mostrar versão do Ansible
+      debug:
+        msg: "{{ ansible_version.stdout }}"
