@@ -1,5 +1,5 @@
 ---
-- name: Instalar Terraform CLI e tambem Ansible CLI
+- name: Instalar Terraform CLI e tambem Ansible CLI + AWS CLI
   hosts: all
   become: true
   tasks:
@@ -141,3 +141,78 @@
     - name: Mostrar versão do Ansible
       debug:
         msg: "{{ ansible_version_result.stdout }}"
+
+    # ============================================================
+    # Instalar AWS CLI v2
+    # ============================================================
+
+    - name: Verificar se a AWS CLI já está instalada
+      command:
+        cmd: aws --version
+      register: awscli_check
+      changed_when: false
+      failed_when: false
+
+    - name: Detectar arquitetura para AWS CLI
+      set_fact:
+        awscli_arch: >-
+          {{
+            'x86_64'
+            if ansible_architecture == 'x86_64'
+            else 'aarch64'
+            if ansible_architecture in ['aarch64', 'arm64']
+            else ''
+          }}
+      when: awscli_check.rc != 0
+
+    - name: Validar arquitetura suportada
+      fail:
+        msg: "Arquitetura não suportada para instalação da AWS CLI: {{ ansible_architecture }}"
+      when:
+        - awscli_check.rc != 0
+        - awscli_arch == ''
+
+    - name: Baixar AWS CLI v2
+      get_url:
+        url: "https://awscli.amazonaws.com/awscli-exe-linux-{{ awscli_arch }}.zip"
+        dest: "/tmp/awscliv2.zip"
+        mode: "0644"
+      when: awscli_check.rc != 0
+
+    - name: Criar diretório temporário da AWS CLI
+      file:
+        path: /tmp/aws
+        state: directory
+        mode: "0755"
+      when: awscli_check.rc != 0
+
+    - name: Extrair AWS CLI
+      unarchive:
+        src: /tmp/awscliv2.zip
+        dest: /tmp
+        remote_src: true
+      when: awscli_check.rc != 0
+
+    - name: Instalar AWS CLI v2
+      command:
+        cmd: /tmp/aws/install --bin-dir /usr/local/bin --install-dir /usr/local/aws-cli
+      when: awscli_check.rc != 0
+
+    - name: Limpar arquivos temporários da AWS CLI
+      file:
+        path: "{{ item }}"
+        state: absent
+      loop:
+        - /tmp/awscliv2.zip
+        - /tmp/aws
+      when: awscli_check.rc != 0
+
+    - name: Verificar instalação da AWS CLI
+      command:
+        cmd: /usr/local/bin/aws --version
+      register: awscli_version_result
+      changed_when: false
+
+    - name: Mostrar versão da AWS CLI
+      debug:
+        msg: "{{ awscli_version_result.stdout }}"
