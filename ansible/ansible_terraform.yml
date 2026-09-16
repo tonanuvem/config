@@ -132,6 +132,22 @@
         cmd: /opt/ansible_venv/bin/pip install --no-cache-dir ansible
       when: not ansible_installed.stat.exists
 
+    - name: Configurar Ansible no PATH global
+      become: true
+      copy:
+        dest: /etc/profile.d/ansible.sh
+        mode: "0644"
+        content: |
+          export ANSIBLE_VENV=/opt/ansible_venv
+          export PATH=$ANSIBLE_VENV/bin:$PATH
+
+    - name: Adicionar Ansible ao PATH do sistema
+      become: true
+      lineinfile:
+        path: /etc/environment
+        regexp: '^PATH='
+        line: 'PATH="/opt/ansible_venv/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"'
+
     - name: Verificar versão do Ansible
       command:
         cmd: /opt/ansible_venv/bin/ansible --version
