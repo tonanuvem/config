@@ -10,6 +10,11 @@
     code_server_password: "fiap"  # Altere conforme necessário
     workspace_dir: "/home/ubuntu"
 
+  # Reiniciar o code-server SO quando a configuracao muda (via notify).
+  # Antes, a ultima tarefa usava state=restarted e derrubava o servico
+  # a cada execucao -- desconectando quem estava trabalhando no editor
+  # ("Cannot reconnect. Please reload the window.") sempre que o setup
+  # (criar/ajustar/init) era reexecutado.
   tasks:
     - name: Instalar dependências
       apt:
@@ -44,6 +49,7 @@
         owner: "{{ code_server_user }}"
         group: "{{ code_server_user }}"
         mode: 0600
+      notify: Reiniciar code-server
 
     - name: Criar diretório para (settings.json)
       file:
@@ -52,7 +58,7 @@
         owner: "{{ code_server_user }}"
         group: "{{ code_server_user }}"
         mode: 0755
-        
+
     - name: Criar configurações globais (settings.json)
       copy:
         dest: "/home/{{ code_server_user }}/.local/share/code-server/User/settings.json"
@@ -77,7 +83,7 @@
         owner: ubuntu
         group: ubuntu
         mode: '0755'
-    
+
     - name: Criar tasks.json para abrir terminal automaticamente
       copy:
         dest: "/home/ubuntu/.vscode/tasks.json"
@@ -113,16 +119,30 @@
           [Service]
           ExecStart=
           ExecStart=/usr/bin/code-server {{ workspace_dir }} --host 0.0.0.0 --port {{ code_server_port }} --auth password --user-data-dir /home/{{ code_server_user }}/.local/share/code-server --extensions-dir /home/{{ code_server_user }}/.vscode
+          Restart=always
+          RestartSec=2
         owner: root
         group: root
         mode: 0644
+      notify:
+        - Recarregar systemd
+        - Reiniciar code-server
 
-    - name: Recarregar systemd
-      command: systemctl daemon-reexec
-
-    - name: Ativar e iniciar o Code Server
+    - name: Ativar e garantir o Code Server em execução
       systemd:
-        name: code-server@{{ code_server_user }}
+        name: "code-server@{{ code_server_user }}"
         enabled: yes
-        state: restarted
+        state: started
+        daemon_reload: yes
 
+  handlers:
+    # Ordem de definicao = ordem de execucao: recarrega as units antes
+    # de reiniciar, para o novo override.conf valer.
+    - name: Recarregar systemd
+      systemd:
+        daemon_reload: yes
+
+    - name: Reiniciar code-server
+      systemd:
+        name: "code-server@{{ code_server_user }}"
+        state: restarted
