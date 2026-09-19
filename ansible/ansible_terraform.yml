@@ -4,10 +4,12 @@
   become: true
   tasks:
     - name: Verificar se o Terraform já está instalado
-      command: terraform version
+      # "command -v" retorna rc 0/1 normalmente; evita o erro barulhento
+      # "executable not found" (com ignore_errors) quando o binario falta.
+      ansible.builtin.shell: command -v terraform
       register: terraform_check
-      ignore_errors: yes
       changed_when: false
+      failed_when: false
 
     - name: Mostrar versão atual do Terraform (se existir)
       debug:
