@@ -59,6 +59,11 @@
 
     - name: Instalar Java 21 e Maven no Ubuntu
       become: true
+      # Teto de tempo por tentativa. Sem isto, um apt-get pendurado (mirror
+      # que para de enviar dados no meio do download) trava a etapa
+      # inteira em vez de falhar e deixar o retries/until abaixo agir.
+      async: 300
+      poll: 5
       apt:
         name:
           - openjdk-21-jdk
