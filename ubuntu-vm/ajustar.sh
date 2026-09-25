@@ -61,7 +61,10 @@ echo '[nodes]' > inv.hosts
 
 for N in $(seq 0 "$WORKER_NODES"); do
     NODE="${IPS[$N]}"
-    echo "fiaplab-$N ansible_ssh_host=$NODE" >> inv.hosts
+    # Nome 1-based para casar com o Name tag da AWS (fiaplab-1, fiaplab-2,
+    # de count.index+1). O ansible_hostname.yml usa este inventory_hostname,
+    # entao o hostname da VM fica igual ao numero do tag.
+    echo "fiaplab-$((N + 1)) ansible_ssh_host=$NODE" >> inv.hosts
 done
 
 echo "Inventário:"
