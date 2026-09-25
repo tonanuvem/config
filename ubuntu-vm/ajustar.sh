@@ -61,10 +61,23 @@ echo '[nodes]' > inv.hosts
 
 for N in $(seq 0 "$WORKER_NODES"); do
     NODE="${IPS[$N]}"
-    # Nome 1-based para casar com o Name tag da AWS (fiaplab-1, fiaplab-2,
-    # de count.index+1). O ansible_hostname.yml usa este inventory_hostname,
-    # entao o hostname da VM fica igual ao numero do tag.
-    echo "fiaplab-$((N + 1)) ansible_ssh_host=$NODE" >> inv.hosts
+
+    # Hostname = Name tag COMPLETO da AWS (o nome que aparece na tela,
+    # ex.: fiaplab-1-<sufixo>). O ansible_hostname.yml aplica este
+    # inventory_hostname como hostname, entao a VM fica com o nome
+    # identico ao do tag. Consulta pelo IP publico.
+    NAME=$(aws ec2 describe-instances \
+        --filters "Name=ip-address,Values=$NODE" \
+                  "Name=instance-state-name,Values=running" \
+        --query 'Reservations[].Instances[].[Tags[?Key==`Name`]|[0].Value]' \
+        --output text 2>/dev/null | head -1)
+
+    # Fallback 1-based se a consulta nao retornar.
+    if [ -z "$NAME" ] || [ "$NAME" = "None" ]; then
+        NAME="fiaplab-$((N + 1))"
+    fi
+
+    echo "$NAME ansible_ssh_host=$NODE" >> inv.hosts
 done
 
 echo "Inventário:"
