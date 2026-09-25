@@ -2,6 +2,13 @@
 - name: Instalação das ferramentas DEV
   hosts: all
 
+  vars:
+    # Linha 3.9 (o Quarkus aceita [3.9.0,)). Nao o Maven 4: mudou a
+    # compatibilidade de plugins e nao ha ganho para o lab. Para atualizar,
+    # troque aqui; as versoes publicadas estao em
+    # https://archive.apache.org/dist/maven/maven-3/
+    maven_version: "3.9.16"
+
   tasks:
 
     # ============================================================
@@ -57,17 +64,20 @@
     # Ubuntu / Debian
     # ============================================================
 
-    - name: Instalar Java 21 e Maven no Ubuntu
+    - name: Instalar Java 21 no Ubuntu
       become: true
       # Teto de tempo por tentativa. Sem isto, um apt-get pendurado (mirror
       # que para de enviar dados no meio do download) trava a etapa
       # inteira em vez de falhar e deixar o retries/until abaixo agir.
       async: 300
       poll: 5
+      # O maven sai do apt: o Ubuntu 24.04 empacota o 3.8.7, e o Quarkus
+      # 3.x exige Maven >= 3.9.0 ("Detected Maven Version (3.8.7) is not
+      # supported"). Ele e instalado da Apache logo abaixo, em /opt/maven
+      # -- o caminho que o M2_HOME e o PATH deste playbook ja apontavam.
       apt:
         name:
           - openjdk-21-jdk
-          - maven
           - maven-repo-helper
         state: present
         update_cache: true
@@ -76,6 +86,53 @@
       register: apt_action
       retries: 3
       until: apt_action is success
+      when: ansible_os_family == "Debian"
+
+
+    # archive.apache.org e permanente; o downloads.apache.org so guarda a
+    # versao mais recente e apaga as antigas (o 3.9.8 do task do Amazon
+    # Linux 2 ja da 404 la). O checksum vem publicado ao lado do tar.gz.
+    - name: Baixar Maven {{ maven_version }} da Apache no Ubuntu
+      become: true
+      get_url:
+        url: "https://archive.apache.org/dist/maven/maven-3/{{ maven_version }}/binaries/apache-maven-{{ maven_version }}-bin.tar.gz"
+        dest: "/tmp/apache-maven-{{ maven_version }}-bin.tar.gz"
+        checksum: "sha512:https://archive.apache.org/dist/maven/maven-3/{{ maven_version }}/binaries/apache-maven-{{ maven_version }}-bin.tar.gz.sha512"
+        mode: "0644"
+      when: ansible_os_family == "Debian"
+
+
+    - name: Extrair Maven em /opt no Ubuntu
+      become: true
+      unarchive:
+        src: "/tmp/apache-maven-{{ maven_version }}-bin.tar.gz"
+        dest: /opt
+        remote_src: true
+        creates: "/opt/apache-maven-{{ maven_version }}/bin/mvn"
+      when: ansible_os_family == "Debian"
+
+
+    - name: Apontar /opt/maven para o Maven {{ maven_version }} no Ubuntu
+      become: true
+      file:
+        src: "/opt/apache-maven-{{ maven_version }}"
+        dest: /opt/maven
+        state: link
+        force: true
+      when: ansible_os_family == "Debian"
+
+
+    # O /etc/profile.d so vale em shell de login. O link em /usr/local/bin,
+    # que vem antes de /usr/bin no PATH padrao, garante o mesmo mvn em
+    # qualquer contexto -- terminal do code-server, tasks do Ansible, e
+    # VMs antigas onde o mvn 3.8.7 do apt ainda esteja instalado.
+    - name: Expor mvn em /usr/local/bin no Ubuntu
+      become: true
+      file:
+        src: /opt/maven/bin/mvn
+        dest: /usr/local/bin/mvn
+        state: link
+        force: true
       when: ansible_os_family == "Debian"
 
 
