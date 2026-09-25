@@ -413,6 +413,7 @@ PLAYBOOKS=(
     docker
     k8s
     dev_java
+    dev_node
     code_server_ubuntu
 )
 
