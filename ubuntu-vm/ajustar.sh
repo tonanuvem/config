@@ -98,7 +98,10 @@ echo '[nodes]' > "$INV"
 
 for N in $(seq 0 "$WORKER_NODES"); do
     NODE="${IPS[$N]}"
-    echo "fiaplab-$N ansible_ssh_host=$NODE" >> "$INV"
+    # N comeca em 0 porque indexa IPS; o nome comeca em 1 para bater com
+    # o CloudShell e com a tag Name do main.tf (count.index + 1), assim
+    # o hostname fiaplab-1 corresponde a instancia fiaplab-1-aluno.
+    echo "fiaplab-$((N + 1)) ansible_ssh_host=$NODE" >> "$INV"
 done
 
 echo "Inventário:"
