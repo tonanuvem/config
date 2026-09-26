@@ -98,10 +98,24 @@ echo '[nodes]' > "$INV"
 
 for N in $(seq 0 "$WORKER_NODES"); do
     NODE="${IPS[$N]}"
-    # N comeca em 0 porque indexa IPS; o nome comeca em 1 para bater com
-    # o CloudShell e com a tag Name do main.tf (count.index + 1), assim
-    # o hostname fiaplab-1 corresponde a instancia fiaplab-1-aluno.
-    echo "fiaplab-$((N + 1)) ansible_ssh_host=$NODE" >> "$INV"
+    # Hostname = Name tag COMPLETO da AWS (o nome que aparece na tela,
+    # ex.: fiaplab-1-<sufixo>). O ansible_hostname.yml aplica este
+    # inventory_hostname como hostname, entao a VM fica com o nome
+    # identico ao do tag. Consulta pelo IP publico.
+    NAME=$(aws ec2 describe-instances \
+        --filters "Name=ip-address,Values=$NODE" \
+                  "Name=instance-state-name,Values=running" \
+        --query 'Reservations[].Instances[].[Tags[?Key==`Name`]|[0].Value]' \
+        --output text 2>/dev/null | head -1)
+
+    # Fallback 1-based se a consulta nao retornar. N comeca em 0 porque
+    # indexa IPS; o nome comeca em 1 para casar com a tag Name do main.tf
+    # (count.index + 1) e com o que o CloudShell exibe.
+    if [ -z "$NAME" ] || [ "$NAME" = "None" ]; then
+        NAME="fiaplab-$((N + 1))"
+    fi
+
+    echo "$NAME ansible_ssh_host=$NODE" >> "$INV"
 done
 
 echo "Inventário:"
