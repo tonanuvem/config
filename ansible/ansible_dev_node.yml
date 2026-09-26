@@ -1,0 +1,129 @@
+---
+# Node.js + Yarn para o fluxo do ubuntu-vm.
+#
+# O Cloud9 ja trazia o Node na propria imagem, e o cloud9.yml so
+# instalava o Yarn por cima. O ubuntu-vm nunca instalou o Node, entao
+# qualquer projeto que builda frontend na VM (ex.: create_frontend_yarn.sh
+# chamado por um local-exec do Terraform) falhava com "Node.js nao esta
+# instalado".
+#
+# Nao usa o nodejs do apt: o Ubuntu 24.04 empacota o 18.19, que perdeu
+# suporte em abril de 2025. Instala o binario oficial do nodejs.org em
+# /opt, no mesmo molde do Maven em ansible_dev_java.yml.
+- name: Instalação das ferramentas DEV Node.js
+  hosts: all
+
+  vars:
+    # Linha LTS ativa (24, "Krypton"). Para atualizar, troque aqui; as
+    # versoes e o status LTS de cada uma estao em
+    # https://nodejs.org/dist/index.json
+    node_version: "24.21.0"
+    node_arch: "{{ 'arm64' if ansible_architecture in ['aarch64', 'arm64'] else 'x64' }}"
+    node_dir: "node-v{{ node_version }}-linux-{{ node_arch }}"
+
+  tasks:
+
+    # O checksum vem do SHASUMS256.txt publicado ao lado do tar.gz; o
+    # get_url acha a linha pelo nome do arquivo.
+    - name: Baixar Node.js {{ node_version }} no Ubuntu
+      become: true
+      # Mesmo teto das tasks de apt: um download que para no meio nao
+      # pode travar a etapa inteira.
+      async: 300
+      poll: 5
+      get_url:
+        url: "https://nodejs.org/dist/v{{ node_version }}/{{ node_dir }}.tar.gz"
+        dest: "/tmp/{{ node_dir }}.tar.gz"
+        checksum: "sha256:https://nodejs.org/dist/v{{ node_version }}/SHASUMS256.txt"
+        mode: "0644"
+      when: ansible_os_family == "Debian"
+
+
+    - name: Extrair Node.js em /opt no Ubuntu
+      become: true
+      unarchive:
+        src: "/tmp/{{ node_dir }}.tar.gz"
+        dest: /opt
+        remote_src: true
+        creates: "/opt/{{ node_dir }}/bin/node"
+      when: ansible_os_family == "Debian"
+
+
+    - name: Apontar /opt/node para o Node.js {{ node_version }} no Ubuntu
+      become: true
+      file:
+        src: "/opt/{{ node_dir }}"
+        dest: /opt/node
+        state: link
+        force: true
+      when: ansible_os_family == "Debian"
+
+
+    # Links em /usr/local/bin, que vem antes de /usr/bin no PATH padrao:
+    # valem em qualquer contexto, inclusive o local-exec do Terraform e
+    # o terminal do code-server, sem depender de shell de login.
+    - name: Expor node, npm e npx em /usr/local/bin no Ubuntu
+      become: true
+      file:
+        src: "/opt/node/bin/{{ item }}"
+        dest: "/usr/local/bin/{{ item }}"
+        state: link
+        force: true
+      loop:
+        - node
+        - npm
+        - npx
+      when: ansible_os_family == "Debian"
+
+
+    # Yarn classico (1.x) via npm, o mesmo que o cloud9.yml entregava. Nao
+    # usa corepack: ele deixou de vir junto com o Node a partir do 25, e
+    # amarrar o lab a ele so adiaria a quebra.
+    - name: Instalar Yarn no Ubuntu
+      become: true
+      shell: npm install -g yarn@1
+      args:
+        executable: /bin/bash
+        creates: /opt/node/bin/yarn
+      environment:
+        PATH: "/opt/node/bin:{{ ansible_env.PATH }}"
+      when: ansible_os_family == "Debian"
+
+
+    - name: Expor yarn em /usr/local/bin no Ubuntu
+      become: true
+      file:
+        src: /opt/node/bin/yarn
+        dest: /usr/local/bin/yarn
+        state: link
+        force: true
+      when: ansible_os_family == "Debian"
+
+
+    # Para pacotes que o aluno instalar com "npm install -g" caberem no
+    # PATH de shell interativo, alem dos links fixos acima.
+    - name: Configurar PATH do Node.js no Ubuntu
+      become: true
+      copy:
+        dest: /etc/profile.d/node.sh
+        mode: "0644"
+        content: |
+          export PATH=/opt/node/bin:$PATH
+      when: ansible_os_family == "Debian"
+
+
+    - name: Verificar Node.js, npm e Yarn
+      shell: |
+        echo "node $(node --version)"
+        echo "npm  $(npm --version)"
+        echo "yarn $(yarn --version)"
+      args:
+        executable: /bin/bash
+      register: node_log
+      changed_when: false
+      when: ansible_os_family == "Debian"
+
+    - name: Mostrar Node.js, npm e Yarn
+      debug:
+        msg: "{{ node_log.stdout_lines }}"
+      when: ansible_os_family == "Debian"

@@ -9,6 +9,10 @@
     tasks:
         # PRE-REQS DO UBUNTU
         - name: Instalar pré-reqs (ubuntu)
+          # Mesmo teto das demais tasks de apt: estas tinham ficado de fora, e
+          # um apt pendurado aqui travaria a etapa do mesmo jeito.
+          async: 300
+          poll: 5
           apt:
             name:
               - apt-transport-https
@@ -18,15 +22,49 @@
             state: present
             update_cache: true
           when: ansible_os_family == "Debian"
-        - name: Adicionar Docker GPG key (ubuntu)
-          apt_key:
-            url: https://download.docker.com/linux/ubuntu/gpg
-            state: present
+        # O modulo apt_key esta depreciado e o binario apt-key saiu de
+        # circulacao nas releases recentes. O metodo atual e um keyring
+        # dedicado, referenciado por signed-by na linha do repositorio.
+        - name: Criar diretorio de keyrings do apt (ubuntu)
+          become: yes
+          ansible.builtin.file:
+            path: /etc/apt/keyrings
+            state: directory
+            mode: '0755'
           when: ansible_os_family == "Debian"
+
+        - name: Baixar a chave GPG do Docker (ubuntu)
+          become: yes
+          ansible.builtin.get_url:
+            url: https://download.docker.com/linux/ubuntu/gpg
+            dest: /etc/apt/keyrings/docker.asc
+            mode: '0644'
+          when: ansible_os_family == "Debian"
+
+        # O apt_repository antigo gerava este arquivo a partir da URL.
+        # Numa VM reaproveitada ele sobreviveria com o "focal" fixo e
+        # brigaria com a linha nova, entao removemos explicitamente.
+        - name: Remover repo antigo do Docker fixado em focal (ubuntu)
+          become: yes
+          ansible.builtin.file:
+            path: /etc/apt/sources.list.d/download_docker_com_linux_ubuntu.list
+            state: absent
+          when: ansible_os_family == "Debian"
+
+        # O release estava fixo em "focal" mesmo rodando numa noble --
+        # funcionava por sorte, e a distancia so cresce a cada release.
+        # Agora acompanha a distro e a arquitetura reais do host.
         - name: Adicionar Docker repo (ubuntu)
-          apt_repository:
-            repo: deb https://download.docker.com/linux/ubuntu focal stable
+          become: yes
+          ansible.builtin.apt_repository:
+            repo: >-
+              deb [arch={{ ansible_architecture | replace('x86_64', 'amd64') | replace('aarch64', 'arm64') }}
+              signed-by=/etc/apt/keyrings/docker.asc]
+              https://download.docker.com/linux/ubuntu
+              {{ ansible_distribution_release }} stable
+            filename: docker
             state: present
+            update_cache: true
           when: ansible_os_family == "Debian"
 
         # INSTALL
@@ -60,7 +98,17 @@
             cache_valid_time: 3600
             force_apt_get: true
           register: apt_action
-          retries: 100
+          # Teto dimensionado por medicao, nao por palpite: a maior task de apt
+          # observada levou 42,7s, entao 300s da ~7x de folga para dia de mirror
+          # ruim ou release com mais pacotes, e ainda corta travamento cedo.
+          # O valor anterior, 1800s, era 42x o observado.
+          async: 300
+          poll: 5
+          # retries: 100 era heranca de quando a task nao tinha teto. Com o
+          # async acima, cada tentativa ja e limitada, e 100 delas multiplicariam
+          # o pior caso por 100 sem ganho nenhum.
+          retries: 2
+          delay: 10
           until: apt_action is success or ('Failed to lock apt for exclusive operation' not in apt_action.msg and '/var/lib/dpkg/lock' not in apt_action.msg)
           when: ansible_os_family == "Debian"
 

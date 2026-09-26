@@ -3,6 +3,34 @@ provider "aws" {
   region = var.aws_region
 }
 
+# Descobre a AMI Ubuntu 24.04 mais recente publicada pela Canonical
+# (099720109477 e a conta oficial dela). Serve para o output apontar
+# quando o pin envelheceu: a troca continua deliberada, nao automatica.
+#
+# A explicacao completa de pin fixo vs imagem mais recente, e o ciclo
+# para atualizar, esta no cabecalho da secao de AMI em variable.tf.
+data "aws_ami" "ubuntu_recente" {
+  most_recent = true
+  owners      = ["099720109477"]
+
+  filter {
+    name   = "name"
+    values = ["ubuntu/images/hvm-ssd*/ubuntu-noble-24.04-amd64-server-*"]
+  }
+
+  filter {
+    name   = "virtualization-type"
+    values = ["hvm"]
+  }
+}
+
+# Quem decide de fato qual imagem sobe. Com a flag em false, que e o
+# padrao, usa o ID fixado em aws_amis; com true, a recem-consultada
+# acima. O data source sozinho nao troca imagem nenhuma.
+locals {
+  ami_escolhida = var.usar_ami_mais_recente ? data.aws_ami.ubuntu_recente.id : lookup(var.aws_amis, var.aws_region)
+}
+
 # Cria um VPC que receberá as instâncias e recursos
 resource "aws_vpc" "default" {
   cidr_block = "10.0.0.0/16"
@@ -26,6 +54,8 @@ resource "aws_subnet" "default" {
   vpc_id                  = aws_vpc.default.id
   cidr_block              = "10.0.1.0/24"
   map_public_ip_on_launch = true
+  # Fixa a AZ (como no vm-fiap) para nao correr o risco de a AWS
+  # sortear uma zona onde o instance_type nao esteja disponivel.
   availability_zone       = "us-east-1a"
 }
 
@@ -75,7 +105,11 @@ resource "aws_instance" "web" {
   # Define tipo da VM (CPU e Memoria)
   instance_type = var.instance_type
 
-  # Criar 2 discos: root + ebs
+  # Disco root.
+  #
+  # O volume EBS secundario (/dev/xvdb) foi removido: nenhum playbook
+  # em config/ansible chegava a formata-lo ou monta-lo, entao eram 50 GB
+  # gp3 provisionados e pagos por aluno sem qualquer uso.
   root_block_device {
     volume_size           = var.tamanho_disco
     volume_type           = "gp3"
@@ -83,17 +117,8 @@ resource "aws_instance" "web" {
     encrypted             = true
   }
   
-  # Volume Elastic Block Service: EBS volumes (remote storage devices)  
-  ebs_block_device {
-    device_name           = "/dev/xvdb"
-    volume_size           = var.tamanho_disco
-    volume_type           = "gp3"
-    delete_on_termination = true
-    encrypted             = true
-  }
-  
   # Versão do Sistema Operacional (Ubuntu)
-  ami = lookup(var.aws_amis, var.aws_region)
+  ami = local.ami_escolhida
 
   # Security group to allow HTTP and SSH access
   vpc_security_group_ids = [aws_security_group.default.id]

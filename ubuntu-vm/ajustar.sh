@@ -6,7 +6,25 @@
 
 export ANSIBLE_PYTHON_INTERPRETER=auto_silent
 export ANSIBLE_DEPRECATION_WARNINGS=false
+
+# Some tanto "skipping" (task com when que nao bateu) quanto "ok" (task
+# rodou e nao mudou nada): sobra so "changed", "failed" e o PLAY RECAP
+# de cada playbook, que resume por host sem depender das duas linhas
+# acima. E o log fica curto o bastante para acompanhar aula ao vivo.
 export ANSIBLE_DISPLAY_SKIPPED_HOSTS=false
+export ANSIBLE_DISPLAY_OK_HOSTS=false
+
+# VM de lab e efemera e reaproveita IPs: sem isto o Ansible aborta
+# com "Host key verification failed" por chave antiga no known_hosts.
+export ANSIBLE_HOST_KEY_CHECKING=false
+
+# profile_tasks/timer (tempo por task e por playbook) serviram para
+# dimensionar os tetos de async das tasks de apt por medicao, em vez de
+# palpite -- ja aplicado nos playbooks. Deixados ligados, imprimiam um
+# carimbo de horario antes de CADA task e um ranking no fim de CADA
+# playbook, o que dominava o log. O heartbeat e o resumo de tempos
+# abaixo, que sao nossos, cobrem o que importa no dia a dia; para
+# medir de novo, reativar so os dois exports removidos aqui.
 
 cd ~/environment/config/ubuntu-vm || exit 1
 
@@ -39,8 +57,17 @@ echo ""
 # OBTENDO NODES
 # ============================================================
 
-# Achata o array (mesmo que venha bidimensional [["IP"]]) para obter todos os IPs
-IPS=($(terraform output -json ip_externo | jq -r '.[][]'))
+# O filtro aceita as tres formas que o ip_externo ja teve: string,
+# lista e lista aninhada. Isso importa na transicao -- o state
+# existente so passa a devolver a forma nova no proximo apply.
+LER_IPS='if type=="string" then . else (.. | strings) end'
+
+mapfile -t IPS < <(
+    terraform output -json ip_externo 2>/dev/null |
+    jq -r "$LER_IPS" |
+    grep -v '^[[:space:]]*$'
+)
+
 QTD_NODES=${#IPS[@]}
 
 if [ "$QTD_NODES" -eq 0 ]; then
@@ -50,6 +77,8 @@ fi
 
 WORKER_NODES=$((QTD_NODES - 1))
 
+T_INICIO=$(date +%s)
+
 echo "Quantidade de Nodes: $QTD_NODES"
 echo ""
 
@@ -57,11 +86,18 @@ echo ""
 # INVENTÁRIO ANSIBLE
 # ============================================================
 
-echo '[nodes]' > inv.hosts
+# O inventario e gravado fora do clone deste repositorio quando o
+# fiaplab.sh informa FIAPLAB_INVENTORY (aponta para /tmp/fiap/inventory).
+# O default preserva o comportamento antigo para quem roda o script
+# direto, na mao.
+INV="${FIAPLAB_INVENTORY:-inv.hosts}"
+
+mkdir -p "$(dirname "$INV")"
+
+echo '[nodes]' > "$INV"
 
 for N in $(seq 0 "$WORKER_NODES"); do
     NODE="${IPS[$N]}"
-
     # Hostname = Name tag COMPLETO da AWS (o nome que aparece na tela,
     # ex.: fiaplab-1-<sufixo>). O ansible_hostname.yml aplica este
     # inventory_hostname como hostname, entao a VM fica com o nome
@@ -72,21 +108,41 @@ for N in $(seq 0 "$WORKER_NODES"); do
         --query 'Reservations[].Instances[].[Tags[?Key==`Name`]|[0].Value]' \
         --output text 2>/dev/null | head -1)
 
-    # Fallback 1-based se a consulta nao retornar.
+    # Fallback 1-based se a consulta nao retornar. N comeca em 0 porque
+    # indexa IPS; o nome comeca em 1 para casar com a tag Name do main.tf
+    # (count.index + 1) e com o que o CloudShell exibe.
     if [ -z "$NAME" ] || [ "$NAME" = "None" ]; then
         NAME="fiaplab-$((N + 1))"
     fi
 
-    echo "$NAME ansible_ssh_host=$NODE" >> inv.hosts
+    echo "$NAME ansible_ssh_host=$NODE" >> "$INV"
 done
 
 echo "Inventário:"
-cat inv.hosts
+cat "$INV"
 echo ""
 
 # ============================================================
 # SCP
+#
+# Cada ssh/scp tem o codigo de retorno verificado: sem isso, uma
+# falha ao copiar credenciais ou a chave so aparecia muito depois,
+# como um erro incompreensivel no meio de um playbook.
 # ============================================================
+
+SSH_OPTS=(-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o ConnectTimeout=10 -o LogLevel=error)
+CHAVE="$HOME/environment/labsuser.pem"
+CREDENCIAIS="$HOME/environment/credenciais/credentials"
+
+if [ ! -f "$CHAVE" ]; then
+    echo "❌ Chave SSH não encontrada: $CHAVE"
+    exit 1
+fi
+
+if [ ! -f "$CREDENCIAIS" ]; then
+    echo "❌ Credenciais AWS não encontradas: $CREDENCIAIS"
+    exit 1
+fi
 
 echo ""
 echo "============================================================"
@@ -94,110 +150,360 @@ echo "        COPIANDO ARQUIVOS PARA A EC2"
 echo "============================================================"
 echo ""
 
+falhar() {
+    echo ""
+    echo "❌ $1"
+    echo ""
+    exit 1
+}
+
+# ============================================================
+# HEARTBEAT
+#
+# O Ansible nao imprime nada durante uma task longa, entao "lento" e
+# "morto" ficam indistinguiveis. Foi o que custou mais tempo aqui: o
+# openjdk/maven baixando e o dpkg desempacotando 80+ pacotes pareciam
+# um travamento identico ao do mirror quebrado. Este amostrador roda em
+# paralelo a cada etapa e mostra o que o no esta realmente fazendo.
+# ============================================================
+
+HB_PID=""
+
+heartbeat_inicia() {
+
+    local NODE="$1"
+    local ETAPA="$2"
+
+    (
+        while true; do
+
+            sleep 30
+
+            INFO=$(ssh "${SSH_OPTS[@]}" -i "$CHAVE" ubuntu@"$NODE" '
+                if pgrep -x apt-get >/dev/null 2>&1; then
+                    PROC=apt-get
+                elif pgrep -x dpkg >/dev/null 2>&1; then
+                    PROC=dpkg
+                else
+                    PROC=-
+                fi
+                BAIXANDO=$(sudo du -sb /var/cache/apt/archives/partial 2>/dev/null | cut -f1)
+                ULTIMO=$(sudo tail -n 1 /var/log/apt/term.log 2>/dev/null | tr -d "\r" | cut -c1-70)
+                echo "proc=$PROC baixado=${BAIXANDO:-0}B | $ULTIMO"
+            ' 2>/dev/null)
+
+            [ -n "$INFO" ] && echo "      ⏱  [$ETAPA] $INFO"
+
+        done
+    ) &
+
+    HB_PID=$!
+}
+
+heartbeat_para() {
+
+    [ -n "$HB_PID" ] || return 0
+
+    kill "$HB_PID" 2>/dev/null
+    wait "$HB_PID" 2>/dev/null
+
+    HB_PID=""
+}
+
+resumo_tempos() {
+
+    local T_TOTAL=$(( $(date +%s) - T_INICIO ))
+    local D
+
+    echo ""
+    echo "============================================================"
+    echo "        TEMPOS (para dimensionar os tetos)"
+    echo "============================================================"
+    printf "   %-24s %6ss\n" "preparação" "${T_PREPARO:-0}"
+
+    for D in "${DURACOES[@]}"; do
+        printf "   %-24s %6ss\n" "${D%%:*}" "${D##*:}"
+    done
+
+    printf "   %-24s %6ss\n" "TOTAL" "$T_TOTAL"
+}
+
+# Sem isto um Ctrl+C deixaria o amostrador orfao rodando em background.
+trap 'heartbeat_para; exit 130' INT TERM
+
 for N in $(seq 0 "$WORKER_NODES"); do
+
     NODE="${IPS[$N]}"
 
     echo "Sincronizando repositório Git em $NODE..."
 
-    # Garante que os diretórios base existam
-    ssh -o StrictHostKeyChecking=no \
-        -i ~/environment/labsuser.pem \
-        ubuntu@"$NODE" \
-        "mkdir -p /home/ubuntu/environment /home/ubuntu/.aws"
+    ssh "${SSH_OPTS[@]}" -i "$CHAVE" ubuntu@"$NODE" \
+        "mkdir -p /home/ubuntu/environment /home/ubuntu/.aws" \
+        || falhar "Não foi possível conectar em $NODE."
 
-    # Clona ou atualiza a pasta config via Git direto na VM
-    ssh -o StrictHostKeyChecking=no \
-        -i ~/environment/labsuser.pem \
-        ubuntu@"$NODE" \
+    # VM efemera recem-criada: nos primeiros minutos de boot o cloud-init,
+    # o apt-daily e o unattended-upgrades seguram o lock do apt/dpkg. Sem
+    # esperar, o primeiro "apt install" dos playbooks (utils, docker) fica
+    # travado repetindo em silencio. Aqui bloqueamos ate o boot concluir e
+    # o lock ser liberado -- e o que o ambiente do Cloud9 nao precisa por
+    # ja estar ligado ha tempo.
+    echo "Aguardando cloud-init/unattended-upgrades liberar o apt em $NODE..."
+    ssh "${SSH_OPTS[@]}" -i "$CHAVE" ubuntu@"$NODE" 'bash -s' <<'REMOTO' \
+        || falhar "Boot de $NODE nao concluiu no prazo (lock do apt preso)."
+# Os dois tetos abaixo sao o ponto: uma espera sem limite apenas troca
+# "apt travado" por "ajustar.sh travado", que e exatamente o defeito que
+# viemos corrigir. A versao anterior prometia "Timeout" na mensagem de
+# erro mas tinha um while infinito.
+#
+# 3 min em cada um, nao 10: isto e um lab de aula, e uma VM que nao
+# termina o boot nesse prazo esta doente -- melhor falhar cedo e o aluno
+# reexecutar do que consumir metade da aula esperando.
+timeout 180 cloud-init status --wait >/dev/null 2>&1 || true
+
+N=0
+
+while sudo fuser /var/lib/dpkg/lock-frontend /var/lib/dpkg/lock >/dev/null 2>&1; do
+
+    N=$((N + 1))
+
+    if [ "$N" -gt 36 ]; then
+        echo "   ❌ lock do apt/dpkg nao liberou em 3 min"
+        exit 1
+    fi
+
+    # Um sinal de vida a cada minuto, para a espera nao parecer travamento.
+    if [ $((N % 12)) -eq 0 ]; then
+        echo "   ... ainda aguardando o lock do apt ($((N * 5))s)"
+    fi
+
+    sleep 5
+done
+REMOTO
+
+    # O mirror do apt e escolhido testando cada candidato, nao fixado:
+    # fixar um so trocaria um ponto unico de falha por outro. O teste de
+    # aceitacao e o proprio apt-get update sob limite de parede, porque
+    # sondar por fora nao reproduz o defeito -- o mirror regional chegou
+    # a passar num curl pequeno e travar no update completo em seguida.
+    echo "Escolhendo mirror do apt em $NODE..."
+    ssh "${SSH_OPTS[@]}" -i "$CHAVE" ubuntu@"$NODE" 'bash -s' <<'REMOTO' \
+        || falhar "Não foi possível preparar o apt (mirror/listas) em $NODE."
+set -u
+
+# Um Ctrl+C no CloudShell mata o Ansible, mas nao o apt-get que ficou
+# rodando no no. Esse zumbi nao segura o lock do dpkg (entao passa pela
+# espera acima), mas briga com o rm das listas mais abaixo. Limpamos
+# restos antes de comecar.
+#
+# -x casa o nome exato do processo. Com -f o padrao casaria a linha de
+# comando deste proprio script -- que roda como bash -c com o texto
+# inteiro -- e o script se mataria.
+sudo pkill -9 -x apt-get 2>/dev/null || true
+sudo pkill -9 -x http 2>/dev/null || true
+sudo pkill -9 -x store 2>/dev/null || true
+sudo pkill -9 -x gpgv 2>/dev/null || true
+sleep 1
+
+# Ordem definida por observacao, nao por teoria: o us-east-1.ec2 travou
+# o apt-get update de forma reproduzivel a partir desta VPC (Ign: nos
+# indices e stall ate o limite de parede), enquanto o archive.ubuntu.com
+# baixou 15 MB em 0,35s. O regional seria o mais rapido e sem egress
+# quando saudavel, entao fica como ultimo recurso em vez de sair da
+# lista -- mas nao vale gastar 2 min de cada execucao tentando ele
+# primeiro.
+MIRRORS="
+http://archive.ubuntu.com/ubuntu
+http://br.archive.ubuntu.com/ubuntu
+http://us-east-1.ec2.archive.ubuntu.com/ubuntu
+"
+
+# Acquire::Timeout sozinho nao protege. Observado no no travado: o
+# metodo http ficava em CLOSE-WAIT (servidor fechou, apt nunca
+# percebeu) com a transferencia parada de vez -- o du de
+# /var/lib/apt/lists/partial nao mexia um byte em 53s. Nesse estado o
+# apt nao esta esperando um read que expira, entao o timeout dele nunca
+# dispara; so um limite de parede (timeout -k) corta.
+printf 'Acquire::http::Timeout "20";\nAcquire::https::Timeout "20";\nAcquire::Retries "3";\n' \
+    | sudo tee /etc/apt/apt.conf.d/99fiap-timeout >/dev/null
+
+# O teste de aceitacao do mirror e o proprio apt-get update, nao uma
+# sondagem por fora: o mirror regional ja passou num curl pequeno e
+# travou no update completo logo em seguida. Se o update nao terminar
+# no prazo, o mirror cai e tentamos o proximo.
+#
+# Limpar /var/lib/apt/lists a cada tentativa importa duas vezes: descarta
+# indices parciais do mirror anterior e, como os playbooks usam
+# cache_valid_time, garante que eles nao reaproveitem um cache furado
+# (o que dava "held broken packages" em pacotes que existem).
+ESCOLHIDO=""
+
+for M in $MIRRORS; do
+    echo "   Testando mirror: $M"
+
+    sudo sed -i -E "s#http://[^ ]*archive\.ubuntu\.com/ubuntu#$M#g" \
+        /etc/apt/sources.list.d/ubuntu.sources /etc/apt/sources.list 2>/dev/null || true
+
+    sudo rm -rf /var/lib/apt/lists/*
+
+    # 60s por candidato: o mirror saudavel conclui o update bem antes
+    # disso, e com o bom em primeiro lugar o caso tipico e uma tentativa
+    # so. Os tres candidatos no pior caso somam 3 min, nao 6,5.
+    if sudo timeout -k 10 60 apt-get update -qq; then
+        ESCOLHIDO="$M"
+        echo "   ✅ mirror OK (apt-get update concluido): $M"
+        break
+    fi
+
+    echo "   ⚠️  mirror travou ou falhou no update: $M"
+done
+
+if [ -z "$ESCOLHIDO" ]; then
+    echo "   ❌ nenhum mirror concluiu o apt-get update"
+    exit 1
+fi
+REMOTO
+
+    ssh "${SSH_OPTS[@]}" -i "$CHAVE" ubuntu@"$NODE" \
         "if [ -d '/home/ubuntu/environment/config/.git' ]; then
-            cd /home/ubuntu/environment/config && git pull;
+            cd /home/ubuntu/environment/config && git pull --ff-only;
          else
             git clone https://github.com/tonanuvem/config /home/ubuntu/environment/config;
-         fi"
+         fi" \
+        || falhar "Não foi possível sincronizar o repositório config em $NODE."
 
-    # Copia credenciais AWS
-    scp -q \
-        -i ~/environment/labsuser.pem \
-        ~/environment/credenciais/credentials \
-        ubuntu@"$NODE":/home/ubuntu/.aws/credentials
+    scp -q "${SSH_OPTS[@]}" -i "$CHAVE" \
+        "$CREDENCIAIS" \
+        ubuntu@"$NODE":/home/ubuntu/.aws/credentials \
+        || falhar "Não foi possível copiar as credenciais AWS para $NODE."
+
+    ssh "${SSH_OPTS[@]}" -i "$CHAVE" ubuntu@"$NODE" \
+        "chmod 600 /home/ubuntu/.aws/credentials" \
+        || falhar "Não foi possível proteger as credenciais em $NODE."
 
     echo "✅ Repositório e credenciais atualizados em $NODE"
     echo ""
 
     echo "Copiando labsuser.pem para $NODE..."
 
-    # TRATAMENTO DE PERMISSÃO DA CHAVE:
-    # Garante permissão de escrita no arquivo antigo (se existir) antes de sobrescrever
-    ssh -o StrictHostKeyChecking=no \
-        -i ~/environment/labsuser.pem \
-        ubuntu@"$NODE" \
+    # Garante permissao de escrita no arquivo antigo antes de sobrescrever.
+    ssh "${SSH_OPTS[@]}" -i "$CHAVE" ubuntu@"$NODE" \
         "test -f /home/ubuntu/environment/labsuser.pem && chmod 600 /home/ubuntu/environment/labsuser.pem || true"
 
-    # Copia a chave
-    scp \
-        -i ~/environment/labsuser.pem \
-        ~/environment/labsuser.pem \
-        ubuntu@"$NODE":/home/ubuntu/environment/labsuser.pem
+    scp -q "${SSH_OPTS[@]}" -i "$CHAVE" \
+        "$CHAVE" \
+        ubuntu@"$NODE":/home/ubuntu/environment/labsuser.pem \
+        || falhar "Não foi possível copiar a chave SSH para $NODE."
 
-    # Protege a chave novamente
-    ssh -o StrictHostKeyChecking=no \
-        -i ~/environment/labsuser.pem \
-        ubuntu@"$NODE" \
-        "chmod 400 /home/ubuntu/environment/labsuser.pem"
+    ssh "${SSH_OPTS[@]}" -i "$CHAVE" ubuntu@"$NODE" \
+        "chmod 400 /home/ubuntu/environment/labsuser.pem" \
+        || falhar "Não foi possível proteger a chave SSH em $NODE."
 
     echo "✅ labsuser.pem copiado com sucesso para $NODE"
     echo ""
 done
 
+T_PREPARO=$(( $(date +%s) - T_INICIO ))
+echo "⏱  preparação (mirror, git, credenciais): ${T_PREPARO}s"
+
 # ============================================================
 # ANSIBLE
+#
+# Os playbooks rodam em sequencia e cada um tem o codigo de retorno
+# verificado. Antes, os 7 eram invocados soltos e o exit code do
+# script era apenas o do ultimo (code_server): uma falha em k8s ou
+# docker passava como sucesso para o criar.sh.
 # ============================================================
 
+# "terraform" vem da main: instala terraform/ansible/awscli no proprio
+# no antes do docker, adicionado independente deste trabalho de
+# ajustar.sh. Preservado aqui na mesma posicao (apos utils, antes do
+# docker) em vez de chamada solta, para caber no loop com heartbeat e
+# timing que todas as outras etapas ja tem.
+PLAYBOOKS=(
+    hostname
+    desligamento
+    utils
+    terraform
+    docker
+    k8s
+    dev_java
+    dev_node
+    code_server_ubuntu
+)
+
+TOTAL="${#PLAYBOOKS[@]}"
+
+# Guarda "nome:segundos" por etapa. O objetivo e dimensionar os tetos
+# (async, sobretudo) a partir de medicao, em vez de palpite: hoje o
+# async esta folgado justamente por nao sabermos o tempo real.
+DURACOES=()
+
 echo ""
 echo "============================================================"
-echo "        AJUSTANDO VIA ANSIBLE"
+echo "        AJUSTANDO VIA ANSIBLE ($TOTAL etapas)"
 echo "============================================================"
 echo ""
 
-"$ANSIBLE_PLAYBOOK" ~/environment/config/ansible/ansible_hostname.yml \
-    --inventory inv.hosts \
-    -u ubuntu \
-    --key-file ~/environment/labsuser.pem
+for I in "${!PLAYBOOKS[@]}"; do
 
-"$ANSIBLE_PLAYBOOK" ~/environment/config/ansible/ansible_desligamento.yml \
-    --inventory inv.hosts \
-    -u ubuntu \
-    --key-file ~/environment/labsuser.pem
+    NOME="${PLAYBOOKS[$I]}"
+    ARQUIVO="$HOME/environment/config/ansible/ansible_${NOME}.yml"
 
-"$ANSIBLE_PLAYBOOK" ~/environment/config/ansible/ansible_utils.yml \
-    --inventory inv.hosts \
-    -u ubuntu \
-    --key-file ~/environment/labsuser.pem
+    echo "------------------------------------------------------------"
+    echo " Etapa $((I + 1))/$TOTAL : $NOME"
+    echo "------------------------------------------------------------"
 
-"$ANSIBLE_PLAYBOOK" ~/environment/config/ansible/ansible_terraform.yml \
-    --inventory inv.hosts \
-    -u ubuntu \
-    --key-file ~/environment/labsuser.pem
+    if [ ! -f "$ARQUIVO" ]; then
+        echo ""
+        echo "❌ Playbook não encontrado:"
+        echo "   $ARQUIVO"
+        echo ""
+        exit 1
+    fi
 
-"$ANSIBLE_PLAYBOOK" ~/environment/config/ansible/ansible_docker.yml \
-    --inventory inv.hosts \
-    -u ubuntu \
-    --key-file ~/environment/labsuser.pem
+    # Amostra sempre o primeiro no: e suficiente para diferenciar uma
+    # etapa lenta de uma travada, sem multiplicar SSH por node.
+    heartbeat_inicia "${IPS[0]}" "$NOME"
 
-"$ANSIBLE_PLAYBOOK" ~/environment/config/ansible/ansible_k8s.yml \
-    --inventory inv.hosts \
-    -u ubuntu \
-    --key-file ~/environment/labsuser.pem
+    T_ETAPA=$(date +%s)
 
-"$ANSIBLE_PLAYBOOK" ~/environment/config/ansible/ansible_dev_java.yml \
-    --inventory inv.hosts \
-    -u ubuntu \
-    --key-file ~/environment/labsuser.pem
+    "$ANSIBLE_PLAYBOOK" "$ARQUIVO" \
+        --inventory "$INV" \
+        -u ubuntu \
+        --key-file ~/environment/labsuser.pem
 
-"$ANSIBLE_PLAYBOOK" ~/environment/config/ansible/ansible_code_server_ubuntu.yml \
-    --inventory inv.hosts \
-    -u ubuntu \
-    --key-file ~/environment/labsuser.pem
+    RC=$?
+
+    heartbeat_para
+
+    D_ETAPA=$(( $(date +%s) - T_ETAPA ))
+    DURACOES+=("$NOME:$D_ETAPA")
+    echo "⏱  etapa '$NOME' levou ${D_ETAPA}s"
+
+    if [ "$RC" -ne 0 ]; then
+        echo ""
+        echo "============================================================"
+        echo " ❌ FALHA NA ETAPA: $NOME"
+        echo "============================================================"
+        echo ""
+        echo "As etapas anteriores foram aplicadas, mas a configuração"
+        echo "está incompleta. O code-server pode não estar disponível."
+        echo ""
+        echo "Para tentar novamente, execute no menu:"
+        echo "   1) Criar infraestrutura"
+        echo ""
+
+        # Numa rodada de medicao a falha e justamente quando os tempos
+        # mais interessam, entao o resumo sai aqui tambem.
+        resumo_tempos
+
+        exit "$RC"
+    fi
+
+    echo ""
+done
+
+resumo_tempos
 
 echo ""
 echo "============================================================"

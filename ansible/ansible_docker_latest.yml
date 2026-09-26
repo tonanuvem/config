@@ -18,16 +18,48 @@
             update_cache: true
           when: ansible_os_family == "Debian"
 
-        - name: Adicionar Docker GPG key (ubuntu)
-          apt_key:
-            url: https://download.docker.com/linux/ubuntu/gpg
-            state: present
+        # O modulo apt_key esta depreciado e o binario apt-key saiu de
+        # circulacao nas releases recentes. O metodo atual e um keyring
+        # dedicado, referenciado por signed-by na linha do repositorio.
+        - name: Criar diretorio de keyrings do apt (ubuntu)
+          become: yes
+          ansible.builtin.file:
+            path: /etc/apt/keyrings
+            state: directory
+            mode: '0755'
           when: ansible_os_family == "Debian"
 
+        - name: Baixar a chave GPG do Docker (ubuntu)
+          become: yes
+          ansible.builtin.get_url:
+            url: https://download.docker.com/linux/ubuntu/gpg
+            dest: /etc/apt/keyrings/docker.asc
+            mode: '0644'
+          when: ansible_os_family == "Debian"
+
+        # O apt_repository antigo gerava este arquivo a partir da URL.
+        # Numa VM reaproveitada ele sobreviveria sem o signed-by e
+        # brigaria com a linha nova, entao removemos explicitamente.
+        - name: Remover repo antigo do Docker sem signed-by (ubuntu)
+          become: yes
+          ansible.builtin.file:
+            path: /etc/apt/sources.list.d/download_docker_com_linux_ubuntu.list
+            state: absent
+          when: ansible_os_family == "Debian"
+
+        # O release ja era dinamico aqui; o que faltava era o signed-by
+        # apontando para o keyring e a arquitetura real do host.
         - name: Adicionar Docker repo (ubuntu)
-          apt_repository:
-            repo: "deb https://download.docker.com/linux/ubuntu {{ ansible_distribution_release }} stable"
+          become: yes
+          ansible.builtin.apt_repository:
+            repo: >-
+              deb [arch={{ ansible_architecture | replace('x86_64', 'amd64') | replace('aarch64', 'arm64') }}
+              signed-by=/etc/apt/keyrings/docker.asc]
+              https://download.docker.com/linux/ubuntu
+              {{ ansible_distribution_release }} stable
+            filename: docker
             state: present
+            update_cache: true
           when: ansible_os_family == "Debian"
 
         # INSTALL
