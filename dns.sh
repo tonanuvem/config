@@ -102,12 +102,33 @@ fi
 # esperar o aluno digitar.
 # ------------------------------------------------------------
 
-echo ""
-echo "Escolha um nome curto (letras minúsculas, números e hífen)."
-echo "Ele vira: SEUNOME.${ZONA}"
-echo ""
+NOME="${DNS_NOME:-}"
 
-read -rp "Nome: " NOME </dev/tty
+if [ -z "$NOME" ]; then
+
+    echo ""
+    echo "Escolha um nome curto (letras minúsculas, números e hífen)."
+    echo "Ele vira: SEUNOME.${ZONA}"
+    echo ""
+
+    # A inicializacao acima e o "|| true" aqui sao necessarios por causa
+    # do "set -u": quando nao ha terminal (rodando por cron, por um
+    # script, ou por ssh sem -t), o read falha e NOME ficaria sem valor
+    # -- o shell abortava com "NOME: unbound variable" antes de chegar
+    # na mensagem explicativa abaixo.
+    if [ -r /dev/tty ]; then
+        read -rp "Nome: " NOME </dev/tty || true
+    else
+        echo -e "${VERMELHO}Sem terminal para perguntar o nome.${FIM}"
+        echo ""
+        echo "  Rode informando o nome direto:"
+        echo ""
+        echo "    curl -s https://raw.githubusercontent.com/tonanuvem/config/main/dns.sh \\"
+        echo "      | DNS_NOME=seunome bash"
+        echo ""
+        exit 1
+    fi
+fi
 
 NOME=$(printf '%s' "$NOME" | tr '[:upper:]' '[:lower:]' | tr -d '[:space:]')
 
