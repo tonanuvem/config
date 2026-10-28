@@ -138,7 +138,7 @@ if [ -z "$NOME" ]; then
 fi
 
 echo ""
-echo "  Registrando ${NEGRITO}${NOME}.${ZONA}${FIM} -> $IP"
+echo -e "  Registrando ${NEGRITO}${NOME}.${ZONA}${FIM} -> $IP"
 echo ""
 
 # ------------------------------------------------------------
