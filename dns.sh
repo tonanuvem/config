@@ -198,7 +198,16 @@ case "$STATUS" in
         echo ""
         echo -e "   ${NEGRITO}http://${NOME}.${ZONA}${FIM}"
         echo ""
+        echo -e "   ${NEGRITO}http://QUALQUERCOISA.${NOME}.${ZONA}${FIM}"
+        echo ""
         echo "============================================================"
+        echo ""
+        # Os dois nomes apontam para o MESMO IP. O curinga existe para o
+        # proxy reverso que roda dentro da sua VM decidir o destino pelo
+        # cabecalho Host -- da para servir varias aplicacoes de uma VM so.
+        echo "  Os dois apontam para esta máquina ($IP)."
+        echo "  Use o segundo para servir várias aplicações da mesma VM:"
+        echo "     app.${NOME}.${ZONA}, api.${NOME}.${ZONA}, ..."
         echo ""
         echo "  O DNS pode levar até 1 minuto para propagar."
         echo "  Conferir:  dig +short ${NOME}.${ZONA}"
