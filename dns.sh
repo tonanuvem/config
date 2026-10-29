@@ -263,3 +263,9 @@ case "$STATUS" in
         exit 1
         ;;
 esac
+
+# ------------------------------------------------------------
+# BAIXA SCRIPT LABPROXY
+# ------------------------------------------------------------
+
+curl -s https://raw.githubusercontent.com/tonanuvem/labproxy/main/proxy.sh -O
