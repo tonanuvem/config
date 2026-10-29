@@ -293,6 +293,27 @@ esac
 
 # ------------------------------------------------------------
 # BAIXA SCRIPT LABPROXY
+#
+# O -f e o que importa: sem ele, um 404 ou uma intermitencia do GitHub
+# sai com codigo 0 e grava a pagina de erro DENTRO do proxy.sh -- o
+# aluno fica com um arquivo que parece baixado e nao e. Como o script
+# roda sob "set -u" e sem "set -e", a falha tambem nao interrompia nada.
+#
+# Baixa para um nome temporario e so promove no fim, para um download
+# interrompido no meio nao substituir um proxy.sh que ja funcionava.
 # ------------------------------------------------------------
 
-curl -s https://raw.githubusercontent.com/tonanuvem/labproxy/main/proxy.sh -O
+PROXY_URL="https://raw.githubusercontent.com/tonanuvem/labproxy/main/proxy.sh"
+
+if curl -fsSL "$PROXY_URL" -o proxy.sh.parcial; then
+    mv proxy.sh.parcial proxy.sh
+    echo "  Baixado também: ./proxy.sh"
+    echo "     Ele publica as aplicações desta VM em HTTPS."
+    echo "     Rodar:  bash proxy.sh"
+else
+    rm -f proxy.sh.parcial
+    echo -e "${VERMELHO}  Não foi possível baixar o proxy.sh.${FIM}"
+    echo "     O registro no DNS acima está feito; só o download falhou."
+    echo "     Tente depois:  curl -fsSLO $PROXY_URL"
+fi
+echo ""
