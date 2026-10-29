@@ -34,6 +34,11 @@ SENHA_API="${DNS_API_KEY:-aluno}"
 ZONA="${DNS_ZONA:-aluno.lab.tonanuvem.com}"
 
 ARQ_TOKEN="$HOME/.fiap_dns_token"
+ARQ_NOME="$HOME/.fiap_dns_nome"
+
+# A propria URL deste script, para as mensagens de ajuda nao sairem do
+# ar junto com uma mudanca de repositorio.
+ORIGEM="https://raw.githubusercontent.com/tonanuvem/config/main/dns.sh"
 
 VERDE='\033[0;32m'
 VERMELHO='\033[0;31m'
@@ -97,12 +102,23 @@ fi
 # ------------------------------------------------------------
 # Nome escolhido pelo aluno
 #
-# O </dev/tty e obrigatorio: com "curl | bash" a entrada padrao e o
-# proprio script, entao um "read" comum leria o codigo em vez de
-# esperar o aluno digitar.
+# O nome fica guardado junto do token. O caso comum e a VM voltar com
+# outro IP na aula seguinte -- ai nao ha nada a escolher, so um
+# endereco a atualizar, e perguntar o nome de novo e so atrito (e um
+# convite a digitar errado e criar um registro duplicado).
+#
+# Precedencia: DNS_NOME do ambiente > nome guardado > perguntar.
 # ------------------------------------------------------------
 
 NOME="${DNS_NOME:-}"
+
+if [ -z "$NOME" ] && [ -s "$ARQ_NOME" ]; then
+    NOME=$(tr -d '[:space:]' < "$ARQ_NOME")
+    echo "  Nome             : $NOME (de ~/.fiap_dns_nome)"
+    echo ""
+    echo "  Para registrar outro nome:"
+    echo "     curl -s $ORIGEM | DNS_NOME=outronome bash"
+fi
 
 if [ -z "$NOME" ]; then
 
@@ -111,6 +127,10 @@ if [ -z "$NOME" ]; then
     echo "Ele vira: SEUNOME.${ZONA}"
     echo ""
 
+    # O </dev/tty e obrigatorio: com "curl | bash" a entrada padrao e
+    # o proprio script, entao um "read" comum leria o codigo em vez de
+    # esperar o aluno digitar.
+    #
     # A inicializacao acima e o "|| true" aqui sao necessarios por causa
     # do "set -u": quando nao ha terminal (rodando por cron, por um
     # script, ou por ssh sem -t), o read falha e NOME ficaria sem valor
@@ -123,8 +143,7 @@ if [ -z "$NOME" ]; then
         echo ""
         echo "  Rode informando o nome direto:"
         echo ""
-        echo "    curl -s https://raw.githubusercontent.com/tonanuvem/config/main/dns.sh \\"
-        echo "      | DNS_NOME=seunome bash"
+        echo "    curl -s $ORIGEM | DNS_NOME=seunome bash"
         echo ""
         exit 1
     fi
@@ -192,6 +211,10 @@ fi
 case "$STATUS" in
 
     200|201)
+        # So depois do OK da API: guardar um nome recusado faria a
+        # execucao seguinte repetir o erro sem perguntar nada.
+        printf '%s\n' "$NOME" > "$ARQ_NOME"
+
         echo -e "${VERDE}  ✅ Registro criado/atualizado com sucesso!${FIM}"
         echo ""
         echo "============================================================"
@@ -212,8 +235,12 @@ case "$STATUS" in
         echo "  O DNS pode levar até 1 minuto para propagar."
         echo "  Conferir:  dig +short ${NOME}.${ZONA}"
         echo ""
-        echo "  Na próxima aula, rode este script de novo com o MESMO"
-        echo "  nome: o IP muda, o nome continua seu."
+        echo "  Na próxima aula, com a VM em outro IP, basta rodar:"
+        echo ""
+        echo "     curl -s $ORIGEM | bash"
+        echo ""
+        echo "  O nome e o token ficam guardados nesta máquina — não há"
+        echo "  nada a digitar, só o IP a atualizar."
         echo ""
         ;;
 
