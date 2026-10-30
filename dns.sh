@@ -228,19 +228,20 @@ case "$STATUS" in
         # Os dois nomes apontam para o MESMO IP. O curinga existe para o
         # proxy reverso que roda dentro da sua VM decidir o destino pelo
         # cabecalho Host -- da para servir varias aplicacoes de uma VM so.
-        echo "  Os dois apontam para esta máquina ($IP)."
-        echo "  Use o segundo para servir várias aplicações da mesma VM:"
-        echo "     app.${NOME}.${ZONA}, api.${NOME}.${ZONA}, ..."
+        #echo "  Os dois apontam para esta máquina ($IP)."
+        #echo "  Use o segundo para servir várias aplicações da mesma VM:"
+        #echo "     app.${NOME}.${ZONA}, api.${NOME}.${ZONA}, ..."
         echo ""
-        echo "  O DNS pode levar até 1 minuto para propagar."
-        echo "  Conferir:  dig +short ${NOME}.${ZONA}"
-        echo ""
+        #echo "  O DNS pode levar até 1 minuto para propagar."
+        #echo "  Conferir:  dig +short ${NOME}.${ZONA}"
+        #echo ""
+        chmod +x dns.sh
         echo "  Na próxima aula, com a VM em outro IP, basta rodar:"
         echo ""
-        echo "     curl -s $ORIGEM | bash"
-        echo ""
-        echo "  O nome e o token ficam guardados nesta máquina — não há"
-        echo "  nada a digitar, só o IP a atualizar."
+        echo "     bash dns.sh"
+        #echo ""
+        #echo "  O nome e o token ficam guardados nesta máquina — não há"
+        #echo "  nada a digitar, só o IP a atualizar."
         echo ""
         ;;
 
@@ -249,9 +250,6 @@ case "$STATUS" in
         echo ""
         echo "  Escolha outro nome e rode o script de novo."
         echo ""
-        echo "  Se o nome era seu e você perdeu a VM (e com ela o"
-        echo "  ~/.fiap_dns_token), peça ao instrutor para apagar o"
-        echo "  registro — o token não tem como ser recuperado."
         echo ""
         exit 1
         ;;
@@ -307,9 +305,7 @@ PROXY_URL="https://raw.githubusercontent.com/tonanuvem/labproxy/main/proxy.sh"
 
 if curl -fsSL "$PROXY_URL" -o proxy.sh.parcial; then
     mv proxy.sh.parcial proxy.sh
-    echo "  Baixado também: ./proxy.sh"
-    echo "     Ele publica as aplicações desta VM em HTTPS."
-    echo "     Rodar:  bash proxy.sh"
+    chmod +x proxy.sh
 else
     rm -f proxy.sh.parcial
     echo -e "${VERMELHO}  Não foi possível baixar o proxy.sh.${FIM}"
