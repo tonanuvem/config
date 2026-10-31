@@ -5,7 +5,7 @@
 
   vars:
     code_server_user: ubuntu
-    code_server_version: "4.100.3"
+    code_server_version: "4.144.0"
     code_server_port: 8099
     code_server_password: "fiap"  # Altere conforme necessário
     workspace_dir: "/home/ubuntu"
