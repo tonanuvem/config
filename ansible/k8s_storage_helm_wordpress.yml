@@ -8,10 +8,13 @@
     tasks:
         - name: Configurar os volumes do Wordpress
           shell: |
-            mkdir /tmp/wordpress-vol
-            sudo chown -R www-data:www-data /tmp/wordpress-vol
+            #mkdir /tmp/wordpress-vol
+            mkdir -p /tmp/wordpress-vol
+            #sudo chown -R www-data:www-data /tmp/wordpress-vol
+            sudo chown -R 33:33 /tmp/wordpress-vol
             sudo chmod 777 /tmp/wordpress-vol
-            mkdir /tmp/mariadb-vol
+            #mkdir /tmp/mariadb-vol
+            mkdir -p /tmp/mariadb-vol
             sudo chown -R 1001:1001 /tmp/mariadb-vol
 
           args:

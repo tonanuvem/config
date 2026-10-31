@@ -28,7 +28,8 @@ ssh -oStrictHostKeyChecking=no -i ~/environment/labsuser.pem ec2-user@$MASTER 'b
 #	Configurar o cliente kubectl:
 echo "mkdir -p $DIRETORIO/.kube" > master.sh
 echo "sudo cp -i /etc/kubernetes/admin.conf $DIRETORIO/.kube/config" >> master.sh
-echo "sudo chown $(id -u):$(id -g) $DIRETORIO/.kube/config" >> master.sh
+#echo "sudo chown $(id -u):$(id -g) $DIRETORIO/.kube/config" >> master.sh
+echo "sudo chown \$(id -u):\$(id -g) $DIRETORIO/.kube/config" >> master.sh
 
 ### CONFIGURANDO O MASTER via SSH
 ssh -oStrictHostKeyChecking=no -i ~/environment/labsuser.pem ec2-user@$MASTER 'bash -s' < master.sh
@@ -66,6 +67,11 @@ ssh -oStrictHostKeyChecking=no -i ~/environment/labsuser.pem ec2-user@$MASTER 'k
 
 ### CONFIGURANDO OS VOLUMES 
 #sh k8s_criar_volume_portworx.sh
+#sh k8s_config_volume_longhorn.sh
+ssh -oStrictHostKeyChecking=no -i ~/environment/labsuser.pem ec2-user@$MASTER '
+  kubectl apply -f https://raw.githubusercontent.com/rancher/local-path-provisioner/v0.0.37/deploy/local-path-storage.yaml
+  kubectl patch storageclass local-path -p "{\"metadata\": {\"annotations\":{\"storageclass.kubernetes.io/is-default-class\":\"true\"}}}"
+'
 
 printf "\n\n"
 echo "   CONFIGURAÇÕES REALIZADAS. FIM."

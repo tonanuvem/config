@@ -70,9 +70,11 @@
             
             ## Configure containerd:
             sudo mkdir -p /etc/containerd
-            containerd config default | sudo tee /etc/containerd/config.toml
+            #containerd config default | sudo tee /etc/containerd/config.toml
+            containerd config default | sed 's/SystemdCgroup = false/SystemdCgroup = true/g' | sudo tee /etc/containerd/config.toml
             # Restart containerd:
-            sudo systemctl restart containerd
+            #sudo systemctl restart containerd
+            sudo systemctl enable --now containerd && sudo systemctl restart containerd
           args:
             executable: /bin/bash
             
@@ -91,32 +93,40 @@
           args:
             executable: /bin/bash
             
-        - name: Instalar kubelet kubeadm kubectl (amazon linux 2)
+        #- name: Instalar kubelet kubeadm kubectl (amazon linux 2)
+        - name: Instalar kubelet kubeadm kubectl (amazon linux)
           become: yes
           shell: |
             cat <<EOF | sudo tee /etc/yum.repos.d/kubernetes.repo
             [kubernetes]
             name=Kubernetes
-            baseurl=https://pkgs.k8s.io/core:/stable:/v1.29/rpm/
+            #baseurl=https://pkgs.k8s.io/core:/stable:/v1.29/rpm/
+            baseurl=https://pkgs.k8s.io/core:/stable:/v1.37/rpm/
             enabled=1
             gpgcheck=1
-            gpgkey=https://pkgs.k8s.io/core:/stable:/v1.29/rpm/repodata/repomd.xml.key
+            #gpgkey=https://pkgs.k8s.io/core:/stable:/v1.29/rpm/repodata/repomd.xml.key
+            gpgkey=https://pkgs.k8s.io/core:/stable:/v1.37/rpm/repodata/repomd.xml.key
             exclude=kubelet kubeadm kubectl cri-tools kubernetes-cni
             EOF
             # Set SELinux in permissive mode (effectively disabling it)
-            sudo setenforce 0
-            sudo sed -i 's/^SELINUX=enforcing$/SELINUX=permissive/' /etc/selinux/config
+            #sudo setenforce 0
+            sudo setenforce 0 || true
+            #sudo sed -i 's/^SELINUX=enforcing$/SELINUX=permissive/' /etc/selinux/config
+            sudo sed -i 's/^SELINUX=enforcing$/SELINUX=permissive/' /etc/selinux/config || true
             
             # DEFINIR A VERSÃO
-            sudo yum install -y kubelet kubeadm kubectl --disableexcludes=kubernetes
+            #sudo yum install -y kubelet kubeadm kubectl --disableexcludes=kubernetes
+            sudo yum install -y kubelet kubeadm kubectl cri-tools conntrack socat --disableexcludes=kubernetes
             #sudo systemctl enable --now kubelet
             
             ## cgroupd
             cat <<EOF | sudo tee ~/kubeadm-config.yaml
             # kubeadm-config.yaml
             kind: ClusterConfiguration
-            apiVersion: kubeadm.k8s.io/v1beta3
-            kubernetesVersion: v1.21.0
+            #apiVersion: kubeadm.k8s.io/v1beta3
+            apiVersion: kubeadm.k8s.io/v1beta4
+            #kubernetesVersion: v1.21.0
+            kubernetesVersion: v1.37.2
             ---
             kind: KubeletConfiguration
             apiVersion: kubelet.config.k8s.io/v1beta1
@@ -131,19 +141,22 @@
           become: yes
           shell: |
             #Install CNI plugins (required for most pod network):
-            CNI_VERSION="v0.8.2"
+            #CNI_VERSION="v0.8.2"
+            CNI_VERSION="v1.9.1"
             ARCH="amd64"
             sudo mkdir -p /opt/cni/bin
             curl -L "https://github.com/containernetworking/plugins/releases/download/${CNI_VERSION}/cni-plugins-linux-${ARCH}-${CNI_VERSION}.tgz" | sudo tar -C /opt/cni/bin -xz
             DOWNLOAD_DIR=/usr/local/bin
             sudo mkdir -p $DOWNLOAD_DIR
-            CRICTL_VERSION="v1.17.0"
+            #CRICTL_VERSION="v1.17.0"
+            CRICTL_VERSION="v1.37.0"
             ARCH="amd64"
             curl -L "https://github.com/kubernetes-sigs/cri-tools/releases/download/${CRICTL_VERSION}/crictl-${CRICTL_VERSION}-linux-${ARCH}.tar.gz" | sudo tar -C $DOWNLOAD_DIR -xz
             
             #Install kubeadm, kubelet, kubectl and add a kubelet systemd service:
             # DEFINIR A VERSÃO
-            RELEASE="v1.21.0"
+            #RELEASE="v1.21.0"
+            RELEASE="v1.37.2"
             #RELEASE="$(curl -sSL https://dl.k8s.io/release/stable.txt)"
             ARCH="amd64"
             cd $DOWNLOAD_DIR
@@ -165,8 +178,10 @@
             cat <<EOF | sudo tee ~/kubeadm-config.yaml
             # kubeadm-config.yaml
             kind: ClusterConfiguration
-            apiVersion: kubeadm.k8s.io/v1beta3
-            kubernetesVersion: v1.21.0
+            #apiVersion: kubeadm.k8s.io/v1beta3
+            apiVersion: kubeadm.k8s.io/v1beta4
+            #kubernetesVersion: v1.21.0
+            kubernetesVersion: v1.37.2
             ---
             kind: KubeletConfiguration
             apiVersion: kubelet.config.k8s.io/v1beta1
@@ -180,7 +195,8 @@
         - name: Instalar helm
           shell: |
             #curl -s https://get.helm.sh/helm-v3.1.2-linux-amd64.tar.gz -o helm-linux-amd64.tar.gz
-            curl -s https://get.helm.sh/helm-v3.14.1-linux-amd64.tar.gz -o helm-linux-amd64.tar.gz
+            #curl -s https://get.helm.sh/helm-v3.14.1-linux-amd64.tar.gz -o helm-linux-amd64.tar.gz
+            curl -s https://get.helm.sh/helm-v3.22.1-linux-amd64.tar.gz -o helm-linux-amd64.tar.gz
             tar -zxvf helm-linux-amd64.tar.gz
             sudo mv linux-amd64/helm /usr/local/bin/helm
             rm -rf helm-linux-amd64.tar.gz linux-amd64

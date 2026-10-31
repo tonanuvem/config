@@ -13,3 +13,14 @@ hosts
 .terraform.lock.hcl
 terraform.tfstate
 terraform.tfstate.backup
+*.log
+shift/master.sh
+azure-cluster/master.sh
+workers.sh
+istio.sh
+JOINTOKEN
+TEMPSENHA
+LOGINTOKEN
+APITOKEN
+AGENTCMD
+DOCKERRUNCMD

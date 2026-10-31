@@ -17,4 +17,5 @@
             backup: yes
           #register: etchostsupdate
           #when: inventory_hostname != "{{ item }}" or inventory_hostname == "{{ item }}"
-          with_items: "{{groups['nodes']}}"
+          #with_items: "{{groups['nodes']}}"
+          with_items: "{{groups['all']}}"

@@ -14,7 +14,8 @@ else
   read NODENUM
 fi
 
-IP=$(~/environment/ip | awk -Fv '{ if ( !($1 ~  "None") && (/vm_'$NODENUM'/) ) { print $1} }')
+#IP=$(~/environment/ip | awk -Fv '{ if ( !($1 ~  "None") && (/vm_'$NODENUM'/) ) { print $1} }')
+IP=$(terraform output -json ip_externo | jq .[] | jq .[$NODENUM] | sed 's/"//g')
 
 echo "Conectando.. IP = $IP"
 ssh -o LogLevel=error -oStrictHostKeyChecking=no -i ~/environment/labsuser.pem ec2-user@$IP
