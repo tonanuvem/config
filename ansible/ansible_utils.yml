@@ -1,154 +1,247 @@
+---
 - hosts: all
   tasks:
-  - name: Criar o arquivo ~/ip para pegar o IP da maquina
-    ansible.builtin.copy:
-      dest: "~/ip"
-      content: |
-        IP=$(curl -s checkip.amazonaws.com)
-        echo "http://$IP"
-  - name: Mudar a permissao do arquivo ~/ip
-    ansible.builtin.file:
-      path: ~/ip
-      mode: u+rwx,g+rwx,o+rx
+    - name: Criar o arquivo ~/ip para pegar o IP da maquina
+      ansible.builtin.copy:
+        dest: "~/ip"
+        content: |
+          IP=$(curl -s checkip.amazonaws.com)
+          echo "http://$IP"
+
+    - name: Mudar a permissao do arquivo ~/ip
+      ansible.builtin.file:
+        path: ~/ip
+        mode: u+rwx,g+rwx,o+rx
 
 - hosts: all
   tasks:
-  - name: Criar o arquivo ~/dns.sh 
-    ansible.builtin.copy:
-      dest: "~/dns.sh"
-      content: |
-        curl -s https://raw.githubusercontent.com/tonanuvem/config/main/dns.sh | bash
+    - name: Criar o arquivo ~/dns.sh
+      ansible.builtin.copy:
+        dest: "~/dns.sh"
+        content: |
+          curl -s https://raw.githubusercontent.com/tonanuvem/config/main/dns.sh | bash
 
-  #- name: Desabilitar GPGCheck certs em amzn2-core.repo
-  #  become: yes
-  #  # yum repo configuration file, the line gpgcheck=1 indicates that GPG checking should be done for all packages in this repository
-  #  shell: "sed -i 's|gpgcheck=1|gpgcheck=0|' /etc/yum.repos.d/amzn2-core.repo"
-  #  when: ansible_os_family == "RedHat"
+    # - name: Desabilitar GPGCheck certs em amzn2-core.repo
+    #   become: yes
+    #   # yum repo configuration file, the line gpgcheck=1 indicates that GPG checking should be done for all packages in this repository
+    #   shell: "sed -i 's|gpgcheck=1|gpgcheck=0|' /etc/yum.repos.d/amzn2-core.repo"
+    #   when: ansible_os_family == "RedHat"
 
-  - name: Configurar /etc/yum.repos.d/kubernetes.repo com GPG desabilitado
-    become: yes
-    shell: |
-      cat <<EOF | sudo tee /etc/yum.repos.d/kubernetes.repo
-      [kubernetes]
-      name=Kubernetes
-      baseurl=https://pkgs.k8s.io/core:/stable:/v1.29/rpm/
-      enabled=1
-      gpgcheck=1
-      gpgkey=https://pkgs.k8s.io/core:/stable:/v1.29/rpm/repodata/repomd.xml.key
-      exclude=kubelet kubeadm kubectl cri-tools kubernetes-cni
-      EOF
-    when: ansible_os_family == "RedHat"
+    - name: Configurar /etc/yum.repos.d/kubernetes.repo com GPG desabilitado
+      become: yes
+      shell: |
+        cat <<EOF | sudo tee /etc/yum.repos.d/kubernetes.repo
+        [kubernetes]
+        name=Kubernetes
+        baseurl=https://pkgs.k8s.io/core:/stable:/v1.29/rpm/
+        enabled=1
+        gpgcheck=1
+        gpgkey=https://pkgs.k8s.io/core:/stable:/v1.29/rpm/repodata/repomd.xml.key
+        exclude=kubelet kubeadm kubectl cri-tools kubernetes-cni
+        EOF
+      when: ansible_os_family == "RedHat"
 
-  - name: Instalar lista de pacotes via dfm no Amazon Linux 2023
-    become: yes
-    ansible.builtin.package:
-      name:
-        - python3
-        - python3-pip
-        #- python3-venv
-        - wget
-        - git
-        - jq
-        - httpd
-      state: present
-      disable_gpg_check: yes
-      lock_timeout: 180
-    when: (ansible_os_family == "RedHat") and (ansible_distribution_version == "2023")
+    - name: Instalar lista de pacotes via dnf no Amazon Linux 2023
+      become: yes
+      ansible.builtin.package:
+        name:
+          - python3
+          - python3-pip
+          # - python3-venv
+          - wget
+          - git
+          - jq
+          - httpd
+        state: present
+        disable_gpg_check: yes
+        lock_timeout: 180
+      when: (ansible_os_family == "RedHat") and (ansible_distribution_version == "2023")
 
-  - name: Instalar o Docker via yum no Amazon Linux 2
-    become: yes
-    shell: |
-      sudo yum install -y docker python3 python3-pip wget git jq httpd
-    when: (ansible_os_family == "RedHat") and (ansible_distribution_version == "2")
-    
-  - name: Instalar lista de pacotes (ubuntu)
-    become: yes
-    apt:
-    #ansible.builtin.package:
-      name:
-        - python3
-        - python3-pip
-        - python3-venv
-        - wget
-        - git
-        - jq
-        - apache2
-        - curl
-        - unzip
-      state: present
-      update_cache: true
-      cache_valid_time: 3600
-      force_apt_get: true
-    register: apt_action
-    # Teto dimensionado por medicao, nao por palpite: a maior task de apt
-    # observada levou 42,7s, entao 300s da ~7x de folga para dia de mirror
-    # ruim ou release com mais pacotes, e ainda corta travamento cedo.
-    # O valor anterior, 1800s, era 42x o observado.
-    async: 300
-    poll: 5
-    # retries: 100 era heranca de quando a task nao tinha teto. Com o
-    # async acima, cada tentativa ja e limitada, e 100 delas multiplicariam
-    # o pior caso por 100 sem ganho nenhum.
-    retries: 2
-    delay: 10
-    until: apt_action is success or ('Failed to lock apt for exclusive operation' not in apt_action.msg and '/var/lib/dpkg/lock' not in apt_action.msg)
-    when: ansible_os_family == "Debian"
+    - name: Instalar o Docker via yum no Amazon Linux 2
+      become: yes
+      shell: |
+        sudo yum install -y docker python3 python3-pip wget git jq httpd
+      when: (ansible_os_family == "RedHat") and (ansible_distribution_version == "2")
 
-  - name: atualizar index page (Apache web server) no Amazon Linux
-    become: yes
-    shell: |
-      sudo systemctl start httpd
-      sudo systemctl enable httpd
-      sudo firewall-cmd --permanent --add-service=http
-      sudo firewall-cmd --reload
-      sudo chmod 777 /var/www/html
-      sudo curl -s "https://tonanuvem.github.io/page/docs/open.html" -o "/var/www/html/index.html" 
-    when: ansible_os_family == "RedHat"
+    - name: Instalar lista de pacotes (ubuntu)
+      become: yes
+      apt:
+        name:
+          - python3
+          - python3-pip
+          - python3-venv
+          - wget
+          - git
+          - jq
+          - apache2
+          - curl
+          - unzip
+        state: present
+        update_cache: true
+        cache_valid_time: 3600
+        force_apt_get: true
+      register: apt_action
+      async: 300
+      poll: 5
+      retries: 2
+      delay: 10
+      until: apt_action is success or ('Failed to lock apt for exclusive operation' not in apt_action.msg and '/var/lib/dpkg/lock' not in apt_action.msg)
+      when: ansible_os_family == "Debian"
 
-  - name: atualizar index page (Apache web server) no Ubuntu
-    become: yes
-    shell: |
-      sudo curl -s "https://tonanuvem.github.io/page/docs/open.html" -o "/var/www/html/index.html" 
-    args:
-      executable: /bin/bash
-    when: ansible_os_family == "Debian"
-    
-  - name: Preparar utilitário ccat
-    ansible.builtin.shell: |
-      wget https://github.com/jingweno/ccat/releases/download/v1.1.0/linux-amd64-1.1.0.tar.gz
-      tar -zxvf linux-amd64-1.1.0.tar.gz 
-      chmod +x linux-amd64-1.1.0/ccat
-      sudo mv linux-amd64-1.1.0/ccat /usr/local/bin/ccat
-      echo "alias cat='/usr/local/bin/ccat --bg=dark'" | sudo tee -a /etc/profile
-      rm -rf linux-amd64-1.1.0*
-    args:
-      executable: /bin/bash
-      
-  - name: Criar diretorio vazio das credenciais da AWS
-    ansible.builtin.file:
-      path: ~/.aws
-      state: directory
-      mode: '0755'
-      
-  - name: Criar arquivo vazio das credenciais da AWS
-    ansible.builtin.file:
-      path: ~/.aws/credentials
-      state: touch
-      mode: u+rw,g+rw,o+rw
+    - name: Atualizar index page (Apache web server) no Amazon Linux
+      become: yes
+      shell: |
+        sudo systemctl start httpd
+        sudo systemctl enable httpd
+        sudo firewall-cmd --permanent --add-service=http
+        sudo firewall-cmd --reload
+        sudo chmod 777 /var/www/html
+        sudo curl -s "https://tonanuvem.github.io/page/docs/open.html" -o "/var/www/html/index.html"
+      when: ansible_os_family == "RedHat"
 
-  - name: Baixar e executar o script de instalação do Amazon Q
-    shell: |
-      wget https://raw.githubusercontent.com/tonanuvem/config/refs/heads/main/amazon-q-install.sh
-      chmod +x amazon-q-install.sh
-      ./amazon-q-install.sh
-      rm -rf amazon-q-install.sh
-    args:
-      executable: /bin/bash
+    - name: Atualizar index page (Apache web server) no Ubuntu
+      become: yes
+      shell: |
+        sudo curl -s "https://tonanuvem.github.io/page/docs/open.html" -o "/var/www/html/index.html"
+      args:
+        executable: /bin/bash
+      when: ansible_os_family == "Debian"
 
-  - name: Ajustar o .bashrc (ubuntu)
-    shell: |
-      cp /etc/skel/.bashrc ~/
-      #systemctl stop apache2.service
-    args:
-      executable: /bin/bash
-    when: ansible_os_family == "Debian"
+    - name: Preparar utilitário ccat
+      ansible.builtin.shell: |
+        wget https://github.com/jingweno/ccat/releases/download/v1.1.0/linux-amd64-1.1.0.tar.gz
+        tar -zxvf linux-amd64-1.1.0.tar.gz
+        chmod +x linux-amd64-1.1.0/ccat
+        sudo mv linux-amd64-1.1.0/ccat /usr/local/bin/ccat
+        echo "alias cat='/usr/local/bin/ccat --bg=dark'" | sudo tee -a /etc/profile
+        rm -rf linux-amd64-1.1.0*
+      args:
+        executable: /bin/bash
+        creates: /usr/local/bin/ccat
+
+    - name: Criar diretorio vazio das credenciais da AWS
+      ansible.builtin.file:
+        path: ~/.aws
+        state: directory
+        mode: '0755'
+
+    - name: Criar arquivo vazio das credenciais da AWS
+      ansible.builtin.file:
+        path: ~/.aws/credentials
+        state: touch
+        mode: u+rw,g+rw,o+rw
+
+    - name: Ajustar o .bashrc (ubuntu)
+      shell: |
+        cp /etc/skel/.bashrc ~/
+        # systemctl stop apache2.service
+      args:
+        executable: /bin/bash
+      when: ansible_os_family == "Debian"
+
+    - name: Baixar e executar o script de instalação do Amazon Q
+      shell: |
+        wget https://raw.githubusercontent.com/tonanuvem/config/refs/heads/main/amazon-q-install.sh
+        chmod +x amazon-q-install.sh
+        ./amazon-q-install.sh
+        rm -rf amazon-q-install.sh
+      args:
+        executable: /bin/bash
+
+# Google Antigravity CLI (agy) para o fluxo do ubuntu-vm.
+#
+# Substitui o antigo @google/gemini-cli (descontinuado para contas individuais)
+# permitindo login direto via OAuth com contas Google pessoais / Google AI Pro
+# e execucao 100% autonoma no laboratorio via --dangerously-skip-permissions.
+# Cria tambem o atalho "gemini" apontando para o "agy" para manter
+# compatibilidade com roteiros de aula e costume dos alunos.
+- name: Instalação e configuração do Google Antigravity CLI (agy / gemini)
+  hosts: all
+
+  vars:
+    dev_user: "{{ ansible_user | default('ubuntu') }}"
+    dev_home: "/home/{{ dev_user }}"
+    agy_bin_local: "{{ dev_home }}/.local/bin/agy"
+
+  tasks:
+
+    - name: Garantir dependências básicas (curl e ca-certificates) no Ubuntu
+      become: true
+      apt:
+        name:
+          - curl
+          - ca-certificates
+        state: present
+        update_cache: true
+      async: 300
+      poll: 5
+      when: ansible_os_family == "Debian"
+
+    # Instala o binario oficial em ~/.local/bin/agy rodando como o usuario da VM
+    - name: Instalar Google Antigravity CLI (agy) no Ubuntu
+      become: true
+      become_user: "{{ dev_user }}"
+      shell: curl -fsSL https://antigravity.google/cli/install.sh | bash
+      args:
+        executable: /bin/bash
+        creates: "{{ agy_bin_local }}"
+      when: ansible_os_family == "Debian"
+
+    # Cria wrappers em /usr/local/bin/agy e /usr/local/bin/gemini
+    # repassando sempre a flag --dangerously-skip-permissions para o binario real.
+    - name: Configurar wrappers globais (agy e gemini) em /usr/local/bin com --dangerously-skip-permissions
+      become: true
+      copy:
+        dest: "/usr/local/bin/{{ item }}"
+        mode: "0755"
+        owner: root
+        group: root
+        content: |
+          #!/usr/bin/env bash
+          exec "{{ agy_bin_local }}" --dangerously-skip-permissions "$@"
+      loop:
+        - agy
+        - gemini
+      when: ansible_os_family == "Debian"
+
+    # Configura os aliases agy e gemini em login shells (/etc/profile.d/agy.sh)
+    - name: Configurar aliases agy e gemini em login shells (/etc/profile.d/agy.sh)
+      become: true
+      copy:
+        dest: /etc/profile.d/agy.sh
+        mode: "0644"
+        content: |
+          export PATH="{{ dev_home }}/.local/bin:$PATH"
+          alias agy='{{ agy_bin_local }} --dangerously-skip-permissions'
+          alias gemini='{{ agy_bin_local }} --dangerously-skip-permissions'
+      when: ansible_os_family == "Debian"
+
+    - name: Garantir aliases agy e gemini no .bashrc do usuário (para terminal do code-server)
+      become: true
+      blockinfile:
+        path: "{{ dev_home }}/.bashrc"
+        marker: "# {mark} ANSIBLE MANAGED BLOCK - AGY & GEMINI CLI"
+        owner: "{{ dev_user }}"
+        group: "{{ dev_user }}"
+        block: |
+          export PATH="{{ dev_home }}/.local/bin:$PATH"
+          alias agy='{{ agy_bin_local }} --dangerously-skip-permissions'
+          alias gemini='{{ agy_bin_local }} --dangerously-skip-permissions'
+      when: ansible_os_family == "Debian"
+
+    - name: Verificar instalação dos comandos agy e gemini
+      become: true
+      become_user: "{{ dev_user }}"
+      shell: |
+        echo "agy:    $(/usr/local/bin/agy --version)"
+        echo "gemini: $(/usr/local/bin/gemini --version)"
+      args:
+        executable: /bin/bash
+      register: agy_log
+      changed_when: false
+      when: ansible_os_family == "Debian"
+
+    - name: Mostrar versão instalada (agy e gemini)
+      debug:
+        msg: "{{ agy_log.stdout_lines }}"
+      when: ansible_os_family == "Debian"
