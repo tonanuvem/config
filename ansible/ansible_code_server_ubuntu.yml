@@ -5,9 +5,9 @@
 
   vars:
     code_server_user: ubuntu
-    code_server_version: "4.144.0"
+    code_server_version: "4.144.0"  # Ou "4.103.2" caso prefira a serie anterior
     code_server_port: 8099
-    code_server_password: "fiap"  # Altere conforme necessário
+    code_server_password: "fiap"    # Altere conforme necessário
     workspace_dir: "/home/ubuntu"
 
   # Reiniciar o code-server SO quando a configuracao muda (via notify).
@@ -28,7 +28,8 @@
     - name: Baixar Code Server
       get_url:
         url: "https://github.com/coder/code-server/releases/download/v{{ code_server_version }}/code-server_{{ code_server_version }}_amd64.deb"
-        dest: /tmp/code-server.deb
+        dest: "/tmp/code-server_{{ code_server_version }}.deb"
+        mode: "0644"
 
     - name: Instalar Code Server
       # Mesmo teto das demais tasks de apt: estas tinham ficado de fora, e
@@ -36,7 +37,9 @@
       async: 300
       poll: 5
       apt:
-        deb: /tmp/code-server.deb
+        deb: "/tmp/code-server_{{ code_server_version }}.deb"
+        allow_downgrade: yes
+      notify: Reiniciar code-server
 
     - name: Criar diretório de configuração
       file:
@@ -44,7 +47,7 @@
         state: directory
         owner: "{{ code_server_user }}"
         group: "{{ code_server_user }}"
-        mode: 0755
+        mode: "0755"
 
     - name: Criar arquivo config.yaml
       copy:
@@ -56,17 +59,20 @@
           cert: false
         owner: "{{ code_server_user }}"
         group: "{{ code_server_user }}"
-        mode: 0600
+        mode: "0600"
       notify: Reiniciar code-server
 
     - name: Criar diretório para (settings.json)
       file:
-        path: "/home/{{ code_server_user }}/.local/share/code-server/User/"
+        path: "/home/{{ code_server_user }}/.local/share/code-server/User"
         state: directory
         owner: "{{ code_server_user }}"
         group: "{{ code_server_user }}"
-        mode: 0755
+        mode: "0755"
 
+    # Desativa o EditContext experimental e o suporte a colagem de imagens
+    # no terminal (enableImages: false) para evitar que TUIs como o "agy"
+    # capturem o Ctrl+V esperando imagem e bloqueiem a colagem de texto via HTTP.
     - name: Criar configurações globais (settings.json)
       copy:
         dest: "/home/{{ code_server_user }}/.local/share/code-server/User/settings.json"
@@ -78,26 +84,34 @@
             "workbench.colorTheme": "Default Dark+",
             "update.mode": "none",
             "security.workspace.trust.enabled": false,
-            "keyboard.dispatch": "keyCode"
+            "editor.experimentalEditContextEnabled": false,
+            "terminal.integrated.enableImages": false,
+            "terminal.integrated.sendKeybindingsToShell": false,
+            "terminal.integrated.allowChords": true,
+            "terminal.integrated.rightClickBehavior": "paste",
+            "terminal.integrated.commandsToSkipShell": [
+              "workbench.action.terminal.paste",
+              "workbench.action.terminal.copySelection"
+            ]
           }
         owner: "{{ code_server_user }}"
         group: "{{ code_server_user }}"
-        mode: 0644
+        mode: "0644"
 
     - name: Criar pasta .vscode no workspace
       file:
-        path: "/home/ubuntu/.vscode"
+        path: "{{ workspace_dir }}/.vscode"
         state: directory
-        owner: ubuntu
-        group: ubuntu
-        mode: '0755'
+        owner: "{{ code_server_user }}"
+        group: "{{ code_server_user }}"
+        mode: "0755"
 
     - name: Criar tasks.json para abrir terminal automaticamente
       copy:
-        dest: "/home/ubuntu/.vscode/tasks.json"
-        owner: ubuntu
-        group: ubuntu
-        mode: '0644'
+        dest: "{{ workspace_dir }}/.vscode/tasks.json"
+        owner: "{{ code_server_user }}"
+        group: "{{ code_server_user }}"
+        mode: "0644"
         content: |
           {
             "version": "2.0.0",
@@ -106,7 +120,14 @@
                 "label": "Abrir terminal",
                 "type": "shell",
                 "command": "echo Terminal iniciado",
-                "runOn": "folderOpen",
+                "runOptions": {
+                  "runOn": "folderOpen"
+                },
+                "presentation": {
+                  "reveal": "always",
+                  "panel": "dedicated",
+                  "focus": true
+                },
                 "problemMatcher": []
               }
             ]
@@ -118,7 +139,7 @@
         state: directory
         owner: root
         group: root
-        mode: 0755
+        mode: "0755"
 
     - name: Criar override para iniciar com workspace padrão
       copy:
@@ -126,12 +147,12 @@
         content: |
           [Service]
           ExecStart=
-          ExecStart=/usr/bin/code-server {{ workspace_dir }} --host 0.0.0.0 --port {{ code_server_port }} --auth password --user-data-dir /home/{{ code_server_user }}/.local/share/code-server --extensions-dir /home/{{ code_server_user }}/.vscode
+          ExecStart=/usr/bin/code-server {{ workspace_dir }} --host 0.0.0.0 --port {{ code_server_port }} --auth password --user-data-dir /home/{{ code_server_user }}/.local/share/code-server --extensions-dir /home/{{ code_server_user }}/.local/share/code-server/extensions
           Restart=always
           RestartSec=2
         owner: root
         group: root
-        mode: 0644
+        mode: "0644"
       notify:
         - Recarregar systemd
         - Reiniciar code-server
