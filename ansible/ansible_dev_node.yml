@@ -20,6 +20,8 @@
     node_version: "24.21.0"
     node_arch: "{{ 'arm64' if ansible_architecture in ['aarch64', 'arm64'] else 'x64' }}"
     node_dir: "node-v{{ node_version }}-linux-{{ node_arch }}"
+    # Usuario padrao da VM (ubuntu) para permitir "npm install -g" sem sudo
+    dev_user: "{{ ansible_user | default(ansible_user_id) }}"
 
   tasks:
 
@@ -45,7 +47,23 @@
         src: "/tmp/{{ node_dir }}.tar.gz"
         dest: /opt
         remote_src: true
+        owner: "{{ dev_user }}"
+        group: "{{ dev_user }}"
         creates: "/opt/{{ node_dir }}/bin/node"
+      when: ansible_os_family == "Debian"
+
+
+    # Garante que mesmo em VMs ja provisionadas anteriormente (onde a pasta
+    # ja existia como root) a arvore /opt/node-v... passe a pertencer ao
+    # usuario da VM para liberar "npm install -g" sem sudo.
+    - name: Garantir permissoes do usuario em /opt/{{ node_dir }}
+      become: true
+      file:
+        path: "/opt/{{ node_dir }}"
+        state: directory
+        owner: "{{ dev_user }}"
+        group: "{{ dev_user }}"
+        recurse: true
       when: ansible_os_family == "Debian"
 
 
@@ -55,6 +73,8 @@
         src: "/opt/{{ node_dir }}"
         dest: /opt/node
         state: link
+        owner: "{{ dev_user }}"
+        group: "{{ dev_user }}"
         force: true
       when: ansible_os_family == "Debian"
 
@@ -79,8 +99,10 @@
     # Yarn classico (1.x) via npm, o mesmo que o cloud9.yml entregava. Nao
     # usa corepack: ele deixou de vir junto com o Node a partir do 25, e
     # amarrar o lab a ele so adiaria a quebra.
+    # IMPORTANTE: Roda sem "become: true" (como o proprio usuario ubuntu)
+    # para nao criar arquivos root dentro de /opt/node/lib/node_modules
+    # nem em ~/.npm.
     - name: Instalar Yarn no Ubuntu
-      become: true
       shell: npm install -g yarn@1
       args:
         executable: /bin/bash
@@ -101,14 +123,23 @@
 
 
     # Para pacotes que o aluno instalar com "npm install -g" caberem no
-    # PATH de shell interativo, alem dos links fixos acima.
-    - name: Configurar PATH do Node.js no Ubuntu
+    # PATH de shell interativo (SSH login e terminal do code-server).
+    - name: Configurar PATH do Node.js em login shells (/etc/profile.d)
       become: true
       copy:
         dest: /etc/profile.d/node.sh
         mode: "0644"
         content: |
           export PATH=/opt/node/bin:$PATH
+      when: ansible_os_family == "Debian"
+
+
+    - name: Garantir /opt/node/bin no PATH de shells nao-login (code-server)
+      become: true
+      lineinfile:
+        path: /etc/bash.bashrc
+        line: 'export PATH=/opt/node/bin:$PATH'
+        state: present
       when: ansible_os_family == "Debian"
 
 
