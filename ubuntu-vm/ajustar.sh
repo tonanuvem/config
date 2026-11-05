@@ -431,7 +431,29 @@ PLAYBOOKS=(
     code_server_ubuntu
 )
 
+# Com argumentos, roda SO as etapas pedidas (na ordem dada):
+#
+#     bash ajustar.sh dev_java code_server_ubuntu
+#
+# E o que resolve uma falha isolada -- antes, reaplicar a etapa que
+# caiu por rede obrigava a repetir as nove, ~5 minutos de aula.
+if [ "$#" -gt 0 ]; then
+    PLAYBOOKS=("$@")
+    echo ""
+    echo "Etapas selecionadas: $*"
+fi
+
 TOTAL="${#PLAYBOOKS[@]}"
+
+# Etapas que falharam, para o resumo do fim. O loop nao aborta mais na
+# primeira falha: as etapas sao independentes entre si (java, node, k8s,
+# docker) e a causa tipica e passageira -- mirror fora do ar, handshake
+# TLS estourado no download do Maven. Abortar ali deixava o code-server
+# (ultima etapa, a que o aluno usa) sem instalar por causa de um
+# download que nada tem a ver com ele.
+#
+# Com FIAPLAB_PARAR_NO_ERRO=1 volta o comportamento antigo.
+FALHAS=()
 
 # Guarda "nome:segundos" por etapa. O objetivo e dimensionar os tetos
 # (async, sobretudo) a partir de medicao, em vez de palpite: hoje o
@@ -458,7 +480,8 @@ for I in "${!PLAYBOOKS[@]}"; do
         echo "❌ Playbook não encontrado:"
         echo "   $ARQUIVO"
         echo ""
-        exit 1
+        FALHAS+=("$NOME")
+        continue
     fi
 
     # Amostra sempre o primeiro no: e suficiente para diferenciar uma
@@ -481,29 +504,66 @@ for I in "${!PLAYBOOKS[@]}"; do
     echo "⏱  etapa '$NOME' levou ${D_ETAPA}s"
 
     if [ "$RC" -ne 0 ]; then
+
+        FALHAS+=("$NOME")
+
         echo ""
         echo "============================================================"
         echo " ❌ FALHA NA ETAPA: $NOME"
         echo "============================================================"
         echo ""
-        echo "As etapas anteriores foram aplicadas, mas a configuração"
-        echo "está incompleta. O code-server pode não estar disponível."
-        echo ""
-        echo "Para tentar novamente, execute no menu:"
-        echo "   1) Criar infraestrutura"
-        echo ""
 
-        # Numa rodada de medicao a falha e justamente quando os tempos
-        # mais interessam, entao o resumo sai aqui tambem.
-        resumo_tempos
+        if [ -n "$FIAPLAB_PARAR_NO_ERRO" ]; then
+            echo "FIAPLAB_PARAR_NO_ERRO=1: interrompendo aqui."
+            echo ""
 
-        exit "$RC"
+            # Numa rodada de medicao a falha e justamente quando os
+            # tempos mais interessam, entao o resumo sai aqui tambem.
+            resumo_tempos
+
+            exit "$RC"
+        fi
+
+        if [ "$((I + 1))" -lt "$TOTAL" ]; then
+            echo "O erro está acima. Seguindo para a próxima etapa -- as"
+            echo "demais não dependem desta; o resumo no fim lista o que"
+            echo "falhou e como reaplicar só isso."
+        else
+            echo "O erro está acima; era a última etapa. O resumo abaixo"
+            echo "diz como reaplicar só o que falhou."
+        fi
     fi
 
     echo ""
 done
 
 resumo_tempos
+
+if [ "${#FALHAS[@]}" -gt 0 ]; then
+
+    echo ""
+    echo "============================================================"
+    echo "        ⚠️  LAB CONFIGURADO PARCIALMENTE"
+    echo "============================================================"
+    echo ""
+    echo "Etapas com erro (${#FALHAS[@]} de $TOTAL):"
+    echo ""
+
+    for NOME in "${FALHAS[@]}"; do
+        echo "   ❌ $NOME"
+    done
+
+    echo ""
+    echo "As outras etapas foram aplicadas. Para reaplicar só as que"
+    echo "falharam (a causa costuma ser rede, e na segunda passa):"
+    echo ""
+    echo "   bash ~/environment/config/ubuntu-vm/ajustar.sh ${FALHAS[*]}"
+    echo ""
+    echo "Ou reaplique tudo pelo menu:  1) Criar infraestrutura"
+    echo ""
+
+    exit 1
+fi
 
 echo ""
 echo "============================================================"
