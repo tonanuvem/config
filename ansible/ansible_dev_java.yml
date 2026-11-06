@@ -9,24 +9,81 @@
     # https://archive.apache.org/dist/maven/maven-3/
     maven_version: "3.9.16"
 
+    # O checksum fica fixo aqui, e nao como URL no parametro checksum do
+    # get_url, de proposito. O get_url baixa a URL do checksum ANTES de
+    # olhar se o arquivo de destino ja esta no disco com o hash certo
+    # (modules/get_url.py: o fetch do checksum vem antes do early exit
+    # "file already exists"). Ou seja: com o checksum remoto, toda execucao
+    # do playbook vai a rede buscar o .sha512, mesmo numa VM onde o Maven
+    # ja esta instalado -- e foi exatamente esse fetch que estourou o
+    # handshake TLS do archive.apache.org. Com o hash fixo, uma VM ja
+    # provisionada nao toca a rede.
+    #
+    # Ao trocar maven_version, atualize este valor. Ele e publicado ao lado
+    # do tar.gz:
+    #   curl -s https://downloads.apache.org/maven/maven-3/<versao>/binaries/apache-maven-<versao>-bin.tar.gz.sha512
+    maven_sha512: "831a8591fe20c8243b1dbe7d71e3244f31d1665b0804b2e825e38cbbe5ce0cafb8338851f90780735568773e0a6cd07bbec107cda0b896b008b861075358b6f6"
+
+    # Mirrors tentados em ordem, do mais rapido para o mais completo:
+    #
+    # - downloads.apache.org fica atras da CDN da Apache, aguenta IP de
+    #   nuvem e so guarda a versao corrente de cada linha (hoje, na 3.9, e
+    #   justamente a 3.9.16 -- entao e o mirror certo para o caso normal).
+    # - archive.apache.org guarda tudo para sempre, mas e host unico, sem
+    #   CDN, e com rate limit agressivo: de dentro da AWS o handshake TLS
+    #   simplesmente nao fecha nos 10s de timeout padrao do get_url. Fica
+    #   como reserva, para quando maven_version sair do downloads.
+    maven_mirrors:
+      - "https://downloads.apache.org/maven/maven-3"
+      - "https://archive.apache.org/dist/maven/maven-3"
+
   tasks:
 
     # ============================================================
     # Amazon Linux 2
     # ============================================================
 
+    # Antes esta task pedia o 3.9.8 ao downloads.apache.org, que ja o apagou
+    # (404) -- e o shell rodava sem "set -e": o wget falhava calado, o tar
+    # falhava, mas o "cat > /etc/profile.d" no fim dava rc 0 e a task era
+    # reportada como ok. Resultado: VM sem Maven, playbook verde. Agora usa
+    # a mesma versao, lista de mirrors e checksum do caminho Ubuntu, com
+    # "set -euo pipefail" para a falha aparecer.
     - name: Instalar Java 11 e Maven no Amazon Linux 2
       become: true
       shell: |
+        set -euo pipefail
+
         amazon-linux-extras install java-openjdk11 -y
 
-        wget -q https://downloads.apache.org/maven/maven-3/3.9.8/binaries/apache-maven-3.9.8-bin.tar.gz
+        tarball="/tmp/apache-maven-{{ maven_version }}-bin.tar.gz"
 
-        tar xf apache-maven-3.9.8-bin.tar.gz -C /opt
+        # Nao rebaixa o tar.gz se ele ja estiver no disco com o hash certo.
+        if ! echo "{{ maven_sha512 }}  $tarball" | sha512sum -c - >/dev/null 2>&1; then
+          rm -f "$tarball"
+          for base in {{ maven_mirrors | join(' ') }}; do
+            url="$base/{{ maven_version }}/binaries/apache-maven-{{ maven_version }}-bin.tar.gz"
+            # O "if" protege o curl do set -e, para que o mirror seguinte
+            # ainda seja tentado.
+            if curl -fsSL --connect-timeout 15 --max-time 300 -o "$tarball" "$url"; then
+              break
+            fi
+            echo "mirror falhou, tentando o proximo: $base" >&2
+            rm -f "$tarball"
+          done
+          # Se nenhum mirror respondeu, o arquivo nao existe e o sha512sum
+          # abaixo derruba a task com a mensagem certa.
+          echo "{{ maven_sha512 }}  $tarball" | sha512sum -c -
+        fi
 
-        rm -f apache-maven-3.9.8-bin.tar.gz
+        rm -rf "/opt/apache-maven-{{ maven_version }}"
+        tar xf "$tarball" -C /opt
 
-        ln -sfn /opt/apache-maven-3.9.8 /opt/maven
+        ln -sfn "/opt/apache-maven-{{ maven_version }}" /opt/maven
+
+        # Mesmo motivo do link no caminho Ubuntu: /etc/profile.d so vale em
+        # shell de login, e /usr/local/bin vem antes de /usr/bin no PATH.
+        ln -sfn /opt/maven/bin/mvn /usr/local/bin/mvn
 
         cat > /etc/profile.d/java-maven.sh <<'EOF'
         export JAVA_HOME=/usr/lib/jvm/jre-11-openjdk
@@ -37,6 +94,7 @@
         EOF
       args:
         executable: /bin/bash
+        creates: "/opt/apache-maven-{{ maven_version }}/bin/mvn"
       when:
         - ansible_os_family == "RedHat"
         - ansible_distribution_major_version == "2"
@@ -108,16 +166,61 @@
       when: ansible_os_family == "Debian"
 
 
-    # archive.apache.org e permanente; o downloads.apache.org so guarda a
-    # versao mais recente e apaga as antigas (o 3.9.8 do task do Amazon
-    # Linux 2 ja da 404 la). O checksum vem publicado ao lado do tar.gz.
+    # Tenta cada mirror de maven_mirrors, em ordem, e para no primeiro que
+    # entregar o arquivo: com o checksum fixo (e nao como URL), o get_url
+    # sai na hora com "file already exists" quando o tar.gz ja esta no
+    # disco com o hash certo, sem abrir conexao -- entao as iteracoes
+    # seguintes a que baixou nao vao a rede.
+    #
+    # timeout: 30 porque o padrao do get_url e 10s, e foi nele que a versao
+    # anterior morreu ("elapsed": 10) contra o archive.apache.org.
+    #
+    # ignore_errors para que o mirror que falhar nao derrube a play antes de
+    # o proximo ser tentado; quem decide se o download deu certo e o assert
+    # logo abaixo.
     - name: Baixar Maven {{ maven_version }} da Apache no Ubuntu
       become: true
       get_url:
-        url: "https://archive.apache.org/dist/maven/maven-3/{{ maven_version }}/binaries/apache-maven-{{ maven_version }}-bin.tar.gz"
+        url: "{{ item }}/{{ maven_version }}/binaries/apache-maven-{{ maven_version }}-bin.tar.gz"
         dest: "/tmp/apache-maven-{{ maven_version }}-bin.tar.gz"
-        checksum: "sha512:https://archive.apache.org/dist/maven/maven-3/{{ maven_version }}/binaries/apache-maven-{{ maven_version }}-bin.tar.gz.sha512"
+        checksum: "sha512:{{ maven_sha512 }}"
         mode: "0644"
+        timeout: 30
+      loop: "{{ maven_mirrors }}"
+      register: maven_download
+      retries: 2
+      delay: 5
+      until: maven_download is success
+      ignore_errors: true
+      when: ansible_os_family == "Debian"
+
+
+    # Checa o resultado pelo disco, e nao pelo registro das tentativas:
+    # pega tambem o caso de um /tmp com tar.gz truncado de uma execucao
+    # anterior.
+    - name: Conferir o tar.gz do Maven baixado no Ubuntu
+      become: true
+      stat:
+        path: "/tmp/apache-maven-{{ maven_version }}-bin.tar.gz"
+        checksum_algorithm: sha512
+      register: maven_tar
+      changed_when: false
+      when: ansible_os_family == "Debian"
+
+
+    - name: Falhar se nenhum mirror da Apache entregou o Maven no Ubuntu
+      ansible.builtin.assert:
+        that:
+          - maven_tar.stat.exists
+          - maven_tar.stat.checksum == maven_sha512
+        fail_msg: >-
+          Nao foi possivel baixar o Maven {{ maven_version }} de nenhum
+          mirror ({{ maven_mirrors | join(', ') }}). Se o erro foi timeout
+          de handshake TLS, o archive.apache.org costuma estar limitando o
+          IP de saida -- confira se maven_version ainda e a versao corrente
+          em https://downloads.apache.org/maven/maven-3/ e, se nao for,
+          atualize maven_version e maven_sha512.
+        success_msg: "Maven {{ maven_version }} conferido pelo sha512."
       when: ansible_os_family == "Debian"
 
 
