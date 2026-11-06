@@ -445,6 +445,20 @@ fi
 
 TOTAL="${#PLAYBOOKS[@]}"
 
+# FIAPLAB_LIMIT: roda as etapas so no host indicado (--limit do
+# ansible-playbook). E o que o refazer-vm.sh do repo cloudshell usa
+# depois de recriar UMA VM do lote: a VM nova sobe limpa e precisa das
+# nove etapas, enquanto as outras do lote ja estao prontas e nao devem
+# ser mexidas. O nome vem da tag Name, que e o inventory_hostname
+# montado acima. Vazio = todas, como sempre.
+LIMITE=()
+
+if [ -n "$FIAPLAB_LIMIT" ]; then
+    LIMITE=(--limit "$FIAPLAB_LIMIT")
+    echo ""
+    echo "Limitado a: $FIAPLAB_LIMIT"
+fi
+
 # Etapas que falharam, para o resumo do fim. O loop nao aborta mais na
 # primeira falha: as etapas sao independentes entre si (java, node, k8s,
 # docker) e a causa tipica e passageira -- mirror fora do ar, handshake
@@ -492,6 +506,7 @@ for I in "${!PLAYBOOKS[@]}"; do
 
     "$ANSIBLE_PLAYBOOK" "$ARQUIVO" \
         --inventory "$INV" \
+        "${LIMITE[@]}" \
         -u ubuntu \
         --key-file ~/environment/labsuser.pem
 
