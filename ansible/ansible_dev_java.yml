@@ -3,11 +3,24 @@
   hosts: all
 
   vars:
-    # Linha 3.9 (o Quarkus aceita [3.9.0,)). Nao o Maven 4: mudou a
-    # compatibilidade de plugins e nao ha ganho para o lab. Para atualizar,
-    # troque aqui; as versoes publicadas estao em
-    # https://archive.apache.org/dist/maven/maven-3/
-    maven_version: "3.9.16"
+    # Release corrente da linha Maven 3 (3.10.0, de 2026-10-01). Para
+    # atualizar, troque aqui e em maven_sha512; as versoes publicadas estao
+    # em https://archive.apache.org/dist/maven/maven-3/
+    #
+    # Roda em Java 8+ -- o maven-core do 3.10.0 e bytecode major 52, igual
+    # ao do 3.9.x. Isso importa porque as tres distros deste playbook
+    # instalam JDKs diferentes (11 no Amazon Linux 2, 21 no Ubuntu, 22 no
+    # Amazon Linux 2023) e as tres compartilham esta variavel.
+    #
+    # O Quarkus 3.x exige "[3.9.0,)", e o 3.10.0 satisfaz: na ordenacao do
+    # Maven o segmento e numerico, entao 3.10.0 > 3.9.16 > 3.9.0 (nao e
+    # comparacao de string, em que "3.10" viria antes de "3.9").
+    #
+    # Nao o Maven 4: em 2026-11 a Apache so publicou candidatos a release
+    # (o mais novo e o 4.0.0-rc-7), nao ha GA. E o maven-core dele e
+    # bytecode major 61, ou seja, exige Java 17+ -- quebraria o caminho do
+    # Amazon Linux 2, que fica no Java 11.
+    maven_version: "3.10.0"
 
     # O checksum fica fixo aqui, e nao como URL no parametro checksum do
     # get_url, de proposito. O get_url baixa a URL do checksum ANTES de
@@ -22,13 +35,15 @@
     # Ao trocar maven_version, atualize este valor. Ele e publicado ao lado
     # do tar.gz:
     #   curl -s https://downloads.apache.org/maven/maven-3/<versao>/binaries/apache-maven-<versao>-bin.tar.gz.sha512
-    maven_sha512: "831a8591fe20c8243b1dbe7d71e3244f31d1665b0804b2e825e38cbbe5ce0cafb8338851f90780735568773e0a6cd07bbec107cda0b896b008b861075358b6f6"
+    maven_sha512: "908b1501bfb420bf7c8affb855534a9c407fd6099367bfb9f2f2dcb8e9799102bffb84518cde74c679bd76870247c6528683abdd620581bffa90f95d92d175aa"
 
     # Mirrors tentados em ordem, do mais rapido para o mais completo:
     #
     # - downloads.apache.org fica atras da CDN da Apache, aguenta IP de
-    #   nuvem e so guarda a versao corrente de cada linha (hoje, na 3.9, e
-    #   justamente a 3.9.16 -- entao e o mirror certo para o caso normal).
+    #   nuvem e so guarda a versao corrente de cada linha -- entao e o
+    #   mirror certo enquanto maven_version for a release corrente, que e
+    #   mais um motivo para nao deixar a versao envelhecer aqui: quando ela
+    #   sai do downloads, o lab cai no archive e volta a tomar timeout.
     # - archive.apache.org guarda tudo para sempre, mas e host unico, sem
     #   CDN, e com rate limit agressivo: de dentro da AWS o handshake TLS
     #   simplesmente nao fecha nos 10s de timeout padrao do get_url. Fica
