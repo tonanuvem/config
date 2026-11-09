@@ -24,3 +24,10 @@ LOGINTOKEN
 APITOKEN
 AGENTCMD
 DOCKERRUNCMD
+
+# Lab EKS (eks/): arquivos gerados pelos scripts. Credenciais NUNCA versionadas.
+eks/files/credentials
+eks/files/kube/
+eks/awscli/
+eks/bkp_awscli_*/
+eks/terraform.tfvars
