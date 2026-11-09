@@ -301,6 +301,29 @@ aqui. Causas comuns:
 | `InsufficientInstanceCapacity` | a AZ ficou sem capacidade daquele tipo |
 | ASG lanca mas o no some | o no sobe e nao registra: rede sem saida para o endpoint do EKS ou para o ECR |
 
+Se o `health.issues` trouxer **`NodeCreationFailure: Unhealthy nodes in the
+kubernetes cluster`**, as instancias subiram mas nao viraram nos do
+Kubernetes. O `resourceIds` dessa mensagem lista as instancias culpadas, e o
+**console output** delas e a unica pista do que o bootstrap fez:
+
+```bash
+aws ec2 get-console-output --instance-id i-xxxxxxxx --region us-east-1 --query Output --output text | tail -40
+```
+
+Corra: quando o EKS desiste, ele apaga as instancias e o console vai junto. O
+`sh diagnostico.sh` ja captura isso automaticamente para cada instancia
+listada em `health.issues`. Procure no console por falha ao baixar imagem
+(saida para o ECR), erro do `kubelet` ao registrar (saida para o endpoint do
+EKS) ou falta de permissao na role dos nos.
+
+Depois de um `NodeCreationFailure` o EKS leva cerca de 35 minutos para
+desistir e deixa o node group em `DELETING`. Espere terminar antes de tentar
+de novo:
+
+```bash
+aws eks wait nodegroup-deleted --cluster-name eksfiap --nodegroup-name demo --region us-east-1 && sh iniciar.sh
+```
+
 Se o diagnostico disser **`ASG AINDA NAO CRIADO`** com `health: []`, o caso e
 outro: o EKS nem comecou a provisionar as maquinas, entao quota e tipo de
 instancia **nao** sao a causa (esses erros so aparecem depois que o ASG

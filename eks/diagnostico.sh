@@ -65,6 +65,21 @@ if command -v aws >/dev/null 2>&1; then
 
         # O erro real de lancamento das instancias (quota de vCPU, tipo de
         # instancia bloqueado, falta de capacidade na AZ) so aparece aqui.
+        # NodeCreationFailure aponta as instancias que nao viraram nos. O
+        # console output delas e a unica pista do que o bootstrap fez - e ele
+        # some quando o EKS termina o rollback, entao e capturado aqui.
+        for inst in $(aws eks describe-nodegroup --cluster-name "$CLUSTER_NAME" \
+                --nodegroup-name "$ng" --region "$AWS_REGION" \
+                --query 'nodegroup.health.issues[].resourceIds[]' --output text 2>/dev/null); do
+            case "$inst" in i-*) ;; *) continue ;; esac
+            echo ""
+            echo "    --- console da instancia $inst (ultimas linhas) ---"
+            aws ec2 get-console-output --instance-id "$inst" --region "$AWS_REGION" \
+                --query 'Output' --output text 2>/dev/null \
+                | tail -30 | sed 's/^/      /' \
+                || echo "      (console indisponivel; a instancia pode ja ter sido removida)"
+        done
+
         ASG=$(aws eks describe-nodegroup --cluster-name "$CLUSTER_NAME" --nodegroup-name "$ng" \
             --region "$AWS_REGION" --query 'nodegroup.resources.autoScalingGroups[0].name' \
             --output text 2>/dev/null)
