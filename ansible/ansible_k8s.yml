@@ -167,7 +167,11 @@
             # (um XML "<Error><Code>NoSuchKey</Code>...") dentro dos arquivos
             # kubeadm/kubelet/kubectl, o chmod +x os torna "executaveis" e a
             # falha so aparece no primeiro uso, como:
-            #   /usr/local/bin/kubectl: line 1: syntax error near unexpected token `<'
+            #   /usr/local/bin/kubectl: line 1: syntax error near unexpected token <
+            # NAO use apostrofo nem backtick nesta mensagem: o Ansible roda
+            # split_args sobre o bloco inteiro do shell e uma aspa sozinha,
+            # mesmo dentro de um comentario, aborta a task com
+            # failed at splitting arguments, either an unbalanced jinja2 block or quotes
             sudo curl -fL --remote-name-all https://dl.k8s.io/release/${RELEASE}/bin/linux/${ARCH}/{kubeadm,kubelet,kubectl}
             sudo chmod +x {kubeadm,kubelet,kubectl}
             # Falha agora, e com mensagem clara, em vez de no primeiro uso.
