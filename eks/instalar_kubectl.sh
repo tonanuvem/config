@@ -73,5 +73,43 @@ fi
 echo ""
 hash -r 2>/dev/null || true
 "$DESTINO/kubectl" version --client
+
+# ---------------------------------------------------------------------------
+# O mesmo download quebrado que corrompia o kubectl corrompia tambem o kubeadm
+# e o kubelet, instalados lado a lado pelo ansible_k8s.yml. Sintoma no systemd:
+#   kubelet.service: Failed to execute /usr/local/bin/kubelet: Exec format error
+# seguido de um laco de reinicio sem fim (restart counter nas centenas).
+# ---------------------------------------------------------------------------
+CORROMPIDOS=""
+for bin in kubeadm kubelet; do
+    for dir in /usr/local/bin /usr/bin; do
+        alvo="$dir/$bin"
+        [ -f "$alvo" ] || continue
+        if head -c 1 "$alvo" 2>/dev/null | grep -q '<'; then
+            CORROMPIDOS="$CORROMPIDOS $alvo"
+        fi
+    done
+done
+
+if [ -n "$CORROMPIDOS" ]; then
+    echo ""
+    echo "AVISO: estes arquivos tambem sao paginas de erro, nao binarios:"
+    for c in $CORROMPIDOS; do echo "  $c"; done
+    echo ""
+    echo "Vieram do mesmo download quebrado. Para instala-los corretamente:"
+    for c in $CORROMPIDOS; do
+        nome=$(basename "$c")
+        echo "  sudo curl -fsSL -o $c https://dl.k8s.io/release/${KUBECTL_VERSION}/bin/linux/${ARCH}/$nome && sudo chmod +x $c"
+    done
+    if systemctl is-active --quiet kubelet 2>/dev/null \
+        || systemctl is-enabled --quiet kubelet 2>/dev/null; then
+        echo ""
+        echo "O kubelet.service esta em laco de reinicio nesta maquina. Em um lab"
+        echo "de EKS ele nao serve para nada (os nos ficam na AWS); so e usado nos"
+        echo "labs de cluster proprio com kubeadm. Para parar o laco:"
+        echo "  sudo systemctl disable --now kubelet"
+    fi
+fi
+
 echo ""
 echo "kubectl instalado. Proximo passo: sh conectar.sh"

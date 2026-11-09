@@ -417,6 +417,27 @@ node_desired_size   = 3
 Lembre que aumentar `max_size` sozinho nao resolve: veja a secao
 "Escala automatica" acima.
 
+**`kubelet.service: Failed to execute /usr/local/bin/kubelet: Exec format error`**
+Mesma causa do item seguinte, em outro binario: `kubeadm`, `kubelet` e
+`kubectl` eram baixados juntos do bucket legado e os tres viraram paginas de
+erro. O `systemd` tenta executar o `kubelet` e reinicia em laco (o contador de
+reinicios chega as centenas). Isso e **na VM do lab**, nao nos nos do EKS.
+
+```bash
+sh instalar_kubectl.sh
+```
+
+O script conserta o `kubectl` e aponta os outros dois, com o comando de
+correcao. Num lab de EKS o `kubelet` local nao serve para nada - os nos ficam
+na AWS -, entao o laco pode simplesmente ser parado:
+
+```bash
+sudo systemctl disable --now kubelet
+```
+
+VMs provisionadas depois da correcao do `ansible/ansible_k8s.yml` nao tem esse
+problema.
+
 **`kubectl: line 1: syntax error near unexpected token '<'`**
 O `kubectl` da maquina nao e um binario: e uma pagina de erro XML
 (`<Error><Code>NoSuchKey</Code>...`) gravada no lugar dele. Acontece quando o
