@@ -573,8 +573,28 @@ nao expoe `health.issues`, que e exatamente onde o EKS diz o que esta errado.
 Um recurso opcional, que so importa para cargas com disco, estava no caminho
 critico da criacao do cluster.
 
-Correcao: `habilitar_ebs_csi` passa a `false` por default, e o addon e
-instalado por um script novo, `ebs_csi.sh`, que:
+Primeira correcao, **revertida depois**: tirar o addon do terraform
+(`habilitar_ebs_csi = false`) e instala-lo por script. Resolvia o sintoma, mas
+ao custo de deixar um pedaco da infraestrutura fora do estado, em um projeto
+cujo proposito e ensinar IaC - e criando duas formas de fazer a mesma coisa,
+que conflitam entre si (`ResourceInUseException`). O diagnostico nunca dependeu
+de quem cria o addon: `--status` consulta a API do EKS, e funciona com o
+terraform rodando em outro terminal.
+
+Correcao final: o addon **continua no terraform** (default `true`), com tres
+ajustes que atacam a causa do incomodo sem abrir mao do IaC:
+
+- `timeouts` com `ebs_csi_timeout` (default 8 minutos, contra os 20 do
+  provider): falha cedo o suficiente para nao perder uma aula;
+- `depends_on` do node group deixa o addon como **ultimo** recurso do apply,
+  entao, quando ele falha, o cluster e os workers ja estao prontos;
+- o `preparar.sh` passa a distinguir os dois casos: consulta o estado do
+  cluster e o do addon e, quando so o addon falhou, diz isso em vez de dar a
+  impressao de que o lab inteiro quebrou, apontando o `--status` e o
+  `conectar.sh`, que ja funciona.
+
+O `ebs_csi.sh` fica como ferramenta de diagnostico e reparo, e ainda instala o
+addon para quem optar por `habilitar_ebs_csi = false`. Ele:
 
 - cria o addon e consulta `describe-addon` a cada 10 segundos;
 - imprime `health.issues` **assim que aparecem** - um problema vira diagnostico
@@ -584,13 +604,13 @@ instalado por um script novo, `ebs_csi.sh`, que:
 - aceita `--status` e `--remover`, para repetir a tentativa sem mexer no
   terraform nem no estado.
 
-O recurso do terraform continua existindo para quem quiser o addon no estado,
-com o risco documentado e o aviso de nao usar as duas formas ao mesmo tempo
-(`ResourceInUseException`).
-
 A licao e a mesma do item 11.5, num nivel acima: o `|| echo` escondia *qual*
-erro era; aqui o desenho escondia *se havia* erro. Um passo opcional e lento
-que so sabe dizer "ainda esperando" nao pertence ao caminho critico.
+erro era; aqui o desenho escondia *se havia* erro. Mas a primeira correcao
+exagerou na dose - tirou o recurso do IaC para resolver um problema de
+visibilidade e de timeout, que tinham solucao sem isso. Vale registrar as duas
+tentativas: a reacao instintiva a um passo lento foi retira-lo do caminho
+critico, quando o que faltava era limitar a espera e saber distinguir o que
+falhou.
 
 ---
 

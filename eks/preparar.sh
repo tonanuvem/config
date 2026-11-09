@@ -190,9 +190,45 @@ echo ""
 
 INICIO=$SECONDS
 
-terraform apply -auto-approve -input=false "${TF_ARGS[@]+"${TF_ARGS[@]}"}"
+RC=0
+terraform apply -auto-approve -input=false "${TF_ARGS[@]+"${TF_ARGS[@]}"}" || RC=$?
 
 DURACAO=$((SECONDS - INICIO))
+
+# -----------------------------------------------------------------------------
+# Um apply que falha nao quer dizer que o cluster falhou. O addon do driver de
+# EBS e o ultimo recurso a ser criado, entao, quando e ele que quebra, o
+# cluster e os workers ja estao prontos - e a mensagem precisa dizer isso, em
+# vez de deixar a impressao de que o lab inteiro foi por agua abaixo.
+# -----------------------------------------------------------------------------
+if [ "$RC" -ne 0 ]; then
+    titulo "O apply falhou depois de $((DURACAO / 60))m$((DURACAO % 60))s"
+
+    CLUSTER_ST=$(aws eks describe-cluster --name "$CLUSTER_NAME" \
+        --query 'cluster.status' --output text 2>/dev/null || echo "AUSENTE")
+    ADDON_ST=$(aws eks describe-addon --cluster-name "$CLUSTER_NAME" \
+        --addon-name aws-ebs-csi-driver --query 'addon.status' --output text 2>/dev/null \
+        || echo "AUSENTE")
+
+    printf '  %-22s : %s\n' "cluster '$CLUSTER_NAME'" "$CLUSTER_ST"
+    printf '  %-22s : %s\n' "addon do EBS" "$ADDON_ST"
+    echo ""
+
+    if [ "$CLUSTER_ST" = "ACTIVE" ] && [ "$ADDON_ST" != "ACTIVE" ]; then
+        echo "O cluster e os workers estao prontos: o que falhou foi so o addon"
+        echo "do driver de EBS, que e o ultimo recurso do apply."
+        echo ""
+        echo "  sh ebs_csi.sh --status   mostra o motivo (health.issues)"
+        echo "  sh conectar.sh           ja funciona, sem volumes de disco"
+        echo ""
+        echo "Para seguir a aula sem o driver, ponha no terraform.tfvars:"
+        echo "  habilitar_ebs_csi = false"
+    else
+        echo "Releia o erro acima. Em geral basta rodar 'sh iniciar.sh' de novo:"
+        echo "o terraform retoma de onde parou."
+    fi
+    exit "$RC"
+fi
 
 titulo "Ambiente criado em $((DURACAO / 60))m$((DURACAO % 60))s"
 

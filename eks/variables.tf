@@ -204,26 +204,38 @@ variable "habilitar_ebs_csi" {
       pod has unbound immediate PersistentVolumeClaims
 
     Isso atinge qualquer StatefulSet (Dynatrace ActiveGate, bancos de dados,
-    Prometheus...).
+    Prometheus...), por isso o default e true e o addon fica no terraform,
+    junto com o resto da infraestrutura.
 
-    MESMO ASSIM o default e false, e o caminho recomendado e "sh ebs_csi.sh"
-    depois que o cluster subir. Motivo: o terraform espera o addon chegar a
-    ACTIVE sem mostrar mais nada, entao um addon que nao fica saudavel vira
-    ate 20 minutos de "Still creating..." e, no fim, derruba o apply inteiro -
-    inclusive as partes que tinham dado certo. O motivo real fica em
-    health.issues, que so a API do EKS conta, e e isso que o ebs_csi.sh
-    consulta a cada 10 segundos.
+    O addon e o ultimo recurso a ser criado (depends_on do node group), entao,
+    se ele falhar, o cluster e os workers ja estao prontos - e o
+    ebs_csi_timeout limita a espera, em vez dos 20 minutos default do provider.
+    Nesse caso, diagnostique com "sh ebs_csi.sh --status".
 
-    Marque true apenas se quiser o addon no estado do terraform e aceitar esse
-    risco. Nao use as duas formas ao mesmo tempo: o addon criado pelo script
-    faz o terraform falhar com ResourceInUseException.
+    Use false para tirar o addon do apply, por exemplo quando ele esta
+    impedindo uma turma de comecar; ai instale depois com "sh ebs_csi.sh".
+    Nao use as duas formas ao mesmo tempo: com o addon ja criado pelo script,
+    o terraform falha com ResourceInUseException.
 
     A role dos nos precisa poder criar e anexar volumes EBS (a LabRole do AWS
     Academy ja pode). Em conta propria, use IRSA e informe
     ebs_csi_service_account_role_arn.
   EOT
   type        = bool
-  default     = false
+  default     = true
+}
+
+variable "ebs_csi_timeout" {
+  description = <<-EOT
+    Tempo maximo de espera do terraform pelo addon do EBS.
+
+    O default do provider e 20 minutos, durante os quais o apply so imprime
+    "Still creating..." - o motivo real fica em health.issues, que o terraform
+    nao mostra. Oito minutos ja e bem mais do que os 1 a 2 minutos de uma
+    instalacao normal, e falha cedo o suficiente para nao perder uma aula.
+  EOT
+  type        = string
+  default     = "8m"
 }
 
 variable "ebs_csi_service_account_role_arn" {

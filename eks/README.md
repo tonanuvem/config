@@ -21,10 +21,6 @@ sh iniciar.sh
 ```
 
 ```bash
-sh ebs_csi.sh
-```
-
-```bash
 sh conectar.sh
 ```
 
@@ -51,7 +47,6 @@ que os scripts antigos modificaram arquivos versionados.
 | `sh atualizar.sh` | so em clone reaproveitado: `git pull` preservando as credenciais | segundos |
 | `sh config_credenciais.sh` | le as credenciais coladas e grava em `files/credentials` | segundos |
 | `sh iniciar.sh` | verificacoes previas + `terraform apply` | **12 a 15 min** |
-| `sh ebs_csi.sh` | instala o driver de disco (necessario para StatefulSet) | 1 a 3 min |
 | `sh conectar.sh` | abre um shell com `kubectl` apontado para o cluster | segundos |
 | `sh destruir.sh` | remove cluster, workers e VPC | 8 a 12 min |
 
@@ -91,7 +86,7 @@ Precisa de:
   Internet Gateway e rota default;
 - security group do control plane;
 - cluster EKS `eksfiap`, com o criador ja mapeado como administrador;
-- (via `sh ebs_csi.sh`) o addon `aws-ebs-csi-driver`, necessario para PVC de disco;
+- addon `aws-ebs-csi-driver`, necessario para qualquer PVC de disco;
 - managed node group `demo`: 3 x `t3.large` (min 2, max 4), AMI Amazon
   Linux 2023, disco de 20 GiB.
 
@@ -286,18 +281,19 @@ e o seu:
   existente". Esse nunca recebe a default, e o campo e imutavel - o PVC
   precisa ser apagado para o StatefulSet recria-lo.
 
-**O driver de EBS nao fica saudavel**
-Use o script, que mostra o motivo em vez de esperar calado:
+**O apply falha no `aws_eks_addon.ebs_csi`**
+O addon e o **ultimo** recurso do apply, entao o cluster e os workers ja estao
+prontos quando ele falha - o `iniciar.sh` diz isso explicitamente. O terraform
+nao mostra o motivo, so `Still creating...` ate o `ebs_csi_timeout` (8 min por
+default, contra os 20 do provider). O motivo fica em `health.issues`:
 
 ```bash
 sh ebs_csi.sh --status
 ```
 
-Por isso o addon **nao** e criado pelo `iniciar.sh` por default: o terraform
-espera ele chegar a `ACTIVE` sem mostrar mais nada, entao um addon doente vira
-ate 20 minutos de `Still creating...` e no fim derruba o apply inteiro. O
-`ebs_csi.sh` consulta `health.issues` a cada 10 segundos e imprime assim que
-aparece.
+Esse comando funciona a qualquer momento, inclusive em outro terminal com o
+terraform ainda rodando. Ele consulta `health.issues` e mostra tambem os pods
+do driver, os eventos e os logs.
 
 Como ler o resultado:
 
@@ -308,16 +304,17 @@ Como ler o resultado:
 | `AccessDenied` nos logs | a role dos nos nao pode mexer em volumes EBS |
 | `ConfigurationConflict` | ja existe uma instalacao manual do driver no cluster |
 
-Para recomecar do zero:
+Para tentar de novo:
 
 ```bash
-sh ebs_csi.sh --remover && sh ebs_csi.sh
+sh iniciar.sh
 ```
 
-Se preferir o addon dentro do estado do terraform, use
-`habilitar_ebs_csi = true` - mas ai o risco do apply travar volta. **Nao use as
-duas formas juntas**: com o addon ja criado pelo script, o terraform falha com
-`ResourceInUseException`. Se isso acontecer, importe:
+Se o addon estiver atrapalhando uma turma a comecar, tire-o do apply com
+`habilitar_ebs_csi = false` no `terraform.tfvars` e instale depois com
+`sh ebs_csi.sh`. **Nao use as duas formas juntas**: com o addon ja criado pelo
+script, o terraform falha com `ResourceInUseException`. Se isso acontecer,
+importe:
 
 ```bash
 terraform import 'aws_eks_addon.ebs_csi[0]' eksfiap:aws-ebs-csi-driver
@@ -405,7 +402,7 @@ Terraform faz por baixo. Os dois caminhos usam o nome `eksfiap`, portanto
 | `delete_vpc.sh` | limpeza manual de VPC ([lianghong/delete_vpc](https://github.com/lianghong/delete_vpc)) |
 | `cloud9_kubectl.sh` | configura o `kubectl` local sem abrir shell novo |
 | `diagnostico.sh` | coleta somente-leitura do estado do cluster |
-| `ebs_csi.sh` | instala/remove o driver de disco, com diagnostico |
+| `ebs_csi.sh` | diagnostica o driver de disco (`--status`), instala/remove |
 | `storage.sh` | garante uma StorageClass default (gp3) |
 | `autoscaler.sh` | instala/remove o Cluster Autoscaler |
 | `instalar_kubectl.sh` | (re)instala o `kubectl` na versao do cluster |

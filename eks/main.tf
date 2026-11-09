@@ -287,6 +287,15 @@ resource "aws_eks_addon" "ebs_csi" {
   resolve_conflicts_on_create = "OVERWRITE"
   resolve_conflicts_on_update = "OVERWRITE"
 
+  # Sem isto o provider espera 20 minutos so imprimindo "Still creating...".
+  timeouts {
+    create = var.ebs_csi_timeout
+    update = var.ebs_csi_timeout
+    delete = var.ebs_csi_timeout
+  }
+
+  # Ultimo recurso do apply: se o addon falhar, o cluster e os workers ja
+  # estao prontos e so ele precisa de atencao.
   depends_on = [aws_eks_node_group.demo]
 
   tags = {

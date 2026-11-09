@@ -3,12 +3,16 @@
 # Instala o driver CSI de EBS como addon do EKS, mostrando o motivo na hora
 # quando ele nao fica saudavel.
 #
-# POR QUE FORA DO TERRAFORM
-# O terraform espera o addon chegar a ACTIVE e nao mostra mais nada enquanto
-# isso: sao ate 20 minutos de "Still creating..." e, no fim, o apply inteiro
-# falha. O motivo real fica em health.issues, que so a API do EKS conta.
-# Este script pergunta isso a cada 10 segundos e imprime assim que aparece,
-# entao um problema vira diagnostico em ~1 minuto em vez de 20.
+# QUAL E O PAPEL DESTE SCRIPT
+# O addon e criado pelo terraform (habilitar_ebs_csi, default true), como todo
+# o resto da infraestrutura. O que o terraform NAO faz e dizer por que o addon
+# nao fica saudavel: ele so imprime "Still creating..." ate o timeout. O motivo
+# fica em health.issues, que so a API do EKS conta - e e isso que este script
+# pergunta a cada 10 segundos, junto com o estado dos pods e os logs.
+#
+# Use "--status" a qualquer momento, inclusive em outro terminal com o
+# terraform rodando. A instalacao por aqui serve para quem desligou o addon no
+# terraform (habilitar_ebs_csi = false); nao use as duas formas ao mesmo tempo.
 #
 # Uso:
 #   sh ebs_csi.sh              instala e acompanha
