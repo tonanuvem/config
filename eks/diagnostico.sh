@@ -25,8 +25,14 @@ case "${1:-}" in
     *)  echo "Uso: sh diagnostico.sh [-n namespace]" >&2; exit 2 ;;
 esac
 
-command -v kubectl >/dev/null 2>&1 || { echo "ERRO: kubectl nao encontrado. Rode: sh instalar_kubectl.sh" >&2; exit 1; }
-kubectl version --client >/dev/null 2>&1 || { echo "ERRO: kubectl quebrado. Rode: sh instalar_kubectl.sh" >&2; exit 1; }
+# O diagnostico precisa funcionar com o cluster ainda subindo, sem nos e sem
+# kubectl - que e justamente quando um "terraform apply" trava. Por isso a
+# parte da AWS vem primeiro e o kubectl e opcional.
+KUBECTL_OK=1
+if ! command -v kubectl >/dev/null 2>&1 || ! kubectl version --client >/dev/null 2>&1; then
+    KUBECTL_OK=0
+    kubectl() { return 1; }   # faz as secoes do Kubernetes caírem no fallback
+fi
 
 if [ -z "${AWS_ACCESS_KEY_ID:-}" ] && grep -qi aws_access_key_id ./files/credentials 2>/dev/null; then
     export AWS_SHARED_CREDENTIALS_FILE="$PWD/files/credentials"
@@ -36,6 +42,59 @@ export AWS_PAGER=""
 
 secao() { printf '\n\n========== %s ==========\n' "$1"; }
 NS_ARGS=(--all-namespaces); [ -n "$NS" ] && NS_ARGS=(-n "$NS")
+
+secao "0. Estado na AWS (nao depende do kubectl)"
+# Esta secao responde "por que o terraform esta parado": o motivo de um
+# cluster, node group ou addon que nao fica pronto esta em health.issues e nas
+# scaling activities do ASG, nunca no log do apply.
+if command -v aws >/dev/null 2>&1; then
+    echo "--- Cluster ---"
+    aws eks describe-cluster --name "$CLUSTER_NAME" --region "$AWS_REGION" \
+        --query 'cluster.{status:status,versao:version,criado:createdAt}' --output json 2>/dev/null \
+        || echo "  (cluster '$CLUSTER_NAME' nao encontrado)"
+
+    echo ""
+    echo "--- Node groups ---"
+    for ng in $(aws eks list-nodegroups --cluster-name "$CLUSTER_NAME" --region "$AWS_REGION" \
+            --query 'nodegroups[]' --output text 2>/dev/null); do
+        echo "  $ng:"
+        aws eks describe-nodegroup --cluster-name "$CLUSTER_NAME" --nodegroup-name "$ng" \
+            --region "$AWS_REGION" \
+            --query 'nodegroup.{status:status,tipos:instanceTypes,escala:scalingConfig,problemas:health.issues}' \
+            --output json 2>/dev/null | sed 's/^/    /'
+
+        # O erro real de lancamento das instancias (quota de vCPU, tipo de
+        # instancia bloqueado, falta de capacidade na AZ) so aparece aqui.
+        ASG=$(aws eks describe-nodegroup --cluster-name "$CLUSTER_NAME" --nodegroup-name "$ng" \
+            --region "$AWS_REGION" --query 'nodegroup.resources.autoScalingGroups[0].name' \
+            --output text 2>/dev/null)
+        if [ -n "${ASG:-}" ] && [ "$ASG" != "None" ]; then
+            echo "    ultimas atividades do ASG $ASG:"
+            aws autoscaling describe-scaling-activities --auto-scaling-group-name "$ASG" \
+                --region "$AWS_REGION" --max-items 5 \
+                --query 'Activities[].{quando:StartTime,status:StatusCode,motivo:StatusMessage}' \
+                --output json 2>/dev/null | sed 's/^/      /'
+        else
+            echo "    (ASG ainda nao criado)"
+        fi
+    done
+    [ -z "$(aws eks list-nodegroups --cluster-name "$CLUSTER_NAME" --region "$AWS_REGION" \
+        --query 'nodegroups[]' --output text 2>/dev/null)" ] && echo "  (nenhum node group)"
+
+    echo ""
+    echo "--- Instancias EC2 do cluster ---"
+    aws ec2 describe-instances --region "$AWS_REGION" \
+        --filters "Name=tag:eks:cluster-name,Values=$CLUSTER_NAME" \
+        --query 'Reservations[].Instances[].{id:InstanceId,tipo:InstanceType,estado:State.Name,az:Placement.AvailabilityZone}' \
+        --output table 2>/dev/null | head -20 || echo "  (nenhuma)"
+else
+    echo "(aws cli nao encontrado)"
+fi
+
+if [ "$KUBECTL_OK" -eq 0 ]; then
+    printf '\n\nAVISO: kubectl indisponivel nesta maquina; as secoes do Kubernetes\n'
+    printf '       abaixo ficarao vazias. Para instalar: sh instalar_kubectl.sh\n'
+fi
 
 secao "1. Nos: capacidade e sistema operacional"
 # OS-IMAGE importa: AL2023 usa SELinux, nao AppArmor. Cargas que montam

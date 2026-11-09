@@ -263,6 +263,15 @@ resource "aws_eks_node_group" "demo" {
   tags = {
     Name = "${var.cluster-name}-workers"
   }
+
+  # Sem isto o provider espera 60 minutos so imprimindo "Still creating...".
+  # Quando os nos nao conseguem entrar no cluster, o motivo esta em
+  # health.issues e nas scaling activities do ASG: "sh diagnostico.sh".
+  timeouts {
+    create = var.node_group_timeout
+    update = var.node_group_timeout
+    delete = var.node_group_timeout
+  }
 }
 
 # -----------------------------------------------------------------------------

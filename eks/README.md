@@ -281,6 +281,35 @@ e o seu:
   existente". Esse nunca recebe a default, e o campo e imutavel - o PVC
   precisa ser apagado para o StatefulSet recria-lo.
 
+**O apply fica parado em `aws_eks_node_group.demo: Still creating...`**
+A criacao normal leva 3 a 5 minutos. Passou disso, os nos nao estao
+conseguindo entrar no cluster. O motivo nao aparece no log do terraform: fica
+em `health.issues` do node group e nas *scaling activities* do Auto Scaling
+Group. **Sem matar o terraform**, em outro terminal:
+
+```bash
+sh diagnostico.sh
+```
+
+A secao 0 nao depende de `kubectl` nem de nos existirem - justamente o caso
+aqui. Causas comuns:
+
+| Mensagem na scaling activity | Causa |
+|---|---|
+| `requested more vCPU capacity than your current vCPU limit` | quota de vCPU da conta estourada |
+| `not authorized to perform: ec2:RunInstances` | tipo de instancia bloqueado por politica da conta |
+| `InsufficientInstanceCapacity` | a AZ ficou sem capacidade daquele tipo |
+| ASG lanca mas o no some | o no sobe e nao registra: rede sem saida para o endpoint do EKS ou para o ECR |
+
+Se for quota, reduza no `terraform.tfvars`:
+
+```hcl
+node_desired_size = 2
+```
+
+O terraform desiste em `node_group_timeout` (25 min por default, contra os 60
+do provider).
+
 **O apply falha no `aws_eks_addon.ebs_csi`**
 O addon e o **ultimo** recurso do apply, entao o cluster e os workers ja estao
 prontos quando ele falha - o `iniciar.sh` diz isso explicitamente. O terraform

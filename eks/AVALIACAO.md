@@ -614,6 +614,40 @@ falhou.
 
 ---
 
+## 18. O mesmo defeito, em outro recurso: node group sem limite
+
+Na execucao seguinte o `aws_eks_node_group.demo` passou de 19 minutos em
+`Still creating...` (o normal e 3 a 5; numa execucao anterior levou 2m6s). O
+diagnostico do item 17 valia igual aqui, e eu so tinha aplicado ao addon.
+
+Numeros que importam: o timeout default do provider para o node group e de
+**60 minutos**, contra 20 do addon. Ou seja, o recurso mais propenso a falhar
+por motivos de conta - quota de vCPU, tipo de instancia bloqueado, capacidade
+na AZ, rede sem saida - era tambem o que demorava mais a desistir, sem dizer
+nada.
+
+Correcao, generalizando o item 17:
+
+- `timeouts` no `aws_eks_node_group`, pela variavel `node_group_timeout`
+  (default 25 minutos);
+- o `diagnostico.sh` ganhou a **secao 0**, que nao depende de `kubectl` nem de
+  nos existirem - exatamente o cenario de um apply travado. Ela mostra o
+  estado do cluster, de cada node group com `health.issues` e escala, as
+  **scaling activities do ASG** (onde aparece o erro real de lancamento das
+  instancias) e as instancias EC2. O resto do script passou a tratar o
+  `kubectl` como opcional, em vez de abortar quando ele falta;
+- o `preparar.sh` passou a reportar tambem o estado do node group na falha do
+  apply, com as causas comuns e a saida imediata (`node_desired_size = 2`);
+- `NODE_GROUP_NAME` entrou nas variaveis de ambiente repassadas ao terraform,
+  para o diagnostico nao olhar um node group diferente do que foi criado.
+
+A licao, de novo: todo recurso lento do apply precisa de duas coisas - um
+limite de espera menor que o default do provider, e um caminho para ver o
+estado por fora enquanto espera. Eu tinha tratado isso como um problema do
+addon, quando era um padrao do projeto inteiro.
+
+---
+
 ## Sobre os 15 minutos
 
 A maior parte e irredutivel e nao esta no codigo: o control plane do EKS leva

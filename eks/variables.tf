@@ -268,6 +268,23 @@ variable "habilitar_autoscaler" {
   default     = false
 }
 
+variable "node_group_timeout" {
+  description = <<-EOT
+    Tempo maximo de espera do terraform pelo node group.
+
+    O default do provider e 60 minutos. Um node group cujos nos nao conseguem
+    entrar no cluster (quota de vCPU estourada, tipo de instancia bloqueado,
+    falta de capacidade na AZ, rede sem saida) fica "Still creating..." esse
+    tempo todo sem dizer nada - o motivo fica em health.issues e nas scaling
+    activities do Auto Scaling Group, que o terraform nao mostra.
+
+    25 minutos ja e bem mais que os 3 a 5 de uma criacao normal.
+    Diagnostique com "sh diagnostico.sh".
+  EOT
+  type        = string
+  default     = "25m"
+}
+
 variable "node_ssh_key_name" {
   description = <<-EOT
     Nome do key pair EC2 para acesso SSH aos nos ("vockey" no AWS Academy).

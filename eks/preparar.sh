@@ -47,6 +47,7 @@ AVISOS=()
 # mudava as checagens mas o terraform criava "eksfiap" de qualquer forma).
 [ -n "${CLUSTER_NAME+x}" ] && TF_ARGS+=(-var "cluster-name=$CLUSTER_NAME")
 [ -n "${AWS_REGION+x}" ] && TF_ARGS+=(-var "aws_region=$AWS_REGION")
+[ -n "${NODE_GROUP_NAME+x}" ] && TF_ARGS+=(-var "node_group_name=$NODE_GROUP_NAME")
 [ -n "${CLUSTER_ROLE_NAME+x}" ] && TF_ARGS+=(-var "cluster_role_name=$CLUSTER_ROLE_NAME")
 [ -n "${NODE_ROLE_NAME+x}" ] && TF_ARGS+=(-var "node_role_name=$NODE_ROLE_NAME")
 [ -n "${SSH_KEY_NAME+x}" ] && TF_ARGS+=(-var "node_ssh_key_name=$SSH_KEY_NAME")
@@ -55,6 +56,7 @@ CLUSTER_NAME="${CLUSTER_NAME:-eksfiap}"
 AWS_REGION="${AWS_REGION:-us-east-1}"
 SSH_KEY_NAME="${SSH_KEY_NAME:-vockey}"
 CLUSTER_ROLE_NAME="${CLUSTER_ROLE_NAME:-LabRole}"
+NODE_GROUP_NAME="${NODE_GROUP_NAME:-demo}"
 
 titulo() { printf '\n=== %s ===\n' "$1"; }
 ok()     { printf '  [ok]   %s\n' "$1"; }
@@ -210,11 +212,27 @@ if [ "$RC" -ne 0 ]; then
         --addon-name aws-ebs-csi-driver --query 'addon.status' --output text 2>/dev/null \
         || echo "AUSENTE")
 
+    NG_ST=$(aws eks describe-nodegroup --cluster-name "$CLUSTER_NAME" \
+        --nodegroup-name "$NODE_GROUP_NAME" --query 'nodegroup.status' --output text 2>/dev/null \
+        || echo "AUSENTE")
+
     printf '  %-22s : %s\n' "cluster '$CLUSTER_NAME'" "$CLUSTER_ST"
+    printf '  %-22s : %s\n' "node group '$NODE_GROUP_NAME'" "$NG_ST"
     printf '  %-22s : %s\n' "addon do EBS" "$ADDON_ST"
     echo ""
 
-    if [ "$CLUSTER_ST" = "ACTIVE" ] && [ "$ADDON_ST" != "ACTIVE" ]; then
+    if [ "$CLUSTER_ST" = "ACTIVE" ] && [ "$NG_ST" != "ACTIVE" ] && [ "$NG_ST" != "AUSENTE" ]; then
+        echo "O control plane esta pronto, mas os nos workers nao entraram no"
+        echo "cluster. O motivo nao aparece no log do terraform: ele esta em"
+        echo "health.issues e nas scaling activities do Auto Scaling Group."
+        echo ""
+        echo "  sh diagnostico.sh   secao 0 mostra os dois"
+        echo ""
+        echo "Causas comuns: quota de vCPU da conta estourada, tipo de"
+        echo "instancia bloqueado, falta de capacidade na AZ. Se for quota,"
+        echo "reduza no terraform.tfvars:"
+        echo "  node_desired_size = 2"
+    elif [ "$CLUSTER_ST" = "ACTIVE" ] && [ "$ADDON_ST" != "ACTIVE" ]; then
         echo "O cluster e os workers estao prontos: o que falhou foi so o addon"
         echo "do driver de EBS, que e o ultimo recurso do apply."
         echo ""
