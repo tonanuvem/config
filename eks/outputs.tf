@@ -61,6 +61,11 @@ output "subnet_ids" {
   value       = aws_subnet.demo[*].id
 }
 
+output "node_group_asg_name" {
+  description = "Auto Scaling Group do node group (usado pelo Cluster Autoscaler)."
+  value       = aws_eks_node_group.demo.resources[0].autoscaling_groups[0].name
+}
+
 output "kubeconfig_command" {
   description = "Comando para configurar o kubectl nesta maquina."
   value       = "aws eks --region ${var.aws_region} update-kubeconfig --name ${aws_eks_cluster.eksfiap.name}"

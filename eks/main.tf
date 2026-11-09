@@ -264,3 +264,29 @@ resource "aws_eks_node_group" "demo" {
     Name = "${var.cluster-name}-workers"
   }
 }
+
+# -----------------------------------------------------------------------------
+# Tags de descoberta do Cluster Autoscaler
+#
+# As tags definidas em aws_eks_node_group.tags ficam no node group e NAO sao
+# propagadas para o Auto Scaling Group criado por tras dele. O autoscaler
+# procura ASGs por tag (--node-group-auto-discovery=asg:tag=...), entao elas
+# precisam ser aplicadas no proprio ASG, com aws_autoscaling_group_tag.
+#
+# Isto apenas torna o node group visivel ao autoscaler. Quem escala e o
+# Deployment do Cluster Autoscaler, instalado por "sh autoscaler.sh".
+# -----------------------------------------------------------------------------
+resource "aws_autoscaling_group_tag" "autoscaler" {
+  for_each = var.habilitar_autoscaler ? {
+    "k8s.io/cluster-autoscaler/enabled"             = "true"
+    "k8s.io/cluster-autoscaler/${var.cluster-name}" = "owned"
+  } : {}
+
+  autoscaling_group_name = aws_eks_node_group.demo.resources[0].autoscaling_groups[0].name
+
+  tag {
+    key                 = each.key
+    value               = each.value
+    propagate_at_launch = false
+  }
+}

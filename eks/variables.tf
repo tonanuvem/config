@@ -123,9 +123,19 @@ variable "node_group_name" {
 }
 
 variable "node_instance_types" {
-  description = "Tipos de instancia dos nos workers."
+  description = <<-EOT
+    Tipos de instancia dos nos workers.
+
+    t3.large (2 vCPU / 8 GiB) e o default porque t3.medium (4 GiB, ~3 GiB
+    alocaveis depois do overhead do kubelet e dos DaemonSets) nao comporta
+    stacks de observabilidade como o Dynatrace: os pods ficam Pending com
+    "Insufficient memory".
+
+    Prefira t3.large a t2.large: mesma CPU e memoria, geracao mais nova e
+    cerca de 10% mais barata (us-east-1: ~US$ 0,0832/h contra ~US$ 0,0928/h).
+  EOT
   type        = list(string)
-  default     = ["t3.medium"]
+  default     = ["t3.large"]
 }
 
 variable "node_ami_type" {
@@ -163,13 +173,33 @@ variable "node_desired_size" {
 variable "node_min_size" {
   description = "Quantidade minima de nos workers."
   type        = number
-  default     = 1
+  default     = 2
 }
 
 variable "node_max_size" {
   description = "Quantidade maxima de nos workers."
   type        = number
   default     = 4
+}
+
+variable "habilitar_autoscaler" {
+  description = <<-EOT
+    Marca o Auto Scaling Group do node group com as tags que o Cluster
+    Autoscaler usa para descobri-lo.
+
+    ATENCAO: isto sozinho NAO escala nada. scaling_config (min/max/desired)
+    apenas define os limites do ASG; nada cria nos quando um pod fica Pending.
+    Para ter escala automatica de verdade e preciso tambem instalar o Cluster
+    Autoscaler no cluster:
+
+        sh autoscaler.sh
+
+    Com o autoscaler ativo, o desired_size passa a ser controlado por ele. Um
+    "terraform apply" posterior devolve o valor de node_desired_size, e o
+    autoscaler torna a subir os nos se houver pods Pending.
+  EOT
+  type        = bool
+  default     = false
 }
 
 variable "node_ssh_key_name" {

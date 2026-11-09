@@ -346,6 +346,84 @@ faltando custou um binario corrompido; o `||` faltando custou o diagnostico.
 
 ---
 
+## 12. Dimensionamento dos nos e escala automatica
+
+Na primeira aula com carga real (Dynatrace: operator, OneAgent como DaemonSet
+e ActiveGate como StatefulSet), 6 dos 20 pods ficaram `Pending`:
+
+```
+FailedScheduling: 0/2 nodes are available: 2 Insufficient memory.
+preemption: 0/2 nodes are available: 2 Preemption is not helpful for scheduling.
+```
+
+Diagnostico: memoria, nao quantidade de pods. `t3.medium` tem 4 GiB, dos quais
+sobram ~3 GiB alocaveis; o limite de pods por no (17 em `t3.medium`) nem chegou
+a ser atingido, ja que 2 nos dariam 34 vagas para 20 pods.
+
+### 12.1 t3.large, nao t2.large
+
+| | vCPU | Memoria | Preco sob demanda (us-east-1) |
+|---|---|---|---|
+| `t3.medium` (antes) | 2 | 4 GiB | ~US$ 0,0416/h |
+| `t2.large` (proposto) | 2 | 8 GiB | ~US$ 0,0928/h |
+| **`t3.large` (adotado)** | 2 | 8 GiB | **~US$ 0,0832/h** |
+
+Mesma CPU e memoria da `t2.large`, geracao mais nova, melhor baseline de burst
+e ~10% mais barata. Nao ha cenario neste lab em que a `t2.large` seja melhor.
+Quem quiser cortar mais usa `node_capacity_type = "SPOT"`.
+
+### 12.2 `scaling_config` nao e escala automatica
+
+Vale corrigir a expectativa de "habilitar o autoscaling no terraform via config
+da criacao do cluster": **esse botao nao existe**. O bloco
+
+```hcl
+scaling_config {
+  min_size = 2
+  max_size = 4
+}
+```
+
+apenas define os limites do Auto Scaling Group. Nada observa pods `Pending` e
+nada cria nos. Com `max_size = 4` e sem controlador, os 6 pods do print
+continuariam `Pending` indefinidamente. Escala automatica de verdade exige o
+**Cluster Autoscaler** (ou o Karpenter), que e um Deployment dentro do cluster.
+
+E ha uma armadilha a mais: o autoscaler descobre node groups por tags no ASG, e
+**as tags de `aws_eks_node_group.tags` nao sao propagadas para o ASG**. Precisam
+ser aplicadas com `aws_autoscaling_group_tag`.
+
+### 12.3 O que foi implementado
+
+- defaults: `t3.large`, `min_size = 2`, `desired_size = 2`, `max_size = 4`;
+- `habilitar_autoscaler` (default `false`) aplica no ASG as tags
+  `k8s.io/cluster-autoscaler/enabled` e `k8s.io/cluster-autoscaler/<cluster>`
+  via `aws_autoscaling_group_tag`;
+- novo `autoscaler.sh`, que descobre a release do autoscaler correspondente a
+  minor do cluster, baixa o manifesto oficial daquela tag, substitui o nome do
+  cluster e a imagem (o exemplo oficial fixa `v1.32.1` mesmo nas tags novas),
+  aplica, confere o rollout e inspeciona os logs em busca de erro de permissao;
+- `output "node_group_asg_name"`, para inspecionar o ASG.
+
+Observacao registrada no README: com o autoscaler ativo, o `desired_size` passa
+a ser dele; um `terraform apply` posterior devolve `node_desired_size` e o
+autoscaler torna a subir os nos.
+
+### 12.4 O que foi testado
+
+Verificado contra a rede real: a release `cluster-autoscaler-1.37.0` existe
+(`1.38.0` ainda nao), o manifesto daquela tag baixa, e a substituicao produz
+`image: ...cluster-autoscaler:v1.37.0` com o nome do cluster no
+`--node-group-auto-discovery`, em 6 documentos YAML validos. Os caminhos de
+erro do `autoscaler.sh` (argumento invalido, `kubectl` ausente, tags faltando
+no ASG) foram testados com simuladores. O terraform passa em `validate`.
+
+**Nao testado:** a instalacao do autoscaler em um cluster de verdade, e,
+portanto, se a `LabRole` tem as permissoes de `autoscaling` necessarias. E o
+primeiro ponto a conferir ao rodar `sh autoscaler.sh`.
+
+---
+
 ## Sobre os 15 minutos
 
 A maior parte e irredutivel e nao esta no codigo: o control plane do EKS leva

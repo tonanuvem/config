@@ -70,11 +70,22 @@ Precisa de:
   Internet Gateway e rota default;
 - security group do control plane;
 - cluster EKS `eksfiap`, com o criador ja mapeado como administrador;
-- managed node group `demo`: 2 x `t3.medium` (min 1, max 4), AMI Amazon
+- managed node group `demo`: 2 x `t3.large` (min 2, max 4), AMI Amazon
   Linux 2023, disco de 20 GiB.
 
-Custo aproximado em `us-east-1`: ~US$ 0,10/h do control plane + ~US$ 0,08/h dos
-2 nos. **Rode `sh destruir.sh` ao terminar.**
+Custo aproximado em `us-east-1`: ~US$ 0,10/h do control plane + ~US$ 0,17/h dos
+2 nos `t3.large`. Com `node_capacity_type = "SPOT"` os nos custam cerca de um
+terco disso. **Rode `sh destruir.sh` ao terminar.**
+
+### Por que t3.large e nao t3.medium
+
+`t3.medium` tem 4 GiB, dos quais sobram ~3 GiB alocaveis depois do kubelet e
+dos DaemonSets. Isso nao comporta stacks de observabilidade (Dynatrace, por
+exemplo) e os pods ficam `Pending` com `Insufficient memory`. `t3.large` tem
+8 GiB e o mesmo numero de vCPUs.
+
+Prefira `t3.large` a `t2.large`: mesma CPU e memoria, geracao mais nova,
+melhor baseline de burst e cerca de 10% mais barata.
 
 ## Verificar o cluster
 
@@ -127,6 +138,45 @@ Quando definidas, elas sao repassadas ao terraform como `-var` e, portanto,
 `AWS_REGION` ja vem definida pelo ambiente - exatamente para que a AWS CLI e o
 terraform usem sempre a mesma regiao.
 
+### Escala automatica (Cluster Autoscaler)
+
+`min_size` e `max_size` **nao ligam escala automatica**: eles so definem os
+limites do Auto Scaling Group. Sem um controlador, um pod `Pending` por falta
+de memoria continua `Pending`, mesmo com `max_size = 4`. Quem cria nos e o
+Cluster Autoscaler, um Deployment dentro do cluster.
+
+São dois passos. No `terraform.tfvars`:
+
+```hcl
+habilitar_autoscaler = true
+```
+
+```bash
+sh iniciar.sh && sh autoscaler.sh
+```
+
+O primeiro passo marca o ASG com as tags de descoberta; o segundo instala o
+Cluster Autoscaler na versao correspondente a do cluster. Para remover:
+
+```bash
+sh autoscaler.sh --remover
+```
+
+Duas observacoes:
+
+- a role dos nos precisa de permissoes de `autoscaling:*` (a `LabRole` do AWS
+  Academy costuma ter; o script avisa se os logs acusarem falta de permissao);
+- com o autoscaler ativo, quem controla o `desired_size` e ele. Um
+  `terraform apply` posterior devolve o valor de `node_desired_size`, e o
+  autoscaler torna a subir os nos se houver pods `Pending`.
+
+Sem o autoscaler, da para escalar na mao a qualquer momento:
+
+```bash
+aws eks update-nodegroup-config --cluster-name eksfiap --nodegroup-name demo \
+    --scaling-config minSize=2,maxSize=4,desiredSize=4
+```
+
 ### Opcoes dos scripts
 
 ```bash
@@ -160,6 +210,18 @@ Use `sh atualizar.sh` em vez de `git pull`.
 **As credenciais expiraram no meio do lab**
 No AWS Academy elas sao temporarias. Rode `sh config_credenciais.sh` de novo e
 repita o comando que falhou - o terraform continua de onde parou.
+
+**Pods em `Pending` com `0/2 nodes are available: Insufficient memory`**
+Os nos sao pequenos demais para a carga. O default ja e `t3.large` (8 GiB);
+se ainda faltar memoria, aumente os nos ou a quantidade:
+
+```hcl
+node_instance_types = ["t3.xlarge"]
+node_desired_size   = 3
+```
+
+Lembre que aumentar `max_size` sozinho nao resolve: veja a secao
+"Escala automatica" acima.
 
 **`kubectl: line 1: syntax error near unexpected token '<'`**
 O `kubectl` da maquina nao e um binario: e uma pagina de erro XML
@@ -224,6 +286,7 @@ Terraform faz por baixo. Os dois caminhos usam o nome `eksfiap`, portanto
 | `awscli_eks_create.sh` / `awscli_eks_delete.sh` | caminho alternativo via AWS CLI |
 | `delete_vpc.sh` | limpeza manual de VPC ([lianghong/delete_vpc](https://github.com/lianghong/delete_vpc)) |
 | `cloud9_kubectl.sh` | configura o `kubectl` local sem abrir shell novo |
+| `autoscaler.sh` | instala/remove o Cluster Autoscaler |
 | `instalar_kubectl.sh` | (re)instala o `kubectl` na versao do cluster |
 | `build_imagem.sh` | constroi a imagem do `kubectl` localmente |
 | `lib_versao.sh` | resolve a versao do `kubectl` (usado pelos dois acima) |
