@@ -13,12 +13,24 @@ Gerado em tempo de execucao e **nao versionado** (ver `.gitignore` na raiz):
 - `kube/config` - kubeconfig gerado por `kubectl.sh`, para nao mexer no
   `~/.kube/config` da maquina.
 
-Para reconstruir e publicar a imagem:
+Para reconstruir a imagem, use o script (ele ja confere `aws` e `kubectl`
+dentro da imagem depois do build):
 
 ```
-docker build -t tonanuvem/kubectl-aws-cli ./files
-docker run --rm --entrypoint /bin/sh tonanuvem/kubectl-aws-cli \
-    -c 'aws --version && kubectl version --client'
+sh ../build_imagem.sh
+```
+
+Isso gera a tag local `eks-lab/kubectl-aws-cli:local`, que o `kubectl.sh` passa
+a preferir automaticamente. Para escolher a versao do `kubectl`:
+
+```
+KUBECTL_VERSION=v1.32.5 sh ../build_imagem.sh
+```
+
+Para reconstruir e **publicar** a imagem oficial do lab:
+
+```
+sh ../build_imagem.sh -t tonanuvem/kubectl-aws-cli
 docker push tonanuvem/kubectl-aws-cli
 ```
 

@@ -120,7 +120,8 @@ CLUSTER_NAME=meucluster AWS_REGION=us-east-2 sh iniciar.sh
 Todas as variaveis estao documentadas em `variables.tf`.
 
 Variaveis de ambiente aceitas pelos scripts: `CLUSTER_NAME`, `AWS_REGION`,
-`SSH_KEY_NAME`, `CLUSTER_ROLE_NAME`, `NODE_ROLE_NAME`, `MODO`, `EKS_IMAGE`.
+`SSH_KEY_NAME`, `CLUSTER_ROLE_NAME`, `NODE_ROLE_NAME`, `MODO`, `EKS_IMAGE`,
+`EKS_BUILD`, `KUBECTL_VERSION`.
 Quando definidas, elas sao repassadas ao terraform como `-var` e, portanto,
 **tem precedencia sobre o `terraform.tfvars`**. No AWS CloudShell a variavel
 `AWS_REGION` ja vem definida pelo ambiente - exatamente para que a AWS CLI e o
@@ -161,8 +162,19 @@ No AWS Academy elas sao temporarias. Rode `sh config_credenciais.sh` de novo e
 repita o comando que falhou - o terraform continua de onde parou.
 
 **`exec plugin: invalid apiVersion "client.authentication.k8s.io/v1alpha1"`**
-Imagem do `kubectl` desatualizada. Use `MODO=host sh conectar.sh` (se tiver
-`aws` + `kubectl` na maquina) ou reconstrua a imagem: veja `files/README.md`.
+A imagem publicada do `kubectl` foi construida com uma AWS CLI antiga. Duas
+saidas:
+
+```bash
+MODO=host sh conectar.sh        # se a maquina tem aws + kubectl
+```
+
+```bash
+sh build_imagem.sh              # reconstroi a imagem localmente
+```
+
+Depois do `build_imagem.sh`, o `sh conectar.sh` usa a imagem local
+automaticamente. `EKS_BUILD=1 sh conectar.sh` forca a reconstrucao.
 
 **O `destruir.sh` reclama de `DependencyViolation`**
 Algum `Service type=LoadBalancer` ainda existe. Apague os Services antes
@@ -197,6 +209,7 @@ Terraform faz por baixo. Os dois caminhos usam o nome `eksfiap`, portanto
 | `awscli_eks_create.sh` / `awscli_eks_delete.sh` | caminho alternativo via AWS CLI |
 | `delete_vpc.sh` | limpeza manual de VPC ([lianghong/delete_vpc](https://github.com/lianghong/delete_vpc)) |
 | `cloud9_kubectl.sh` | configura o `kubectl` local sem abrir shell novo |
+| `build_imagem.sh` | constroi a imagem do `kubectl` localmente |
 | `files/Dockerfile` | imagem `tonanuvem/kubectl-aws-cli` |
 | `bkp/`, `iam/bkp/`, `eksfiap_ajustar` | versoes antigas, mantidas como referencia |
 

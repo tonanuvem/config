@@ -149,10 +149,29 @@ E o `pip install awscli` nem roda mais no Alpine atual (PEP 668). O
 
 **O que foi feito:** Dockerfile reescrito com `apk add aws-cli` (AWS CLI v2) e
 `kubectl` em versao fixa via `ARG KUBECTL_VERSION`.
-**Esta imagem nao pode ser construida/testada neste ambiente** (sem daemon
-Docker e com o indice do Alpine bloqueado pela politica de rede), por isso o
-arquivo traz, no topo, os comandos de build e teste antes de publicar. O modo
-`host` do `conectar.sh` evita o problema de vez para quem usa CloudShell.
+
+Corrigir o Dockerfile, no entanto, **nao resolve nada por si so**: o
+`kubectl.sh` fazia `docker pull tonanuvem/kubectl-aws-cli`, ou seja, continuava
+baixando a imagem publicada, construida em 2021. Enquanto ninguem reconstruisse
+e publicasse, o aluno no modo docker seguia recebendo exatamente a imagem com o
+defeito. Faltava o build local - lacuna fechada depois:
+
+- novo `build_imagem.sh`: constroi a partir de `./files`, com
+  `--build-arg KUBECTL_VERSION`, na tag local
+  `eks-lab/kubectl-aws-cli:local`, e **so termina depois de conferir** que
+  `aws --version` e `kubectl version --client` respondem dentro da imagem (o
+  defeito original era justamente uma imagem que construia e falhava em uso);
+- `kubectl.sh` passou a escolher a imagem nesta ordem: `EKS_IMAGE` (se o
+  usuario indicou uma), `EKS_BUILD=1` (forca o build), imagem local ja
+  construida, imagem publicada ja baixada, e por fim `docker pull` - **que ao
+  falhar cai para o build local** em vez de abortar.
+
+**O build da imagem nao pode ser executado neste ambiente** (sem daemon Docker,
+e o indice de pacotes do Alpine bloqueado pela politica de rede). A logica de
+escolha de imagem foi testada com um `docker` simulado, nos seis caminhos. O
+`docker build` em si continua por verificar - e por isso o `build_imagem.sh`
+embute a propria verificacao. O modo `host` do `conectar.sh` dispensa a imagem
+por completo em CloudShell.
 
 ## 6. `main.tf`: correcoes de infraestrutura
 

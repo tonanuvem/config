@@ -28,7 +28,10 @@ cd "$(dirname "$0")"
 CLUSTER_NAME="${CLUSTER_NAME:-eksfiap}"
 AWS_REGION="${AWS_REGION:-us-east-1}"
 MODO="${MODO:-auto}"
-IMAGE="${EKS_IMAGE:-tonanuvem/kubectl-aws-cli}"
+IMAGE_PUBLICADA="${EKS_IMAGE_PUBLICADA:-tonanuvem/kubectl-aws-cli}"
+IMAGE_LOCAL="${IMAGE_LOCAL:-eks-lab/kubectl-aws-cli:local}"
+# EKS_IMAGE continua tendo prioridade, para quem quer apontar uma imagem propria.
+IMAGE="${EKS_IMAGE:-}"
 CONTAINER="${EKS_CONTAINER:-kubectl}"
 
 CRED="./files/credentials"
@@ -127,10 +130,47 @@ else
         exit 1
     }
 
-    docker image inspect "$IMAGE" >/dev/null 2>&1 || {
-        echo "Baixando a imagem $IMAGE ..."
-        docker pull "$IMAGE"
+    # -------------------------------------------------------------------------
+    # Escolha da imagem.
+    #
+    # A imagem publicada foi construida com awscli 1.19.21 (2021), que gera
+    # kubeconfig com a apiVersion client.authentication.k8s.io/v1alpha1,
+    # removida no Kubernetes 1.24. Corrigir o files/Dockerfile nao muda nada
+    # para quem baixa a imagem publicada, por isso aqui a imagem construida
+    # localmente (build_imagem.sh) tem preferencia, e um pull que falha cai
+    # para o build local em vez de simplesmente abortar.
+    # -------------------------------------------------------------------------
+    construir_local() {
+        echo "Construindo a imagem local $IMAGE_LOCAL (uma vez; leva ~1 min) ..."
+        bash ./build_imagem.sh
+        IMAGE="$IMAGE_LOCAL"
     }
+
+    if [ -n "$IMAGE" ]; then
+        # Imagem indicada explicitamente pelo usuario.
+        docker image inspect "$IMAGE" >/dev/null 2>&1 || {
+            echo "Baixando a imagem $IMAGE ..."
+            docker pull "$IMAGE"
+        }
+    elif [ "${EKS_BUILD:-0}" = "1" ]; then
+        construir_local
+    elif docker image inspect "$IMAGE_LOCAL" >/dev/null 2>&1; then
+        IMAGE="$IMAGE_LOCAL"
+        echo "Usando a imagem local $IMAGE_LOCAL."
+    elif docker image inspect "$IMAGE_PUBLICADA" >/dev/null 2>&1; then
+        IMAGE="$IMAGE_PUBLICADA"
+    else
+        echo "Baixando a imagem $IMAGE_PUBLICADA ..."
+        if docker pull "$IMAGE_PUBLICADA"; then
+            IMAGE="$IMAGE_PUBLICADA"
+        else
+            echo ""
+            echo "AVISO: nao foi possivel baixar $IMAGE_PUBLICADA."
+            construir_local
+        fi
+    fi
+
+    echo "Imagem  : $IMAGE"
 
     # Remove sobras de execucoes anteriores (causa do "name already in use").
     docker rm -f "$CONTAINER" >/dev/null 2>&1 || true
