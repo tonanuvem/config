@@ -3,6 +3,19 @@
 # IP do MASTER
 MASTER=$(terraform output -json ip_externo | jq -r '.[0][0]')
 
+echo ""
+echo "========================================"
+echo "        INSTALANDO K8S DASHBOARD"
+echo "========================================"
+echo ""
+echo ""
+echo "Configurando o Dashboard..."
+echo ""
+
+ssh -oStrictHostKeyChecking=no \
+    -i ~/environment/labsuser.pem \
+    ec2-user@$MASTER 'bash -s' < k8s_dashboard_token.sh
+
 # Criando arquivo de comandos
 > istio.sh
 
@@ -115,13 +128,12 @@ ssh -oStrictHostKeyChecking=no \
     -i ~/environment/labsuser.pem \
     ec2-user@$MASTER 'bash -s' < istio.sh
 
-echo ""
-echo "Configurando o Dashboard..."
-echo ""
+export INGRESS_HOST=$(curl -s checkip.amazonaws.com)
+export INGRESS_PORT=$(kubectl -n kubernetes-dashboard get service kubernetes-dashboard -o jsonpath='{.spec.ports[0].nodePort}')
 
-ssh -oStrictHostKeyChecking=no \
-    -i ~/environment/labsuser.pem \
-    ec2-user@$MASTER 'bash -s' < k8s_dashboard_token.sh
+echo "4) Acessar K8S Dashboard:"
+echo "https://$INGRESS_HOST:$INGRESS_PORT"
+echo ""
 
 printf "\n\n"
 echo "========================================"
