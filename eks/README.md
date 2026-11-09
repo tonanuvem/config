@@ -238,6 +238,37 @@ e o seu:
   existente". Esse nunca recebe a default, e o campo e imutavel - o PVC
   precisa ser apagado para o StatefulSet recria-lo.
 
+**O `terraform` fica em `aws_eks_addon.ebs_csi: Still creating...`**
+A criacao normal leva 1 a 2 minutos. Passou disso, o addon esta preso tentando
+ficar saudavel, e o motivo aparece em `health.issues` - nunca no log do
+terraform. **Sem matar o terraform**, abra outro terminal:
+
+```bash
+aws eks describe-addon --cluster-name eksfiap --region us-east-1 \
+    --addon-name aws-ebs-csi-driver --query 'addon.{status:status,problemas:health.issues}'
+```
+
+```bash
+kubectl -n kube-system get pods -l app.kubernetes.io/name=aws-ebs-csi-driver -o wide
+```
+
+Como ler o resultado:
+
+| `health.issues` / estado do pod | Significado |
+|---|---|
+| `InsufficientNumberOfReplicas` + pod `Pending` | nao ha onde agendar; veja `kubectl describe pod` |
+| `ImagePullBackOff` | o no nao alcanca o ECR; cheque a role dos nos |
+| `AccessDenied` nos logs | a role dos nos nao pode mexer em volumes EBS |
+| `ConfigurationConflict` | ja existe uma instalacao manual do driver no cluster |
+
+O terraform desiste sozinho em 20 minutos. Se voce interromper com Ctrl-C
+depois de o addon ja ter sido criado na AWS, ele fica fora do estado e o
+proximo apply falha com `ResourceInUseException`. Nesse caso, importe:
+
+```bash
+terraform import 'aws_eks_addon.ebs_csi[0]' eksfiap:aws-ebs-csi-driver
+```
+
 **`FailedMount: hostPath type check failed, /sys/kernel/security/apparmor`**
 A carga monta um caminho de AppArmor que nao existe na AMI dos nos (a AL2023
 usa SELinux). Nao da para resolver pelo Terraform: e configuracao de quem

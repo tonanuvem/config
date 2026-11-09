@@ -109,9 +109,31 @@ else
     echo "     Correcao: habilitar_ebs_csi = true no terraform.tfvars + sh iniciar.sh"
 fi
 
-secao "8. Addons do EKS"
-aws eks list-addons --cluster-name "$CLUSTER_NAME" --region "$AWS_REGION" --output text 2>/dev/null \
-    || echo "(nao foi possivel consultar; credenciais?)"
+secao "8. Addons do EKS: status e problemas de saude"
+# Um addon preso em CREATING (o terraform fica em "Still creating...") quase
+# sempre tem a explicacao em health.issues, e nao no log do terraform.
+ADDONS=$(aws eks list-addons --cluster-name "$CLUSTER_NAME" --region "$AWS_REGION" \
+    --query 'addons[]' --output text 2>/dev/null || echo "")
+
+if [ -z "$ADDONS" ]; then
+    echo "(nenhum addon gerenciado; coredns/kube-proxy/vpc-cni rodam auto-gerenciados)"
+else
+    for addon in $ADDONS; do
+        echo "--- $addon"
+        aws eks describe-addon --cluster-name "$CLUSTER_NAME" --region "$AWS_REGION" \
+            --addon-name "$addon" \
+            --query 'addon.{status:status,versao:addonVersion,role:serviceAccountRoleArn,problemas:health.issues}' \
+            --output json 2>/dev/null || echo "  (nao foi possivel consultar)"
+    done
+fi
+
+echo ""
+echo "Pods do driver de EBS:"
+kubectl -n kube-system get pods -l app.kubernetes.io/name=aws-ebs-csi-driver -o wide 2>/dev/null \
+    | grep . || echo "  (nenhum)"
+echo ""
+kubectl -n kube-system get events --field-selector type=Warning --sort-by=.lastTimestamp 2>/dev/null \
+    | grep -i 'ebs-csi' | tail -10 || true
 
 secao "9. DaemonSets e volumes hostPath"
 # hostPath que nao existe no no gera FailedMount, por exemplo
