@@ -34,6 +34,20 @@ sh destruir.sh
 | `sh conectar.sh` | abre um shell com `kubectl` apontado para o cluster | segundos |
 | `sh destruir.sh` | remove cluster, workers e VPC | 8 a 12 min |
 
+### Transicao: a primeira atualizacao de um clone antigo
+
+Um clone feito **antes** destas mudancas ainda nao tem o `atualizar.sh`, e o
+`git pull` nele falha porque os scripts antigos modificaram `main.tf` e
+`files/credentials`. Rode **uma vez**, dentro de `config/eks`:
+
+```bash
+git checkout -- main.tf files/credentials && git pull
+```
+
+Perder o `files/credentials` nesse momento nao e problema: o passo seguinte do
+lab (`sh config_credenciais.sh`) grava as credenciais de novo. A partir dai,
+use `sh atualizar.sh` e o problema nao volta.
+
 > `sh atualizar.sh` substitui o `git pull` direto. Os scripts antigos escreviam
 > dentro de arquivos versionados (`main.tf` e `files/credentials`), o que fazia
 > o `git pull` falhar com *"Your local changes would be overwritten by merge"*

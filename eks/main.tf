@@ -2,9 +2,10 @@
 # Lab EKS - FIAP
 #
 # Mudancas em relacao a versao anterior:
-#  * o Account ID deixou de ser fixo no arquivo (era 497573848553 + "sed -i"
-#    em preparar.sh, que sujava o repositorio e quebrava o "git pull");
-#    agora as roles sao resolvidas por data source.
+#  * o Account ID deixou de ser fixo no arquivo. Havia um ARN com o numero da
+#    conta de origem, reescrito por um "sed -i" em preparar.sh - o que sujava
+#    o repositorio e quebrava o "git pull". Agora as roles sao resolvidas por
+#    data source.
 #  * enable_dns_hostnames reativado (o EKS precisa de DNS na VPC).
 #  * subnets com a tag kubernetes.io/role/elb, necessaria para Service
 #    type=LoadBalancer funcionar.

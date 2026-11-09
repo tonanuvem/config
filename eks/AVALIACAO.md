@@ -49,6 +49,18 @@ O aluno travava no passo 1.
   alteracoes feitas por script (`main.tf`, `files/credentials`), faz o `git
   pull` e devolve as credenciais. E o novo passo 1.
 
+**Ressalva da transicao:** um clone criado antes destas mudancas nao tem o
+`atualizar.sh`, portanto a primeira atualizacao ainda precisa de um comando
+manual, documentado no `README.md`:
+
+```
+git checkout -- main.tf files/credentials && git pull
+```
+
+Perder o `files/credentials` nesse momento e inofensivo, porque o passo
+seguinte do lab o regrava. Da segunda vez em diante, o `atualizar.sh` resolve.
+Reproduzi a falha e validei este comando em um clone de teste.
+
 > Credenciais da AWS versionadas sao o achado mais serio aqui. O arquivo
 > rastreado estava vazio no repositorio, mas qualquer `git commit -a` depois de
 > `config_credenciais.sh` publicaria chaves reais. Agora o arquivo e ignorado e
