@@ -548,6 +548,52 @@ como voltar.
 
 ---
 
+## 17. O addon do EBS nao pode bloquear a criacao do cluster
+
+Na execucao real, o `aws_eks_addon.ebs_csi` ficou em `Still creating...` por
+mais de 15 minutos, duas vezes. O addon **era criado** na AWS
+(`v1.67.2-eksbuild.1`, com `created_at` e `modified_at` preenchidos), mas nunca
+chegava a `ACTIVE`, e o terraform esperava calado ate o timeout de 20 minutos -
+derrubando o apply inteiro, inclusive o que ja tinha dado certo.
+
+Dois problemas, um meu e um de desenho.
+
+### 17.1 Meu palpite de CPU estava errado
+
+Eu disse que o provavel culpado era CPU, porque um dos nos estava com 77% de
+requests. A conta desmente: o `ebs-csi-controller` pede ~60m por replica
+(6 containers x 10m), e sobravam 440m no no mais cheio - cabiam 7 replicas.
+CPU nao era o gargalo.
+
+### 17.2 O desenho era ruim, independente da causa
+
+O ponto que importa nao e qual era a causa, e sim que **era impossivel
+descobri-la durante o apply**. O terraform espera o addon chegar a `ACTIVE` e
+nao expoe `health.issues`, que e exatamente onde o EKS diz o que esta errado.
+Um recurso opcional, que so importa para cargas com disco, estava no caminho
+critico da criacao do cluster.
+
+Correcao: `habilitar_ebs_csi` passa a `false` por default, e o addon e
+instalado por um script novo, `ebs_csi.sh`, que:
+
+- cria o addon e consulta `describe-addon` a cada 10 segundos;
+- imprime `health.issues` **assim que aparecem** - um problema vira diagnostico
+  em ~1 minuto em vez de 20;
+- junto com os issues, mostra os pods do driver, os eventos que explicam por
+  que nao ficam prontos e o log do container principal;
+- aceita `--status` e `--remover`, para repetir a tentativa sem mexer no
+  terraform nem no estado.
+
+O recurso do terraform continua existindo para quem quiser o addon no estado,
+com o risco documentado e o aviso de nao usar as duas formas ao mesmo tempo
+(`ResourceInUseException`).
+
+A licao e a mesma do item 11.5, num nivel acima: o `|| echo` escondia *qual*
+erro era; aqui o desenho escondia *se havia* erro. Um passo opcional e lento
+que so sabe dizer "ainda esperando" nao pertence ao caminho critico.
+
+---
+
 ## Sobre os 15 minutos
 
 A maior parte e irredutivel e nao esta no codigo: o control plane do EKS leva

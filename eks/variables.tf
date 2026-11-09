@@ -204,14 +204,26 @@ variable "habilitar_ebs_csi" {
       pod has unbound immediate PersistentVolumeClaims
 
     Isso atinge qualquer StatefulSet (Dynatrace ActiveGate, bancos de dados,
-    Prometheus...), por isso o default e true.
+    Prometheus...).
+
+    MESMO ASSIM o default e false, e o caminho recomendado e "sh ebs_csi.sh"
+    depois que o cluster subir. Motivo: o terraform espera o addon chegar a
+    ACTIVE sem mostrar mais nada, entao um addon que nao fica saudavel vira
+    ate 20 minutos de "Still creating..." e, no fim, derruba o apply inteiro -
+    inclusive as partes que tinham dado certo. O motivo real fica em
+    health.issues, que so a API do EKS conta, e e isso que o ebs_csi.sh
+    consulta a cada 10 segundos.
+
+    Marque true apenas se quiser o addon no estado do terraform e aceitar esse
+    risco. Nao use as duas formas ao mesmo tempo: o addon criado pelo script
+    faz o terraform falhar com ResourceInUseException.
 
     A role dos nos precisa poder criar e anexar volumes EBS (a LabRole do AWS
     Academy ja pode). Em conta propria, use IRSA e informe
     ebs_csi_service_account_role_arn.
   EOT
   type        = bool
-  default     = true
+  default     = false
 }
 
 variable "ebs_csi_service_account_role_arn" {

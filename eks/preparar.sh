@@ -203,5 +203,8 @@ if [ "${#AVISOS[@]}" -gt 0 ]; then
 fi
 
 echo ""
-echo "Proximo passo:  sh conectar.sh"
+echo "Proximos passos:"
+echo "  sh ebs_csi.sh    instala o driver de disco (necessario para StatefulSet)"
+echo "  sh conectar.sh   abre o shell com o kubectl"
+echo ""
 echo "Para destruir:  sh destruir.sh"
