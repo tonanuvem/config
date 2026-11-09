@@ -124,12 +124,21 @@ echo ""
 echo "Configurando o MASTER via SSH..."
 echo ""
 
-ssh -oStrictHostKeyChecking=no \
+# Executar instalação/configuração do Istio no MASTER
+ssh -o StrictHostKeyChecking=no \
     -i ~/environment/labsuser.pem \
     ec2-user@$MASTER 'bash -s' < istio.sh
 
-export INGRESS_HOST=$(curl -s checkip.amazonaws.com)
-export INGRESS_PORT=$(kubectl -n kubernetes-dashboard get service kubernetes-dashboard -o jsonpath='{.spec.ports[0].nodePort}')
+# Obter IP público do MASTER
+export INGRESS_HOST=$(ssh -o StrictHostKeyChecking=no \
+    -i ~/environment/labsuser.pem \
+    ec2-user@$MASTER 'curl -s https://checkip.amazonaws.com')
+
+# Obter NodePort do Kubernetes Dashboard
+export INGRESS_PORT=$(ssh -o StrictHostKeyChecking=no \
+    -i ~/environment/labsuser.pem \
+    ec2-user@$MASTER \
+    "kubectl -n kubernetes-dashboard get service kubernetes-dashboard -o jsonpath='{.spec.ports[0].nodePort}'")
 
 echo "4) Acessar K8S Dashboard:"
 echo "https://$INGRESS_HOST:$INGRESS_PORT"
