@@ -301,6 +301,16 @@ aqui. Causas comuns:
 | `InsufficientInstanceCapacity` | a AZ ficou sem capacidade daquele tipo |
 | ASG lanca mas o no some | o no sobe e nao registra: rede sem saida para o endpoint do EKS ou para o ECR |
 
+Se o diagnostico disser **`ASG AINDA NAO CRIADO`** com `health: []`, o caso e
+outro: o EKS nem comecou a provisionar as maquinas, entao quota e tipo de
+instancia **nao** sao a causa (esses erros so aparecem depois que o ASG
+existe). Nesse estado, verifique a role vinculada ao servico - o diagnostico
+ja faz isso - e, se o node group estiver assim ha mais de 20 minutos, recrie-o:
+
+```bash
+terraform destroy -target=aws_eks_node_group.demo -auto-approve && sh iniciar.sh
+```
+
 Se for quota, reduza no `terraform.tfvars`:
 
 ```hcl

@@ -75,11 +75,38 @@ if command -v aws >/dev/null 2>&1; then
                 --query 'Activities[].{quando:StartTime,status:StatusCode,motivo:StatusMessage}' \
                 --output json 2>/dev/null | sed 's/^/      /'
         else
-            echo "    (ASG ainda nao criado)"
+            # Node group em CREATING sem ASG significa que o EKS ainda nao
+            # comecou a provisionar as maquinas - problema do lado do EKS, e
+            # nao de quota ou de lancamento de instancia (esses so aparecem
+            # depois que o ASG existe).
+            echo "    ASG AINDA NAO CRIADO: o EKS nao comecou a provisionar."
+            echo "    Nesse estado, quota e tipo de instancia nao sao a causa."
+            echo ""
+            echo "    Role vinculada ao servico (o EKS precisa dela para criar o ASG):"
+            if aws iam get-role --role-name AWSServiceRoleForAmazonEKSNodegroup \
+                    --query 'Role.RoleName' --output text 2>/dev/null | grep -q .; then
+                echo "      [ok]  AWSServiceRoleForAmazonEKSNodegroup existe"
+            else
+                echo "      [!]   AWSServiceRoleForAmazonEKSNodegroup NAO existe."
+                echo "            O EKS a cria sozinho na primeira vez, mas precisa de"
+                echo "            iam:CreateServiceLinkedRole - frequentemente negado em"
+                echo "            contas de laboratorio."
+            fi
+            echo ""
+            echo "    Launch templates criados pelo EKS:"
+            aws ec2 describe-launch-templates --region "$AWS_REGION" \
+                --query "LaunchTemplates[?contains(LaunchTemplateName, 'eks-')].LaunchTemplateName" \
+                --output text 2>/dev/null | grep . | sed 's/^/      /' || echo "      (nenhum)"
         fi
     done
     [ -z "$(aws eks list-nodegroups --cluster-name "$CLUSTER_NAME" --region "$AWS_REGION" \
         --query 'nodegroups[]' --output text 2>/dev/null)" ] && echo "  (nenhum node group)"
+
+    echo ""
+    echo "--- Auto Scaling Groups com tag do cluster ---"
+    aws autoscaling describe-auto-scaling-groups --region "$AWS_REGION" \
+        --query "AutoScalingGroups[?contains(to_string(Tags), '$CLUSTER_NAME')].{nome:AutoScalingGroupName,desejado:DesiredCapacity,instancias:length(Instances)}" \
+        --output table 2>/dev/null | head -12 || echo "  (nenhum)"
 
     echo ""
     echo "--- Instancias EC2 do cluster ---"
