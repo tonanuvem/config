@@ -23,7 +23,8 @@ set -euo pipefail
 cd "$(dirname "$0")"
 
 IMAGE_LOCAL="${IMAGE_LOCAL:-eks-lab/kubectl-aws-cli:local}"
-KUBECTL_VERSION="${KUBECTL_VERSION:-v1.33.3}"
+CLUSTER_NAME="${CLUSTER_NAME:-eksfiap}"
+AWS_REGION="${AWS_REGION:-us-east-1}"
 
 TAG="$IMAGE_LOCAL"
 if [ "${1:-}" = "-t" ]; then
@@ -43,6 +44,18 @@ docker info >/dev/null 2>&1 || {
     echo "      Verifique 'sudo systemctl start docker' e as permissoes do usuario." >&2
     exit 1
 }
+
+# Versao do kubectl pela do cluster, nao fixa no codigo: um pino envelhece e
+# sai do skew suportado (o lab chegou a ter kubectl 1.33 com cluster 1.37).
+if [ -z "${KUBECTL_VERSION:-}" ] \
+    && [ -z "${AWS_ACCESS_KEY_ID:-}" ] \
+    && grep -qi aws_access_key_id ./files/credentials 2>/dev/null; then
+    export AWS_SHARED_CREDENTIALS_FILE="$PWD/files/credentials"
+fi
+
+# shellcheck source=lib_versao.sh
+. ./lib_versao.sh
+KUBECTL_VERSION=$(resolver_kubectl_version "$CLUSTER_NAME" "$AWS_REGION")
 
 echo "Construindo $TAG (kubectl $KUBECTL_VERSION) a partir de ./files ..."
 echo ""

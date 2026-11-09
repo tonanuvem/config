@@ -160,8 +160,19 @@
             #RELEASE="$(curl -sSL https://dl.k8s.io/release/stable.txt)"
             ARCH="amd64"
             cd $DOWNLOAD_DIR
-            sudo curl -L --remote-name-all https://storage.googleapis.com/kubernetes-release/release/${RELEASE}/bin/linux/${ARCH}/{kubeadm,kubelet,kubectl}
+            # IMPORTANTE: baixar de dl.k8s.io, e nao do bucket legado
+            # storage.googleapis.com/kubernetes-release, que esta congelado na
+            # v1.31.0 - qualquer versao a partir da v1.32.0 responde 404 lá.
+            # E --fail e obrigatorio: sem ele o curl grava o corpo do erro 404
+            # (um XML "<Error><Code>NoSuchKey</Code>...") dentro dos arquivos
+            # kubeadm/kubelet/kubectl, o chmod +x os torna "executaveis" e a
+            # falha so aparece no primeiro uso, como:
+            #   /usr/local/bin/kubectl: line 1: syntax error near unexpected token `<'
+            sudo curl -fL --remote-name-all https://dl.k8s.io/release/${RELEASE}/bin/linux/${ARCH}/{kubeadm,kubelet,kubectl}
             sudo chmod +x {kubeadm,kubelet,kubectl}
+            # Falha agora, e com mensagem clara, em vez de no primeiro uso.
+            ${DOWNLOAD_DIR}/kubectl version --client
+            ${DOWNLOAD_DIR}/kubeadm version
 
             RELEASE_VERSION="v0.4.0"
             curl -sSL "https://raw.githubusercontent.com/kubernetes/release/${RELEASE_VERSION}/cmd/kubepkg/templates/latest/deb/kubelet/lib/systemd/system/kubelet.service" | sed "s:/usr/bin:${DOWNLOAD_DIR}:g" | sudo tee /etc/systemd/system/kubelet.service

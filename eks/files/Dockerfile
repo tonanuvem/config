@@ -40,7 +40,10 @@ RUN apk add --no-cache \
         groff \
         less
 
-ARG KUBECTL_VERSION=v1.33.3
+# Fallback apenas: o build_imagem.sh sempre passa --build-arg KUBECTL_VERSION
+# com a versao derivada do cluster, porque um pino fixo aqui envelhece e sai do
+# skew suportado (+-1 minor em relacao ao cluster).
+ARG KUBECTL_VERSION=v1.37.2
 RUN curl -fsSLo /usr/local/bin/kubectl \
         "https://dl.k8s.io/release/${KUBECTL_VERSION}/bin/linux/amd64/kubectl" \
     && chmod +x /usr/local/bin/kubectl \

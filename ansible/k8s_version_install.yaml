@@ -6,9 +6,11 @@
   tasks:
   - name: Instalar versao especifica do kubeadm, kubectl e kubelet
     ansible.builtin.shell: |
-      wget https://storage.googleapis.com/kubernetes-release/release/v"{{ versao | default('1.17.11') }}"/bin/linux/amd64/kubectl
-      wget https://storage.googleapis.com/kubernetes-release/release/v"{{ versao | default('1.17.11') }}"/bin/linux/amd64/kubeadm
-      wget https://storage.googleapis.com/kubernetes-release/release/v"{{ versao | default('1.17.11') }}"/bin/linux/amd64/kubelet
+      # dl.k8s.io, e nao storage.googleapis.com/kubernetes-release: o bucket
+      # legado esta congelado na v1.31.0 e devolve 404 para versoes maiores.
+      wget https://dl.k8s.io/release/v"{{ versao | default('1.17.11') }}"/bin/linux/amd64/kubectl
+      wget https://dl.k8s.io/release/v"{{ versao | default('1.17.11') }}"/bin/linux/amd64/kubeadm
+      wget https://dl.k8s.io/release/v"{{ versao | default('1.17.11') }}"/bin/linux/amd64/kubelet
 
       chmod +x kubectl
       chmod +x kubeadm

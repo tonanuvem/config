@@ -161,6 +161,21 @@ Use `sh atualizar.sh` em vez de `git pull`.
 No AWS Academy elas sao temporarias. Rode `sh config_credenciais.sh` de novo e
 repita o comando que falhou - o terraform continua de onde parou.
 
+**`kubectl: line 1: syntax error near unexpected token '<'`**
+O `kubectl` da maquina nao e um binario: e uma pagina de erro XML
+(`<Error><Code>NoSuchKey</Code>...`) gravada no lugar dele. Acontece quando o
+download veio do bucket legado `storage.googleapis.com/kubernetes-release`,
+que esta **congelado na v1.31.0** e devolve 404 para qualquer versao a partir
+da v1.32.0 - e o `curl` nao usou `--fail`, entao gravou o corpo do erro.
+
+```bash
+sh instalar_kubectl.sh
+```
+
+O script baixa de `dl.k8s.io` na versao compativel com o seu cluster, confere
+o checksum e so substitui o binario depois de testa-lo. A causa raiz estava no
+`ansible/ansible_k8s.yml`, que provisiona a VM do lab, e ja foi corrigida.
+
 **`exec plugin: invalid apiVersion "client.authentication.k8s.io/v1alpha1"`**
 A imagem publicada do `kubectl` foi construida com uma AWS CLI antiga. Duas
 saidas:
@@ -209,7 +224,9 @@ Terraform faz por baixo. Os dois caminhos usam o nome `eksfiap`, portanto
 | `awscli_eks_create.sh` / `awscli_eks_delete.sh` | caminho alternativo via AWS CLI |
 | `delete_vpc.sh` | limpeza manual de VPC ([lianghong/delete_vpc](https://github.com/lianghong/delete_vpc)) |
 | `cloud9_kubectl.sh` | configura o `kubectl` local sem abrir shell novo |
+| `instalar_kubectl.sh` | (re)instala o `kubectl` na versao do cluster |
 | `build_imagem.sh` | constroi a imagem do `kubectl` localmente |
+| `lib_versao.sh` | resolve a versao do `kubectl` (usado pelos dois acima) |
 | `files/Dockerfile` | imagem `tonanuvem/kubectl-aws-cli` |
 | `bkp/`, `iam/bkp/`, `eksfiap_ajustar` | versoes antigas, mantidas como referencia |
 

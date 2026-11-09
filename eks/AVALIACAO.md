@@ -260,6 +260,92 @@ Todos corrigidos; as esperas fixas viraram `aws eks wait cluster-active` /
 
 ---
 
+## 11. Bug encontrado na primeira execucao real (kubectl quebrado na VM)
+
+Na primeira execucao do lab em uma VM real, o `sh iniciar.sh` funcionou (cluster
+criado em 13m50s, versao **1.37**), mas o `sh conectar.sh` deu:
+
+```
+/usr/local/bin/kubectl: line 1: syntax error near unexpected token `<'
+/usr/local/bin/kubectl: line 1: `<?xml version='1.0' ...><Error><Code>NoSuchKey</Code>
+  ...No such object: kubernetes-release/release/v1.37.2/bin/linux/amd64/kubectl</Error>'
+(os nos podem levar alguns minutos para aparecer)
+```
+
+Tres defeitos distintos, encadeados.
+
+### 11.1 Causa raiz: bucket legado congelado (`ansible/ansible_k8s.yml`)
+
+O playbook que provisiona a VM do lab baixava `kubeadm`, `kubelet` e `kubectl`
+de `https://storage.googleapis.com/kubernetes-release/release/${RELEASE}/...`.
+Esse bucket **esta congelado**. Verificado:
+
+| URL | Resultado |
+|---|---|
+| `kubernetes-release/release/stable.txt` | `v1.31.0` |
+| `kubernetes-release/.../v1.31.0/bin/linux/amd64/kubectl` | HTTP 200 |
+| `kubernetes-release/.../v1.32.0/bin/linux/amd64/kubectl` | HTTP 404 |
+| `dl.k8s.io/release/v1.37.2/bin/linux/amd64/kubectl` | HTTP 200 |
+
+O commit `ef99e09` ("Atualiza stack shift para ... K8s 1.37") subiu o
+`RELEASE` para `v1.37.2` mas manteve a URL antiga. A partir da v1.32.0 nao
+existe nada lá.
+
+### 11.2 O que transformou um 404 em binario corrompido
+
+```
+sudo curl -L --remote-name-all https://storage.googleapis.com/...
+sudo chmod +x {kubeadm,kubelet,kubectl}
+```
+
+Sem `--fail`, o `curl` grava o corpo da resposta de erro - o XML - dentro dos
+arquivos. O `chmod +x` os torna "executaveis", e a falha so aparece no
+primeiro uso. **Os tres binarios foram afetados**, nao so o `kubectl`.
+
+Corrigido: URL para `dl.k8s.io`, `curl -fL`, e `kubectl version --client` /
+`kubeadm version` no fim da task, para a falha aparecer no provisionamento.
+A mesma URL legada foi corrigida em `ansible/k8s_version_install.yaml` e nas
+linhas comentadas de `aws-vm/config.sh` e `bkp_preparar.sh`, para nao voltar.
+
+### 11.3 Defeito meu: o erro foi disfarcado de "aguarde"
+
+O `kubectl.sh` que eu escrevi fazia:
+
+```
+kubectl get nodes || echo "(os nos podem levar alguns minutos para aparecer)"
+```
+
+Esse `||` transformava **qualquer** falha - binario corrompido, credencial
+invalida, cluster inacessivel - na mensagem tranquilizadora de que os nos
+ainda estavam subindo, e seguia abrindo o shell. Foi exatamente o que apareceu
+no log acima, logo abaixo do erro real.
+
+Agora o script confere `kubectl version --client` antes de usar o `kubectl`;
+se o arquivo comeca com `<`, diz que nao e um binario, mostra o inicio do
+conteudo, explica a origem e aponta o `instalar_kubectl.sh`. E separa os casos
+de `get nodes`: `No resources found` (espera legitima) de erro real, que e
+impresso em vez de engolido. Os quatro cenarios foram testados.
+
+### 11.4 Defeito meu: kubectl fixo saiu do skew
+
+Como deixei `cluster_version = null`, o EKS criou o cluster na sua versao
+default - **1.37**. Mas meu `files/Dockerfile` fixava `KUBECTL_VERSION=v1.33.3`:
+quatro minors de distancia, fora do skew suportado (+-1).
+
+Um pino fixo no codigo envelhece sozinho. Novo `lib_versao.sh` resolve a
+versao na ordem: `KUBECTL_VERSION` explicita > versao do cluster
+(`stable-<minor>.txt`) > `stable.txt`. Usado pelo `instalar_kubectl.sh` e pelo
+`build_imagem.sh`.
+
+### 11.5 Licao
+
+As duas falhas minhas sao da mesma familia: **tratar erro sem distinguir qual
+erro**. O `|| echo` no `get nodes` e o `curl` sem `--fail` fazem a mesma coisa
+em niveis diferentes - seguem adiante como se tivesse dado certo. O `--fail`
+faltando custou um binario corrompido; o `||` faltando custou o diagnostico.
+
+---
+
 ## Sobre os 15 minutos
 
 A maior parte e irredutivel e nao esta no codigo: o control plane do EKS leva

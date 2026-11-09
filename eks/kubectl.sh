@@ -109,8 +109,42 @@ if [ "$MODO" = "host" ]; then
     aws eks --region "$AWS_REGION" describe-cluster --name "$CLUSTER_NAME" \
         --query "cluster.endpoint" --output text
 
+    # -------------------------------------------------------------------------
+    # Confere o kubectl ANTES de usa-lo. A versao anterior fazia
+    # "kubectl get nodes || echo '(os nos podem levar alguns minutos...)'", o
+    # que transformava qualquer falha - inclusive um binario quebrado - na
+    # mensagem tranquilizadora de que os nos ainda estavam subindo.
+    # -------------------------------------------------------------------------
     echo ""
-    kubectl get nodes || echo "(os nos podem levar alguns minutos para aparecer)"
+    if ! kubectl version --client >/dev/null 2>&1; then
+        BIN=$(command -v kubectl || echo "?")
+        echo "ERRO: o kubectl desta maquina nao esta funcionando ($BIN)." >&2
+        if [ -f "$BIN" ] && head -c 1 "$BIN" 2>/dev/null | grep -q '<'; then
+            echo "      O arquivo nao e um binario. Ele comeca com:" >&2
+            TRECHO=$(head -c 200 "$BIN" | tr -d '\r\0' | head -1)
+            printf '        %s\n' "$TRECHO" >&2
+            echo "      Isso e uma pagina de erro gravada no lugar do binario:" >&2
+            echo "      o download veio do bucket legado kubernetes-release," >&2
+            echo "      congelado na v1.31.0, e o curl nao usou --fail." >&2
+        fi
+        echo "" >&2
+        echo "      Conserte com:  sh instalar_kubectl.sh" >&2
+        echo "      Ou use o container:  MODO=docker sh conectar.sh" >&2
+        exit 1
+    fi
+
+    kubectl version --client | head -1
+
+    echo ""
+    if SAIDA=$(kubectl get nodes 2>&1); then
+        printf '%s\n' "$SAIDA"
+        # "No resources found" sai com codigo 0: e o caso legitimo de espera.
+        printf '%s' "$SAIDA" | grep -qi 'No resources found' \
+            && echo "(os nos podem levar alguns minutos para aparecer)"
+    else
+        echo "AVISO: 'kubectl get nodes' falhou:" >&2
+        printf '%s\n' "$SAIDA" | sed 's/^/        /' >&2
+    fi
 
     printf '%s' "$AJUDA"
     exec bash -i
@@ -194,7 +228,19 @@ echo "Cluster endpoint:"
 aws eks --region "$AWS_REGION" describe-cluster --name "$CLUSTER_NAME" \
     --query "cluster.endpoint" --output text
 echo ""
-kubectl get nodes || echo "(os nos podem levar alguns minutos para aparecer)"
+if ! kubectl version --client >/dev/null 2>&1; then
+    echo "ERRO: o kubectl da imagem nao esta funcionando." >&2
+    echo "      Reconstrua a imagem:  sh build_imagem.sh" >&2
+    exit 1
+fi
+if SAIDA=$(kubectl get nodes 2>&1); then
+    printf '%s\n' "$SAIDA"
+    printf '%s' "$SAIDA" | grep -qi 'No resources found' \
+        && echo "(os nos podem levar alguns minutos para aparecer)"
+else
+    echo "AVISO: 'kubectl get nodes' falhou:" >&2
+    printf '%s\n' "$SAIDA" | sed 's/^/        /' >&2
+fi
 printf '%s' "$AJUDA"
 exec /bin/sh
 INNER
