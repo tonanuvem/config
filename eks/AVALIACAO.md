@@ -514,6 +514,40 @@ controle de versao sobre eles, ao custo de mais alguns minutos no apply.
 
 ---
 
+## 16. Quantidade de nos: 3 em vez de 2
+
+Depois da troca para `t3.large`, a pergunta passou a ser quantos nos. Com os
+numeros medidos no cluster real (2 x `t3.large`, 1930m e ~6,9 GiB alocaveis
+por no):
+
+| | CPU (requests) | Memoria (requests) |
+|---|---|---|
+| no 1 | 1490m (77%) | 0,83 GiB (12%) |
+| no 2 | 690m (36%) | 1,38 GiB (20%) |
+| total, 2 nos | 56% | 16% |
+| total, 3 nos | 38% | 11% |
+
+O gargalo deixou de ser memoria (16%) e passou a ser **CPU**, concentrada: 77%
+em um no, com apenas 440m livres ali. Tres razoes para o terceiro no:
+
+1. **folga de CPU** onde ela acabou, nao onde ja sobrava;
+2. **o controlador do driver de EBS** sobe 2 replicas com anti-afinidade entre
+   nos; com um no quase cheio, ele fica `Pending` e o addon nunca fica
+   saudavel - foi o que travou o `terraform apply` em `Still creating...`;
+3. **terceiro dominio de falha**: um StatefulSet de 3 replicas que exija
+   anti-afinidade (o ActiveGate do DynaKube `-agents` pede 3) **nunca** agenda
+   por completo em 2 nos, por mais CPU que sobre.
+
+Custo: 3 x `t3.large` ~US$ 0,25/h, contra ~US$ 0,17/h com 2. Vale comparar com
+a alternativa de nos maiores: 2 x `t3.xlarge` custam ~US$ 0,33/h, mais caro e
+com um dominio de falha a menos.
+
+`node_desired_size` passa a 3 por default, com `min_size` 2 e `max_size` 4. Um
+lab sem stack de observabilidade continua bem servido por 2, e o README diz
+como voltar.
+
+---
+
 ## Sobre os 15 minutos
 
 A maior parte e irredutivel e nao esta no codigo: o control plane do EKS leva

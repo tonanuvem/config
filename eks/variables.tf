@@ -165,9 +165,20 @@ variable "node_disk_size" {
 }
 
 variable "node_desired_size" {
-  description = "Quantidade desejada de nos workers."
+  description = <<-EOT
+    Quantidade desejada de nos workers.
+
+    O default e 3, nao 2, por causa de CPU - nao de memoria. Medido no lab com
+    a stack do Dynatrace, com 2 x t3.large: a memoria ficava em 16% do total,
+    enquanto a CPU chegava a 77% de requests em um dos nos, sobrando ali
+    apenas 440m. Um terceiro no derruba a ocupacao de CPU para ~38% e abre
+    espaco para pods que pedem anti-afinidade entre nos.
+
+    Para um lab simples, sem stack de observabilidade, 2 nos bastam e custam
+    menos: node_desired_size = 2.
+  EOT
   type        = number
-  default     = 2
+  default     = 3
 }
 
 variable "node_min_size" {

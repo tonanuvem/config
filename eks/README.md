@@ -71,11 +71,11 @@ Precisa de:
 - security group do control plane;
 - cluster EKS `eksfiap`, com o criador ja mapeado como administrador;
 - addon `aws-ebs-csi-driver`, necessario para qualquer PVC de disco;
-- managed node group `demo`: 2 x `t3.large` (min 2, max 4), AMI Amazon
+- managed node group `demo`: 3 x `t3.large` (min 2, max 4), AMI Amazon
   Linux 2023, disco de 20 GiB.
 
-Custo aproximado em `us-east-1`: ~US$ 0,10/h do control plane + ~US$ 0,17/h dos
-2 nos `t3.large`. Com `node_capacity_type = "SPOT"` os nos custam cerca de um
+Custo aproximado em `us-east-1`: ~US$ 0,10/h do control plane + ~US$ 0,25/h dos
+3 nos `t3.large` (com 2 nos, ~US$ 0,17/h). Com `node_capacity_type = "SPOT"` os nos custam cerca de um
 terco disso. **Rode `sh destruir.sh` ao terminar.**
 
 ### Por que t3.large e nao t3.medium
@@ -87,6 +87,33 @@ exemplo) e os pods ficam `Pending` com `Insufficient memory`. `t3.large` tem
 
 Prefira `t3.large` a `t2.large`: mesma CPU e memoria, geracao mais nova,
 melhor baseline de burst e cerca de 10% mais barata.
+
+### Por que 3 nos e nao 2
+
+Depois de resolver a memoria, o gargalo virou **CPU**. Medido no lab com a
+stack do Dynatrace, em 2 x `t3.large`:
+
+| | CPU (requests) | Memoria (requests) |
+|---|---|---|
+| no 1 | 1490m de 1930m (77%) | 0,83 GiB de 6,9 (12%) |
+| no 2 | 690m de 1930m (36%) | 1,38 GiB de 6,9 (20%) |
+| **total, 2 nos** | **56%** | **16%** |
+| **total, 3 nos** | **38%** | **11%** |
+
+Sobravam 440m de CPU no no mais cheio - pouco para o controlador do driver de
+EBS (2 replicas com anti-afinidade) e para as replicas do ActiveGate. O
+terceiro no e tambem um terceiro dominio de falha: um StatefulSet de 3
+replicas que exija anti-afinidade **nunca** agenda por completo em 2 nos.
+
+Para conferir se alguma carga sua exige isso:
+
+```bash
+kubectl -n dynatrace get statefulset -o yaml | grep -A5 requiredDuringScheduling
+```
+
+Tres `t3.large` (~US$ 0,25/h) saem mais baratos e dao mais dominios de falha do
+que dois `t3.xlarge` (~US$ 0,33/h). Num lab simples, sem observabilidade, 2 nos
+bastam: `node_desired_size = 2`.
 
 ## Verificar o cluster
 
