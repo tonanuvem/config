@@ -99,6 +99,52 @@ echo ""
 echo "=== Depois ==="
 mostrar
 
-echo "Atencao: PVCs que ja estao Pending nao mudam de StorageClass sozinhos."
-echo "A StorageClass de um PVC e imutavel; recrie o recurso que o gerou. Ex.:"
-echo "  kubectl -n dynatrace delete pvc <nome>   # o StatefulSet recria"
+# ---------------------------------------------------------------------------
+# PVCs que ja estao Pending: dois casos muito diferentes.
+#
+#  * storageClassName AUSENTE (null): desde o Kubernetes 1.28 o controlador
+#    atribui a default retroativamente, entao o PVC liga sozinho em instantes.
+#  * storageClassName = "" (string vazia): significa "nao provisione, so ligue
+#    a um PV existente". Esse NAO e atualizado quando surge uma default, e o
+#    campo e imutavel - o PVC precisa ser recriado.
+# ---------------------------------------------------------------------------
+echo "=== PVCs ainda Pending ==="
+PENDENTES=$(kubectl get pvc --all-namespaces \
+    -o jsonpath='{range .items[?(@.status.phase=="Pending")]}{.metadata.namespace}{" "}{.metadata.name}{"\n"}{end}' 2>/dev/null)
+
+if [ -z "$PENDENTES" ]; then
+    echo "(nenhum)"
+    exit 0
+fi
+
+PRECISA_RECRIAR=""
+while read -r ns nome; do
+    [ -n "${nome:-}" ] || continue
+    VALOR=$(kubectl -n "$ns" get pvc "$nome" -o jsonpath='{.spec.storageClassName}' 2>/dev/null || echo "")
+    if [ -n "$VALOR" ]; then
+        echo "  $ns/$nome -> classe '$VALOR'; aguarde o provisionamento"
+    elif kubectl -n "$ns" get pvc "$nome" -o json 2>/dev/null | grep -q '"storageClassName"'; then
+        # A chave existe mas o valor e vazio: foi pedido explicitamente "sem classe".
+        echo "  $ns/$nome -> storageClassName=\"\" (PRECISA SER RECRIADO)"
+        PRECISA_RECRIAR="$PRECISA_RECRIAR $ns/$nome"
+    else
+        echo "  $ns/$nome -> sem classe definida; a default sera atribuida sozinha"
+    fi
+done <<< "$PENDENTES"
+
+if [ -n "$PRECISA_RECRIAR" ]; then
+    echo ""
+    echo "Os PVCs acima com storageClassName=\"\" nunca recebem a default."
+    echo "A StorageClass de um PVC e imutavel, entao eles precisam ser recriados"
+    echo "(o StatefulSet dono recria o PVC e o pod em seguida):"
+    for item in $PRECISA_RECRIAR; do
+        echo "  kubectl -n ${item%%/*} delete pvc ${item##*/}"
+    done
+    echo ""
+    echo "Se o PVC voltar com storageClassName=\"\", quem o define e o template do"
+    echo "StatefulSet (no Dynatrace, o volumeClaimTemplate do DynaKube): ajuste la."
+else
+    echo ""
+    echo "Nada a recriar. Acompanhe com:"
+    echo "  kubectl get pvc --all-namespaces -w"
+fi

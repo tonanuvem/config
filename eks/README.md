@@ -229,8 +229,14 @@ Se o diagnostico disser `StorageClass default: NENHUMA`, rode tambem:
 sh storage.sh
 ```
 
-Um PVC ja criado nao muda de StorageClass (o campo e imutavel): apague o PVC
-para o StatefulSet recria-lo.
+Para os PVCs que ja estao `Pending`, ha dois casos, e o `storage.sh` diz qual
+e o seu:
+
+- `storageClassName` **ausente**: desde o Kubernetes 1.28 a default e atribuida
+  retroativamente, e o PVC liga sozinho em instantes;
+- `storageClassName: ""`: significa "nao provisione nada, so ligue a um PV
+  existente". Esse nunca recebe a default, e o campo e imutavel - o PVC
+  precisa ser apagado para o StatefulSet recria-lo.
 
 **`FailedMount: hostPath type check failed, /sys/kernel/security/apparmor`**
 A carga monta um caminho de AppArmor que nao existe na AMI dos nos (a AL2023

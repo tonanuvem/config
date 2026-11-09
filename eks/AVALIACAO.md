@@ -477,6 +477,41 @@ Ressalva de honestidade: nao consegui confirmar em fonte oficial que a AL2023
 nao ativa AppArmor. O `diagnostico.sh` mostra o `OS-IMAGE` dos nos e os
 hostPaths dos DaemonSets, que e o que confirma o diagnostico no cluster real.
 
+**Confirmado depois, no cluster:** os nos rodam `Amazon Linux 2023.12`, e a
+remocao do caminho do DynaKube resolveu - o DaemonSet
+`node-config-collector` voltou a 2/2 e seus hostPaths passaram a ser
+`/boot /etc /proc/sys/kernel /sys/fs /usr/lib/systemd/system /var/lib`, sem o
+caminho do AppArmor. Os eventos de `FailedMount` que ainda apareciam eram
+anteriores a correcao.
+
+## 15. O que o diagnostico no cluster real mostrou
+
+Rodado apos a troca para `t3.large`:
+
+- **memoria deixou de ser o gargalo**: 7,1 GiB alocaveis por no, com requests
+  de 11% e 19%. O aperto passou a ser de CPU em um dos nos (77%);
+- **unico bloqueio restante: armazenamento**. Tres replicas do ActiveGate do
+  DynaKube `...-agents` presas em `Pending` ha 95 minutos, com os PVCs
+  `ag-tmp-gateway-*` em `Pending` e o evento do controlador sendo explicito:
+  `no persistent volumes available for this claim and no storage class is set`;
+- **nenhum addon gerenciado no cluster**: `aws eks list-addons` voltou vazio.
+  O `coredns`, o `kube-proxy` e o `vpc-cni` rodam como auto-gerenciados, que e
+  o que o EKS instala quando o cluster e criado sem addons declarados. Nao ha
+  driver de EBS, so `efs.csi.aws.com` e o CSI do proprio Dynatrace;
+- **a unica StorageClass e a `gp2` com o provisionador antigo**
+  `kubernetes.io/aws-ebs`, e **nenhuma esta marcada como default**. Duas
+  razoes somadas para o PVC nunca ser atendido.
+
+Isso confirmou as duas correcoes do item 13 e acrescentou uma distincao que
+faltava no `storage.sh`: um PVC com `storageClassName` ausente recebe a default
+retroativamente (GA no Kubernetes 1.28), enquanto um com `storageClassName: ""`
+nunca recebe e precisa ser recriado. O script agora classifica cada PVC
+pendente nesses dois casos e so manda apagar os que realmente precisam.
+
+Fica como melhoria possivel, nao aplicada: declarar `coredns`, `kube-proxy` e
+`vpc-cni` como `aws_eks_addon`, em vez de deixa-los auto-gerenciados. Daria
+controle de versao sobre eles, ao custo de mais alguns minutos no apply.
+
 ---
 
 ## Sobre os 15 minutos
