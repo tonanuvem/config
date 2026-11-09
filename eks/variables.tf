@@ -182,6 +182,37 @@ variable "node_max_size" {
   default     = 4
 }
 
+variable "habilitar_ebs_csi" {
+  description = <<-EOT
+    Instala o addon aws-ebs-csi-driver no cluster.
+
+    A partir do EKS 1.23 o provisionador de EBS saiu do Kubernetes e virou um
+    driver CSI que NAO vem instalado. Sem ele, qualquer PVC de disco fica
+    Pending e o pod nao agenda, com a mensagem:
+
+      pod has unbound immediate PersistentVolumeClaims
+
+    Isso atinge qualquer StatefulSet (Dynatrace ActiveGate, bancos de dados,
+    Prometheus...), por isso o default e true.
+
+    A role dos nos precisa poder criar e anexar volumes EBS (a LabRole do AWS
+    Academy ja pode). Em conta propria, use IRSA e informe
+    ebs_csi_service_account_role_arn.
+  EOT
+  type        = bool
+  default     = true
+}
+
+variable "ebs_csi_service_account_role_arn" {
+  description = <<-EOT
+    ARN da role IAM (IRSA) para a service account do driver EBS. Deixe null
+    para o driver usar as permissoes da role dos nos - que e o caso do AWS
+    Academy, onde nao ha IRSA configurado.
+  EOT
+  type        = string
+  default     = null
+}
+
 variable "habilitar_autoscaler" {
   description = <<-EOT
     Marca o Auto Scaling Group do node group com as tags que o Cluster

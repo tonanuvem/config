@@ -70,6 +70,7 @@ Precisa de:
   Internet Gateway e rota default;
 - security group do control plane;
 - cluster EKS `eksfiap`, com o criador ja mapeado como administrador;
+- addon `aws-ebs-csi-driver`, necessario para qualquer PVC de disco;
 - managed node group `demo`: 2 x `t3.large` (min 2, max 4), AMI Amazon
   Linux 2023, disco de 20 GiB.
 
@@ -211,6 +212,32 @@ Use `sh atualizar.sh` em vez de `git pull`.
 No AWS Academy elas sao temporarias. Rode `sh config_credenciais.sh` de novo e
 repita o comando que falhou - o terraform continua de onde parou.
 
+**Pods em `Pending` com `pod has unbound immediate PersistentVolumeClaims`**
+O pod espera um disco que ninguem cria. Desde o EKS 1.23 o provisionador de
+EBS virou um driver CSI que **nao vem instalado**. Atinge qualquer StatefulSet
+(Dynatrace ActiveGate, bancos, Prometheus). O default do lab ja instala o
+addon; se o cluster e anterior a esta mudanca:
+
+```bash
+sh diagnostico.sh
+```
+
+Se faltar o driver, garanta `habilitar_ebs_csi = true` e rode `sh iniciar.sh`.
+Se o diagnostico disser `StorageClass default: NENHUMA`, rode tambem:
+
+```bash
+sh storage.sh
+```
+
+Um PVC ja criado nao muda de StorageClass (o campo e imutavel): apague o PVC
+para o StatefulSet recria-lo.
+
+**`FailedMount: hostPath type check failed, /sys/kernel/security/apparmor`**
+A carga monta um caminho de AppArmor que nao existe na AMI dos nos (a AL2023
+usa SELinux). Nao da para resolver pelo Terraform: e configuracao de quem
+pede o mount. No Dynatrace, o caminho fica em `.spec.kspm.mappedHostPaths` do
+DynaKube e precisa ser removido **em cada DynaKube do namespace**.
+
 **Pods em `Pending` com `0/2 nodes are available: Insufficient memory`**
 Os nos sao pequenos demais para a carga. O default ja e `t3.large` (8 GiB);
 se ainda faltar memoria, aumente os nos ou a quantidade:
@@ -286,6 +313,8 @@ Terraform faz por baixo. Os dois caminhos usam o nome `eksfiap`, portanto
 | `awscli_eks_create.sh` / `awscli_eks_delete.sh` | caminho alternativo via AWS CLI |
 | `delete_vpc.sh` | limpeza manual de VPC ([lianghong/delete_vpc](https://github.com/lianghong/delete_vpc)) |
 | `cloud9_kubectl.sh` | configura o `kubectl` local sem abrir shell novo |
+| `diagnostico.sh` | coleta somente-leitura do estado do cluster |
+| `storage.sh` | garante uma StorageClass default (gp3) |
 | `autoscaler.sh` | instala/remove o Cluster Autoscaler |
 | `instalar_kubectl.sh` | (re)instala o `kubectl` na versao do cluster |
 | `build_imagem.sh` | constroi a imagem do `kubectl` localmente |

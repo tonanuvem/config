@@ -424,6 +424,61 @@ primeiro ponto a conferir ao rodar `sh autoscaler.sh`.
 
 ---
 
+## 13. Armazenamento: PVC sem provisionador
+
+Depois de resolver a memoria, o ActiveGate voltou a ficar `Pending`, com outro
+motivo:
+
+```
+0/2 nodes are available: pod has unbound immediate PersistentVolumeClaims
+```
+
+Causa: desde o **EKS 1.23** o provisionador de EBS saiu do Kubernetes e virou
+um driver CSI que **nao vem instalado no cluster**. Sem ele nenhum PVC de
+disco e atendido, o PVC fica `Pending` e o pod nunca agenda. Atinge qualquer
+StatefulSet - ActiveGate, bancos de dados, Prometheus.
+
+O lab nunca tinha esbarrado nisso porque so rodava cargas sem estado.
+
+Implementado:
+
+- `aws_eks_addon "aws-ebs-csi-driver"`, com `habilitar_ebs_csi` default `true`
+  e `depends_on` do node group (o driver roda nos nos);
+- `ebs_csi_service_account_role_arn` para quem usa IRSA; no AWS Academy fica
+  `null` e o driver usa as permissoes da role dos nos;
+- `storage.sh`, para o caso de nao haver StorageClass default: cria uma `gp3`
+  com `WaitForFirstConsumer` (com `Immediate` o volume pode nascer numa AZ sem
+  vaga e o pod nunca agenda), criptografada, e tira o default das demais;
+- `diagnostico.sh`, coleta somente-leitura: nos e AMI, requests por no, pods
+  pendentes com os eventos, StorageClasses e qual e a default, PVCs/PVs,
+  drivers CSI, addons do EKS, hostPaths dos DaemonSets e eventos de Warning.
+
+## 14. `FailedMount` do AppArmor: fora do alcance do Terraform
+
+O segundo erro do mesmo dia:
+
+```
+MountVolume.SetUp failed for volume "node-path-5": hostPath type check failed,
+/sys/kernel/security/apparmor is not a directory ... does not exist
+```
+
+Isto **nao e um problema do cluster nem do Terraform**: e uma carga pedindo um
+hostPath que nao existe na AMI dos nos. O caminho so existe onde o LSM AppArmor
+esta ativo (familia Debian/Ubuntu/SUSE); a AL2023 usa SELinux. Nenhum
+`ami_type` de managed node group do EKS (AL2023, Bottlerocket) traz AppArmor -
+exigiria AMI customizada de Ubuntu, o que seria um preco alto para o lab.
+
+A correcao pertence a configuracao do Dynatrace: remover o caminho de
+`.spec.kspm.mappedHostPaths` do DynaKube. Registrado no README como
+troubleshooting, com a ressalva de que precisa ser feito **em cada DynaKube do
+namespace** - um script que escolhe apenas um deixa os demais quebrados.
+
+Ressalva de honestidade: nao consegui confirmar em fonte oficial que a AL2023
+nao ativa AppArmor. O `diagnostico.sh` mostra o `OS-IMAGE` dos nos e os
+hostPaths dos DaemonSets, que e o que confirma o diagnostico no cluster real.
+
+---
+
 ## Sobre os 15 minutos
 
 A maior parte e irredutivel e nao esta no codigo: o control plane do EKS leva

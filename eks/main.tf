@@ -266,6 +266,35 @@ resource "aws_eks_node_group" "demo" {
 }
 
 # -----------------------------------------------------------------------------
+# Driver CSI de EBS
+#
+# Desde o EKS 1.23 o provisionador de EBS deixou de fazer parte do Kubernetes e
+# virou um driver CSI, que nao vem instalado. Sem ele qualquer PVC de disco
+# fica Pending e o pod nao agenda:
+#
+#   0/2 nodes are available: pod has unbound immediate PersistentVolumeClaims
+#
+# Depende do node group: o driver roda nos nos, entao nao adianta instalar o
+# addon antes de existir no onde agendar os pods dele.
+# -----------------------------------------------------------------------------
+resource "aws_eks_addon" "ebs_csi" {
+  count = var.habilitar_ebs_csi ? 1 : 0
+
+  cluster_name             = aws_eks_cluster.eksfiap.name
+  addon_name               = "aws-ebs-csi-driver"
+  service_account_role_arn = var.ebs_csi_service_account_role_arn
+
+  resolve_conflicts_on_create = "OVERWRITE"
+  resolve_conflicts_on_update = "OVERWRITE"
+
+  depends_on = [aws_eks_node_group.demo]
+
+  tags = {
+    Name = "${var.cluster-name}-ebs-csi"
+  }
+}
+
+# -----------------------------------------------------------------------------
 # Tags de descoberta do Cluster Autoscaler
 #
 # As tags definidas em aws_eks_node_group.tags ficam no node group e NAO sao
