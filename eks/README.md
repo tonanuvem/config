@@ -6,8 +6,10 @@ key pair `vockey` ja existem.
 
 ## Fluxo do lab
 
+### Instalacao limpa (clone novo)
+
 ```bash
-cd config/eks && sh atualizar.sh
+git clone https://github.com/tonanuvem/config.git && cd config/eks
 ```
 
 ```bash
@@ -26,13 +28,27 @@ sh ebs_csi.sh
 sh conectar.sh
 ```
 
+E, ao terminar o lab:
+
 ```bash
 sh destruir.sh
 ```
 
+### Reaproveitando um clone que ja existe
+
+Nesse caso, e **so nesse caso**, comece atualizando o repositorio:
+
+```bash
+sh atualizar.sh
+```
+
+Depois siga a partir do `sh config_credenciais.sh`. Em clone novo o
+`atualizar.sh` nao tem o que fazer: ele existe apenas para resgatar clones em
+que os scripts antigos modificaram arquivos versionados.
+
 | Passo | O que faz | Tempo |
 |---|---|---|
-| `sh atualizar.sh` | `git pull` preservando as credenciais locais | segundos |
+| `sh atualizar.sh` | so em clone reaproveitado: `git pull` preservando as credenciais | segundos |
 | `sh config_credenciais.sh` | le as credenciais coladas e grava em `files/credentials` | segundos |
 | `sh iniciar.sh` | verificacoes previas + `terraform apply` | **12 a 15 min** |
 | `sh ebs_csi.sh` | instala o driver de disco (necessario para StatefulSet) | 1 a 3 min |
