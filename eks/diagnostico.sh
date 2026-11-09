@@ -18,11 +18,13 @@ cd "$(dirname "$0")" || exit 1
 CLUSTER_NAME="${CLUSTER_NAME:-eksfiap}"
 AWS_REGION="${AWS_REGION:-us-east-1}"
 NS=""
+VIGIAR=0
 
 case "${1:-}" in
     -n) NS="${2:-}"; [ -n "$NS" ] || { echo "Uso: sh diagnostico.sh [-n namespace]" >&2; exit 2; } ;;
+    --vigiar) VIGIAR=1 ;;
     "") ;;
-    *)  echo "Uso: sh diagnostico.sh [-n namespace]" >&2; exit 2 ;;
+    *)  echo "Uso: sh diagnostico.sh [-n namespace | --vigiar]" >&2; exit 2 ;;
 esac
 
 # O diagnostico precisa funcionar com o cluster ainda subindo, sem nos e sem
@@ -41,6 +43,74 @@ export AWS_PAGER=""
 [ -z "${KUBECONFIG:-}" ] && [ -f "$PWD/files/kube/config" ] && export KUBECONFIG="$PWD/files/kube/config"
 
 secao() { printf '\n\n========== %s ==========\n' "$1"; }
+
+# -----------------------------------------------------------------------------
+# Modo vigia: quando os nos sobem e nao entram no cluster, a unica evidencia do
+# que aconteceu esta dentro da maquina - e ela e destruida pelo ASG poucos
+# minutos depois. Este modo espera uma instancia aparecer, mostra como entrar
+# nela por SSH e despeja o console assim que a AWS o disponibiliza.
+# -----------------------------------------------------------------------------
+if [ "$VIGIAR" -eq 1 ]; then
+    echo "Vigiando instancias do cluster '$CLUSTER_NAME' em $AWS_REGION."
+    echo "Rode isto em paralelo ao 'sh iniciar.sh'. Ctrl-C para sair."
+    echo ""
+
+    ESPERA_MAX="${ESPERA_MAX:-1800}"
+    INICIO=$SECONDS
+    ALVO=""
+
+    while [ $((SECONDS - INICIO)) -lt "$ESPERA_MAX" ]; do
+        LINHA=$(aws ec2 describe-instances --region "$AWS_REGION" \
+            --filters "Name=tag:eks:cluster-name,Values=$CLUSTER_NAME" \
+                      "Name=instance-state-name,Values=running" \
+            --query 'Reservations[0].Instances[0].[InstanceId,PublicIpAddress,PrivateIpAddress]' \
+            --output text 2>/dev/null)
+
+        case "$LINHA" in
+            i-*)
+                ALVO=$(printf '%s' "$LINHA" | awk '{print $1}')
+                IP=$(printf '%s' "$LINHA" | awk '{print $2}')
+                echo ""
+                echo "Instancia em execucao: $ALVO  (IP publico: $IP)"
+                echo ""
+                echo "Enquanto ela existe, o caminho mais rico e entrar nela:"
+                echo "  ssh -i ~/labsuser.pem ec2-user@$IP"
+                echo "  sudo cat /var/log/cloud-init-output.log | tail -50"
+                echo "  sudo journalctl -u kubelet --no-pager | tail -50"
+                echo ""
+                echo "Aguardando o console ficar disponivel (pode levar ~4 min) ..."
+                break
+                ;;
+        esac
+        printf '.'
+        sleep 15
+    done
+
+    if [ -z "$ALVO" ]; then
+        echo ""
+        echo "Nenhuma instancia em execucao apareceu em ${ESPERA_MAX}s." >&2
+        exit 1
+    fi
+
+    while [ $((SECONDS - INICIO)) -lt "$ESPERA_MAX" ]; do
+        SAIDA=$(aws ec2 get-console-output --instance-id "$ALVO" --region "$AWS_REGION" \
+            --query 'Output' --output text 2>/dev/null)
+        if [ -n "$SAIDA" ] && [ "$SAIDA" != "None" ]; then
+            echo ""
+            echo "========== console de $ALVO =========="
+            printf '%s\n' "$SAIDA" | tail -60
+            exit 0
+        fi
+        printf '.'
+        sleep 20
+    done
+
+    echo ""
+    echo "O console de $ALVO nao ficou disponivel a tempo." >&2
+    echo "Se a instancia ainda existir, tente o SSH mostrado acima." >&2
+    exit 1
+fi
+
 NS_ARGS=(--all-namespaces); [ -n "$NS" ] && NS_ARGS=(-n "$NS")
 
 secao "0. Estado na AWS (nao depende do kubectl)"

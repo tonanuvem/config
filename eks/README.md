@@ -312,7 +312,24 @@ aws ec2 get-console-output --instance-id i-xxxxxxxx --region us-east-1 --query O
 
 Corra: quando o EKS desiste, ele apaga as instancias e o console vai junto. O
 `sh diagnostico.sh` ja captura isso automaticamente para cada instancia
-listada em `health.issues`. Procure no console por falha ao baixar imagem
+listada em `health.issues`. Melhor ainda, **em paralelo ao `sh iniciar.sh`**,
+em outro terminal:
+
+```bash
+sh diagnostico.sh --vigiar
+```
+
+Ele espera uma instancia aparecer, mostra o comando de SSH para entrar nela
+enquanto existe (`/var/log/cloud-init-output.log` e `journalctl -u kubelet`
+dizem muito mais que o console) e despeja o console assim que a AWS o
+disponibiliza.
+
+Para encurtar o ciclo de tentativa durante a investigacao, use um no so:
+
+```hcl
+node_desired_size = 1
+node_min_size     = 1
+``` Procure no console por falha ao baixar imagem
 (saida para o ECR), erro do `kubelet` ao registrar (saida para o endpoint do
 EKS) ou falta de permissao na role dos nos.
 
