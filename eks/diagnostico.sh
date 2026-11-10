@@ -78,7 +78,6 @@ if [ "$VIGIAR" -eq 1 ]; then
                 echo "  sudo cat /var/log/cloud-init-output.log | tail -50"
                 echo "  sudo journalctl -u kubelet --no-pager | tail -50"
                 echo ""
-                echo "Aguardando o console ficar disponivel (pode levar ~4 min) ..."
                 break
                 ;;
         esac
@@ -92,6 +91,47 @@ if [ "$VIGIAR" -eq 1 ]; then
         exit 1
     fi
 
+    # -------------------------------------------------------------------------
+    # A pergunta decisiva quando o no sobe bem mas o EKS diz "Unhealthy nodes":
+    # ele chega a se registrar no cluster? Se aparecer em "kubectl get nodes",
+    # o problema e de Ready/condicoes; se nunca aparecer, e de autenticacao -
+    # o no nao consegue falar com o API server (access entry / aws-auth).
+    # -------------------------------------------------------------------------
+    echo ""
+    echo "--- Access entries do cluster (o no precisa de uma do tipo EC2_LINUX) ---"
+    aws eks list-access-entries --cluster-name "$CLUSTER_NAME" --region "$AWS_REGION" \
+        --output text 2>/dev/null | sed 's/^/  /' || echo "  (nao foi possivel consultar)"
+
+    if [ "$KUBECTL_OK" -eq 1 ]; then
+        aws eks update-kubeconfig --name "$CLUSTER_NAME" --region "$AWS_REGION" >/dev/null 2>&1 || true
+        echo ""
+        echo "--- O no se registra no cluster? (kubectl get nodes a cada 20s) ---"
+        VISTO=""
+        for _ in 1 2 3 4 5 6 7 8 9 10 11 12; do
+            NOS=$(kubectl get nodes -o wide 2>&1)
+            if printf '%s' "$NOS" | grep -q 'ip-'; then
+                printf '%s\n' "$NOS"
+                NOME=$(printf '%s' "$NOS" | awk '/^ip-/{print $1; exit}')
+                echo ""
+                echo "--- Condicoes de $NOME ---"
+                kubectl describe node "$NOME" 2>/dev/null \
+                    | sed -n '/^Conditions:/,/^Addresses:/p' | head -20
+                VISTO="sim"
+                break
+            fi
+            printf '.'
+            sleep 20
+        done
+        if [ -z "$VISTO" ]; then
+            echo ""
+            echo "NENHUM no se registrou em 4 minutos."
+            echo "O no bootou mas nao conseguiu falar com o API server: olhe a"
+            echo "access entry do tipo EC2_LINUX para a role dos nos, acima."
+        fi
+    fi
+
+    echo ""
+    echo "Aguardando o console da instancia (pode levar ~4 min) ..."
     while [ $((SECONDS - INICIO)) -lt "$ESPERA_MAX" ]; do
         SAIDA=$(aws ec2 get-console-output --instance-id "$ALVO" --region "$AWS_REGION" \
             --query 'Output' --output text 2>/dev/null)

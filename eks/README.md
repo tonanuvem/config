@@ -324,6 +324,17 @@ enquanto existe (`/var/log/cloud-init-output.log` e `journalctl -u kubelet`
 dizem muito mais que o console) e despeja o console assim que a AWS o
 disponibiliza.
 
+Antes disso, responde a pergunta que separa os dois casos possiveis: lista as
+**access entries** do cluster e acompanha `kubectl get nodes` por 4 minutos.
+
+| O que o vigia mostra | Significado |
+|---|---|
+| o no aparece, `NotReady` | registrou-se; o motivo esta nas `Conditions`, que ele imprime |
+| nenhum no em 4 minutos | o no bootou mas nao fala com o API server: confira a access entry do tipo `EC2_LINUX` para a role dos nos |
+
+Se o console mostrar `nodeadm: done!` sem erro, o bootstrap funcionou e o
+problema esta num desses dois pontos - nao na maquina.
+
 Para encurtar o ciclo de tentativa durante a investigacao, use um no so:
 
 ```hcl
