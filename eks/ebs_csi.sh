@@ -79,8 +79,24 @@ detalhar() {
 }
 
 # -----------------------------------------------------------------------------
+# Quando o terraform desiste por timeout mas o EKS termina de criar o addon
+# depois, o recurso fica marcado como tainted no estado: o proximo apply
+# DESTROI o addon saudavel e o recria do zero, gastando o mesmo tempo de novo.
+avisar_taint() {
+    grep -q '"aws_eks_addon"' terraform.tfstate 2>/dev/null || return 0
+    grep -q '"status": *"tainted"' terraform.tfstate 2>/dev/null || return 0
+    echo ""
+    echo "ATENCAO: o terraform marcou este addon como tainted (o apply desistiu"
+    echo "         antes de o EKS terminar). Se voce rodar 'sh iniciar.sh' assim,"
+    echo "         ele vai DESTRUIR este addon saudavel e recria-lo do zero."
+    echo ""
+    echo "         Limpe a marca antes:"
+    echo "           terraform untaint 'aws_eks_addon.ebs_csi[0]'"
+}
+
 if [ "$ACAO" = "status" ]; then
     echo "Addon $ADDON: $(estado)"
+    [ "$(estado)" = "ACTIVE" ] && avisar_taint
     echo "Problemas de saude:"; problemas
     detalhar
     exit 0
@@ -117,6 +133,7 @@ if [ "$ATUAL" = "AUSENTE" ]; then
     }
 elif [ "$ATUAL" = "ACTIVE" ]; then
     echo "Addon ja esta ACTIVE. Nada a fazer."
+    avisar_taint
     exit 0
 else
     echo "Addon ja existe, em estado $ATUAL. Acompanhando ..."
@@ -142,6 +159,7 @@ while [ $((SECONDS - INICIO)) -lt "$ESPERA" ]; do
         ACTIVE)
             echo ""
             echo "Addon ACTIVE em $((SECONDS - INICIO))s."
+            avisar_taint
             echo ""
             kubectl -n kube-system get pods -l app.kubernetes.io/name=aws-ebs-csi-driver 2>/dev/null
             echo ""

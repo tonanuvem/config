@@ -482,6 +482,15 @@ Como ler o resultado:
 | `AccessDenied` nos logs | a role dos nos nao pode mexer em volumes EBS |
 | `ConfigurationConflict` | ja existe uma instalacao manual do driver no cluster |
 
+**Se o addon ficar `ACTIVE` depois do timeout do terraform**, o EKS terminou
+sozinho - mas o terraform marcou o recurso como `tainted`, e um
+`sh iniciar.sh` iria **destruir o addon saudavel e recria-lo do zero**. Limpe
+a marca antes (o `ebs_csi.sh --status` avisa quando esse e o caso):
+
+```bash
+terraform untaint 'aws_eks_addon.ebs_csi[0]'
+```
+
 Para tentar de novo:
 
 ```bash
