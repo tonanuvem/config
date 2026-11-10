@@ -752,6 +752,84 @@ esta em nomear o autor.
 
 ---
 
+## 20. Driver de EBS: credenciais pelo IMDS
+
+Com os nos de pe, sobrou o addon do EBS, parado em `CREATING` com
+`health.issues` vazio. O log do controller nomeou a causa:
+
+```
+Failed health check (verify network connection and IAM credentials):
+... no EC2 IMDS role found, ec2imds: GetMetadata, context deadline exceeded
+```
+
+O que identifica o problema e o **contraste entre os pods**:
+
+| Pod | Tipo | Estado |
+|---|---|---|
+| `ebs-csi-node` (3x) | DaemonSet, usa `hostNetwork` | `3/3 Running` |
+| `ebs-csi-controller` (2x) | Deployment, pod comum | `1/6 CrashLoopBackOff` |
+
+Pods comuns rodam em outro network namespace, entao alcancar o IMDS do no
+custa **um salto a mais**. Com `HttpPutResponseHopLimit = 1` o pacote e
+descartado, e o controller nunca obtem credenciais. Confirmado nos tres nos do
+cluster: `hop = 1`.
+
+Isso desmentiu o que eu mesmo tinha escrito em `habilitar_ebs_csi`: que no AWS
+Academy o driver usaria as permissoes da role dos nos. Sem o hop limit
+ajustado, ele nao chega nem a pedir.
+
+Correcoes:
+
+- **permanente**: `aws_launch_template` com `imds_hop_limit` (default 2). Como
+  o EKS nao aceita `disk_size` nem `remote_access` no node group quando ha
+  launch template, os dois migraram para la;
+- **imediata**: `sh ebs_csi.sh --corrigir-imds`, que ajusta as instancias
+  existentes e reinicia o controller - sem recriar nada, mas valido so para os
+  nos atuais;
+- o `diagnostico.sh` passou a ler o hop limit e avisar quando e 1.
+
+### 20.1 Mais um diagnostico estreito demais
+
+Depois da correcao o erro de IMDS sumiu e o `ebs-plugin` passou a subir - mas
+o pod continuou em `CrashLoopBackOff`, agora em `2/6`. O `--status` nao
+ajudava: ele mostrava apenas o log do `ebs-plugin`, justamente o container que
+tinha acabado de ficar saudavel.
+
+O controller tem **seis** containers. Agora o script lista o estado de cada um
+e imprime o log de todos os que nao estao prontos, inclusive o da execucao
+anterior (`--previous`), que e onde o erro aparece em `CrashLoopBackOff`. O
+filtro de eventos tambem estava estreito: procurava `Warning|Failed|Image` e
+deixava passar `BackOff`, `Unhealthy` e `Killing` - exatamente os eventos de
+um container reiniciando em laco, o que explicava o "(sem eventos)" constante.
+
+### 20.2 Resultado
+
+```
+Addon aws-ebs-csi-driver: ACTIVE
+ebs-csi-controller-...-2jrbs   6/6   Running
+ebs-csi-controller-...-gxlgr   6/6   Running
+ebs-csi-node (x3)              3/3   Running
+```
+
+Os contadores altos de restart (54, 11, 10) sao historico do periodo em que o
+IMDS estava bloqueado; os containers estao estaveis desde a correcao.
+
+A cadeia que levou tres horas de investigacao, do inicio ao fim:
+
+1. **limite de instancias da conta** derrubava o terceiro no, e o node group
+   nunca ficava completo → checagem de orcamento antes do apply;
+2. **hop limit do IMDS em 1** impedia o controller de obter credenciais →
+   launch template com `imds_hop_limit = 2`;
+3. **nenhuma StorageClass default** deixava os PVCs sem provisionador →
+   `sh storage.sh`.
+
+Nenhum dos tres aparecia em `health.issues`, no log do `terraform apply` ou em
+qualquer API do EKS. Os tres so foram encontrados em evidencia bruta: o
+console da instancia, o CloudTrail e o log do container certo. E os tres estao
+hoje cobertos por checagens que respondem em segundos.
+
+---
+
 ## Sobre os 15 minutos
 
 A maior parte e irredutivel e nao esta no codigo: o control plane do EKS leva
