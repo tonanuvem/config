@@ -648,6 +648,74 @@ addon, quando era um padrao do projeto inteiro.
 
 ---
 
+## 19. Causa raiz do node group: um processo da conta mata os nos
+
+Tres tentativas, ~35 minutos cada, terminaram em
+`NodeCreationFailure: Unhealthy nodes`. A investigacao passou por quatro
+hipoteses minhas, todas derrubadas pelos dados - vale registrar a sequencia,
+porque o erro de metodo se repetiu.
+
+| Hipotese | O que a derrubou |
+|---|---|
+| CPU insuficiente para o controlador do EBS | 440m livres no no mais cheio; o controlador pede 60m por replica |
+| Quota de vCPU estourada | 15 instancias **lancaram**; quota impediria o lancamento |
+| ASG nunca criado | leitura feita cedo demais; o ASG existia |
+| Falta da access entry `EC2_LINUX` | consulta feita antes de o node group existir; depois ela aparecia |
+
+A resposta so veio de duas evidencias que nenhuma API do EKS mostra.
+
+**Primeira, o console do no:**
+
+```
+[10.50s] nodeadm: done! {"duration": 1.097}
+[33.79s] systemd-shutdown[1]: Syncing filesystems and block devices.
+[33.87s] systemd-shutdown[1]: Powering off.
+[33.99s] ACPI: PM: Preparing to enter system sleep state S5
+```
+
+O bootstrap concluiu em 1,1 segundo e a maquina sofreu um desligamento
+**limpo** 23 segundos depois. Nao foi panico nem falha de boot: `ACPI S5` e o
+sinal que o hipervisor envia em `terminate-instances`. O no estava saudavel e
+foi derrubado de fora.
+
+**Segunda, o CloudTrail:**
+
+```
+23:43:48  RunInstances        AutoScaling   i-011082e0
+23:43:55  TerminateInstances  sys7042595    i-011082e0
+23:46:55  TerminateInstances  AutoScaling   i-011082e0
+```
+
+`sys7042595` nao e o Auto Scaling, nao e o EKS e nao e o usuario (que aparece
+como `user5644817=...` quando rodou o `destruir.sh`). E um processo
+automatizado da conta do AWS Academy que termina a instancia 7 segundos depois
+do lancamento. O ASG relanca, ele mata de novo, e o ciclo se repete a cada
+~2 minutos ate o EKS desistir.
+
+**Nao ha correcao possivel no Terraform**: e politica da conta. O dado que
+resolve e empirico - 2 x `t3.large` sobe e roda por horas nesta mesma conta;
+3 x `t3.large` e derrubado. Entao `node_desired_size` volta a 2, com a
+justificativa de que 3 seria tecnicamente melhor (item 16) mas nao funciona
+no ambiente alvo.
+
+### O que isso ensinou sobre o diagnostico
+
+Cada uma das quatro hipoteses erradas tinha a mesma forma: eu lia um estado
+intermediario e tratava como conclusao. O que finalmente funcionou foi parar
+de inferir e capturar evidencia bruta - o console da maquina e o CloudTrail.
+Ambos entraram no `diagnostico.sh`, com os veredictos ja interpretados:
+
+- o modo `--vigiar` pega o console antes de o ASG destruir a instancia;
+- `quem_matou()` consulta o CloudTrail e **classifica o autor**: Auto Scaling
+  (reciclagem normal), EKS (desistiu), o proprio usuario, ou um principal
+  estranho - caso em que avisa explicitamente que e conformidade da conta e
+  nao problema do cluster.
+
+Um diagnostico que so repete "ainda esperando" nao e diagnostico. O valor
+esta em nomear o autor.
+
+---
+
 ## Sobre os 15 minutos
 
 A maior parte e irredutivel e nao esta no codigo: o control plane do EKS leva

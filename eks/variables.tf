@@ -168,17 +168,19 @@ variable "node_desired_size" {
   description = <<-EOT
     Quantidade desejada de nos workers.
 
-    O default e 3, nao 2, por causa de CPU - nao de memoria. Medido no lab com
-    a stack do Dynatrace, com 2 x t3.large: a memoria ficava em 16% do total,
-    enquanto a CPU chegava a 77% de requests em um dos nos, sobrando ali
-    apenas 440m. Um terceiro no derruba a ocupacao de CPU para ~38% e abre
-    espaco para pods que pedem anti-afinidade entre nos.
+    O default e 2 porque **3 nao funciona no AWS Academy**. Com 3 x t3.large,
+    um processo automatizado da propria conta (que aparece no CloudTrail como
+    um principal "sysNNNNNNN", nem AutoScaling nem EKS) termina cada instancia
+    poucos segundos depois de ela subir. O ASG relanca, o processo mata de
+    novo, e o node group morre com NodeCreationFailure depois de ~35 minutos.
+    Com 2 x t3.large o mesmo codigo sobe normalmente.
 
-    Para um lab simples, sem stack de observabilidade, 2 nos bastam e custam
-    menos: node_desired_size = 2.
+    Tecnicamente 3 seria melhor - com a stack do Dynatrace a CPU chegava a 77%
+    de requests em um dos nos, e um StatefulSet de 3 replicas com anti-afinidade
+    precisa de 3 dominios de falha. Onde a conta permitir, use 3.
   EOT
   type        = number
-  default     = 3
+  default     = 2
 }
 
 variable "node_min_size" {

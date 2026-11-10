@@ -64,10 +64,23 @@ quem_matou() {
 
     if [ -n "$ev" ]; then
         printf '%s\n' "$ev" | sed 's/^/  /'
-        echo ""
-        echo "  Se o autor nao for o Auto Scaling nem o EKS, e um processo da"
-        echo "  conta derrubando a instancia - tipicamente politica de tipo de"
-        echo "  instancia ou de total de vCPU do laboratorio."
+        # Autores esperados: o proprio ASG, o EKS, ou a pessoa que rodou o
+        # destruir.sh. Qualquer outro principal da conta terminando a instancia
+        # logo apos o boot e um processo de conformidade.
+        ESTRANHO=$(printf '%s\n' "$ev" \
+            | grep -viE 'AutoScaling|eks\.amazonaws|@|^$' \
+            | awk '{print $NF}' | sort -u | grep . || true)
+        if [ -n "$ESTRANHO" ]; then
+            echo ""
+            echo "  [!] ALGUEM FORA DO ASG/EKS TERMINOU A INSTANCIA:"
+            printf '      %s\n' "$ESTRANHO"
+            echo ""
+            echo "      Isso e um processo de conformidade da conta, nao um"
+            echo "      problema do cluster nem do terraform. No AWS Academy ele"
+            echo "      derruba instancias que passam do limite de vCPU ou usam"
+            echo "      tipo nao permitido, poucos segundos apos o boot."
+            echo "      Saida: reduzir node_desired_size ou o tipo de instancia."
+        fi
     else
         echo "  (nenhum TerminateInstances/StopInstances registrado ainda;"
         echo "   o CloudTrail costuma levar ate 15 minutos para indexar)"

@@ -104,7 +104,14 @@ exemplo) e os pods ficam `Pending` com `Insufficient memory`. `t3.large` tem
 Prefira `t3.large` a `t2.large`: mesma CPU e memoria, geracao mais nova,
 melhor baseline de burst e cerca de 10% mais barata.
 
-### Por que 3 nos e nao 2
+### Quantos nos: 2 por default
+
+Tecnicamente 3 seriam melhores (veja abaixo), mas **3 nao funciona no AWS
+Academy**: um processo de conformidade da conta termina as instancias poucos
+segundos apos o boot. O default e 2, que sobe normalmente. Onde a conta
+permitir, use `node_desired_size = 3`.
+
+### Por que 3 seria melhor
 
 Depois de resolver a memoria, o gargalo virou **CPU**. Medido no lab com a
 stack do Dynatrace, em 2 x `t3.large`:
@@ -128,8 +135,7 @@ kubectl -n dynatrace get statefulset -o yaml | grep -A5 requiredDuringScheduling
 ```
 
 Tres `t3.large` (~US$ 0,25/h) saem mais baratos e dao mais dominios de falha do
-que dois `t3.xlarge` (~US$ 0,33/h). Num lab simples, sem observabilidade, 2 nos
-bastam: `node_desired_size = 2`.
+que dois `t3.xlarge` (~US$ 0,33/h) - onde a conta permitir tres.
 
 ## Verificar o cluster
 
@@ -360,6 +366,20 @@ aws cloudtrail lookup-events --region us-east-1 \
 | `AutoScaling` / `autoscaling.amazonaws.com` | o proprio ASG reciclou o no (veja as scaling activities) |
 | `eks.amazonaws.com` | o EKS desistiu do node group |
 | qualquer outro principal da conta | um processo de conformidade derrubou a instancia: politica de tipo de instancia ou de total de vCPU do laboratorio |
+
+No AWS Academy esse terceiro caso aparece como um principal `sysNNNNNNN`, e o
+padrao no CloudTrail e inconfundivel:
+
+```
+23:43:48  RunInstances        AutoScaling   i-011082e0   <- o ASG lanca
+23:43:55  TerminateInstances  sysNNNNNNN    i-011082e0   <- 7s depois, mata
+23:46:55  TerminateInstances  AutoScaling   i-011082e0   <- o ASG so recolhe
+```
+
+O ciclo se repete a cada ~2 minutos ate o EKS desistir com
+`NodeCreationFailure`. Medido nesta conta: **2 x `t3.large` sobe normalmente,
+3 x `t3.large` e derrubado**. Nao adianta mexer no Terraform do cluster - e
+politica da conta. Reduza `node_desired_size`.
 
 No ultimo caso nao adianta mexer no Terraform do cluster: reduza o consumo
 (`node_desired_size`) ou use um tipo de instancia permitido pela conta.
