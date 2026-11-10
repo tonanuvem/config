@@ -330,7 +330,14 @@ Antes disso, responde a pergunta que separa os dois casos possiveis: lista as
 | O que o vigia mostra | Significado |
 |---|---|
 | o no aparece, `NotReady` | registrou-se; o motivo esta nas `Conditions`, que ele imprime |
-| nenhum no em 4 minutos | o no bootou mas nao fala com o API server: confira a access entry do tipo `EC2_LINUX` para a role dos nos |
+| nenhum no em 4 minutos | o no bootou mas nao fala com o API server: veja o veredito da access entry |
+
+Sobre a access entry: ela so e criada **junto com o node group**. Consultar
+`aws eks list-access-entries` enquanto o cluster ainda esta sendo criado mostra
+apenas a role do servico e a do criador, e **nao prova nada**. O vigia espera o
+momento certo e compara com a role real dos nos, dando um dos tres veredictos:
+node group ainda inexistente, role sem entry, ou role com entry (e de que
+tipo).
 
 Se o console mostrar `nodeadm: done!` sem erro, o bootstrap funcionou e o
 problema esta num desses dois pontos - nao na maquina.

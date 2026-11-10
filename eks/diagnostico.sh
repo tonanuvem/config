@@ -98,9 +98,34 @@ if [ "$VIGIAR" -eq 1 ]; then
     # o no nao consegue falar com o API server (access entry / aws-auth).
     # -------------------------------------------------------------------------
     echo ""
-    echo "--- Access entries do cluster (o no precisa de uma do tipo EC2_LINUX) ---"
-    aws eks list-access-entries --cluster-name "$CLUSTER_NAME" --region "$AWS_REGION" \
-        --output text 2>/dev/null | sed 's/^/  /' || echo "  (nao foi possivel consultar)"
+    echo "--- Access entry da role dos nos ---"
+    # So vale conferir DEPOIS que o node group existe: e na criacao dele que o
+    # EKS cria a entry do tipo EC2_LINUX. Consultar antes mostra apenas a role
+    # do servico e a do criador do cluster, e nao prova nada.
+    NODE_ROLE=$(aws eks describe-nodegroup --cluster-name "$CLUSTER_NAME" \
+        --nodegroup-name "${NODE_GROUP_NAME:-demo}" --region "$AWS_REGION" \
+        --query 'nodegroup.nodeRole' --output text 2>/dev/null || echo "")
+
+    ENTRIES=$(aws eks list-access-entries --cluster-name "$CLUSTER_NAME" \
+        --region "$AWS_REGION" --query 'accessEntries[]' --output text 2>/dev/null || echo "")
+
+    echo "  entries existentes:"
+    printf '%s\n' "$ENTRIES" | tr '\t' '\n' | grep . | sed 's/^/    /' || echo "    (nenhuma)"
+
+    if [ -z "$NODE_ROLE" ] || [ "$NODE_ROLE" = "None" ]; then
+        echo "  (node group ainda nao existe; a entry EC2_LINUX so e criada com ele)"
+    elif printf '%s' "$ENTRIES" | grep -qF "$NODE_ROLE"; then
+        echo "  [ok]  a role dos nos ($NODE_ROLE) TEM access entry"
+        aws eks describe-access-entry --cluster-name "$CLUSTER_NAME" \
+            --principal-arn "$NODE_ROLE" --region "$AWS_REGION" \
+            --query 'accessEntry.{tipo:type,grupos:kubernetesGroups}' --output json 2>/dev/null \
+            | sed 's/^/        /'
+    else
+        echo "  [!]   a role dos nos ($NODE_ROLE) NAO tem access entry."
+        echo "        Sem ela o kubelet nao autentica no API server e o no"
+        echo "        nunca se registra. Confira tambem o ConfigMap aws-auth:"
+        echo "        kubectl -n kube-system get cm aws-auth -o yaml"
+    fi
 
     if [ "$KUBECTL_OK" -eq 1 ]; then
         aws eks update-kubeconfig --name "$CLUSTER_NAME" --region "$AWS_REGION" >/dev/null 2>&1 || true
