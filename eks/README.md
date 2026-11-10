@@ -342,6 +342,28 @@ tipo).
 Se o console mostrar `nodeadm: done!` sem erro, o bootstrap funcionou e o
 problema esta num desses dois pontos - nao na maquina.
 
+**Console termina em `systemd-shutdown ... Powering off` / `reboot: Power down`**
+A maquina nao quebrou: foi desligada **de fora**, de forma limpa. `ACPI ... S5`
+e o sinal que o hipervisor envia em `stop-instances` / `terminate-instances`.
+Com o `nodeadm: done!` logo acima, o no estava saudavel e alguem o derrubou.
+
+O `diagnostico.sh` consulta o CloudTrail e diz quem foi:
+
+```bash
+aws cloudtrail lookup-events --region us-east-1 \
+    --lookup-attributes AttributeKey=ResourceName,AttributeValue=i-xxxxxxxx \
+    --query 'Events[].[EventTime,EventName,Username]' --output table
+```
+
+| Autor do `TerminateInstances` | Significado |
+|---|---|
+| `AutoScaling` / `autoscaling.amazonaws.com` | o proprio ASG reciclou o no (veja as scaling activities) |
+| `eks.amazonaws.com` | o EKS desistiu do node group |
+| qualquer outro principal da conta | um processo de conformidade derrubou a instancia: politica de tipo de instancia ou de total de vCPU do laboratorio |
+
+No ultimo caso nao adianta mexer no Terraform do cluster: reduza o consumo
+(`node_desired_size`) ou use um tipo de instancia permitido pela conta.
+
 Para encurtar o ciclo de tentativa durante a investigacao, use um no so:
 
 ```hcl

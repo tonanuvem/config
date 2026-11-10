@@ -45,6 +45,37 @@ export AWS_PAGER=""
 secao() { printf '\n\n========== %s ==========\n' "$1"; }
 
 # -----------------------------------------------------------------------------
+# Quando o console termina em "systemd-shutdown ... Powering off" logo apos o
+# nodeadm concluir, a maquina nao quebrou: alguem a desligou de fora. O
+# CloudTrail diz nominalmente quem - pode ser o proprio ASG, o EKS, ou um
+# processo de conformidade da conta (comum em contas de laboratorio, que
+# derrubam instancias fora da politica de tipo ou de total de vCPU).
+# -----------------------------------------------------------------------------
+quem_matou() {
+    local inst="$1"
+    echo ""
+    echo "--- Quem parou/terminou $inst (CloudTrail) ---"
+    local ev
+    ev=$(aws cloudtrail lookup-events --region "$AWS_REGION" \
+        --lookup-attributes "AttributeKey=ResourceName,AttributeValue=$inst" \
+        --max-results 15 \
+        --query 'Events[?EventName==`TerminateInstances`||EventName==`StopInstances`].[EventTime,EventName,Username]' \
+        --output text 2>/dev/null)
+
+    if [ -n "$ev" ]; then
+        printf '%s\n' "$ev" | sed 's/^/  /'
+        echo ""
+        echo "  Se o autor nao for o Auto Scaling nem o EKS, e um processo da"
+        echo "  conta derrubando a instancia - tipicamente politica de tipo de"
+        echo "  instancia ou de total de vCPU do laboratorio."
+    else
+        echo "  (nenhum TerminateInstances/StopInstances registrado ainda;"
+        echo "   o CloudTrail costuma levar ate 15 minutos para indexar)"
+    fi
+}
+
+
+# -----------------------------------------------------------------------------
 # Modo vigia: quando os nos sobem e nao entram no cluster, a unica evidencia do
 # que aconteceu esta dentro da maquina - e ela e destruida pelo ASG poucos
 # minutos depois. Este modo espera uma instancia aparecer, mostra como entrar
@@ -164,6 +195,7 @@ if [ "$VIGIAR" -eq 1 ]; then
             echo ""
             echo "========== console de $ALVO =========="
             printf '%s\n' "$SAIDA" | tail -60
+            quem_matou "$ALVO"
             exit 0
         fi
         printf '.'
@@ -213,6 +245,7 @@ if command -v aws >/dev/null 2>&1; then
                 --query 'Output' --output text 2>/dev/null \
                 | tail -30 | sed 's/^/      /' \
                 || echo "      (console indisponivel; a instancia pode ja ter sido removida)"
+            quem_matou "$inst"
         done
 
         ASG=$(aws eks describe-nodegroup --cluster-name "$CLUSTER_NAME" --nodegroup-name "$ng" \
