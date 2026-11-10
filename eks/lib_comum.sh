@@ -1,7 +1,7 @@
 # shellcheck shell=bash
 # =============================================================================
 # Funcoes compartilhadas pelos scripts do lab.
-# Nao e executavel: use "source ./lib_versao.sh".
+# Nao e executavel: use "source ./lib_comum.sh".
 #
 # O kubectl precisa estar a no maximo uma minor de distancia do cluster
 # (skew suportado pelo Kubernetes). Fixar uma versao no codigo envelhece e

@@ -29,7 +29,7 @@ DESTINO="${DESTINO:-/usr/local/bin}"
 ARCH="${ARCH:-amd64}"
 
 # ---------------------------------------------------------------------------
-# Versao do kubectl (ver lib_versao.sh): explicita > a do cluster > stable.
+# Versao do kubectl (ver lib_comum.sh): explicita > a do cluster > stable.
 # ---------------------------------------------------------------------------
 if [ -z "${KUBECTL_VERSION:-}" ] \
     && [ -z "${AWS_ACCESS_KEY_ID:-}" ] \

@@ -332,7 +332,7 @@ Como deixei `cluster_version = null`, o EKS criou o cluster na sua versao
 default - **1.37**. Mas meu `files/Dockerfile` fixava `KUBECTL_VERSION=v1.33.3`:
 quatro minors de distancia, fora do skew suportado (+-1).
 
-Um pino fixo no codigo envelhece sozinho. Novo `lib_versao.sh` resolve a
+Um pino fixo no codigo envelhece sozinho. Novo `lib_comum.sh` resolve a
 versao na ordem: `KUBECTL_VERSION` explicita > versao do cluster
 (`stable-<minor>.txt`) > `stable.txt`. Usado pelo `instalar_kubectl.sh` e pelo
 `build_imagem.sh`.
