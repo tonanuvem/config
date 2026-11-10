@@ -34,10 +34,11 @@ ESPERA="${ESPERA:-600}"
 
 ACAO="instalar"
 case "${1:-}" in
-    --status)  ACAO="status" ;;
-    --remover) ACAO="remover" ;;
-    "")        ;;
-    *) echo "Uso: sh ebs_csi.sh [--status|--remover]" >&2; exit 2 ;;
+    --status)        ACAO="status" ;;
+    --remover)       ACAO="remover" ;;
+    --corrigir-imds) ACAO="imds" ;;
+    "")              ;;
+    *) echo "Uso: sh ebs_csi.sh [--status|--remover|--corrigir-imds]" >&2; exit 2 ;;
 esac
 
 command -v aws >/dev/null 2>&1 || { echo "ERRO: aws cli nao encontrado." >&2; exit 1; }
@@ -52,6 +53,13 @@ export AWS_PAGER=""
 . ./lib_comum.sh
 
 eks() { aws eks --region "$AWS_REGION" "$@"; }
+
+eks_instancias_running() {
+    aws ec2 describe-instances --region "$AWS_REGION" \
+        --filters "Name=tag:eks:cluster-name,Values=$CLUSTER_NAME" \
+                  "Name=instance-state-name,Values=running" \
+        --query 'Reservations[].Instances[].InstanceId' --output text 2>/dev/null | tr '\t' '\n'
+}
 
 estado() {
     local st
@@ -119,6 +127,51 @@ if [ "$ACAO" = "status" ]; then
     [ "$(estado)" = "ACTIVE" ] && avisar_taint
     echo "Problemas de saude:"; problemas
     detalhar
+    exit 0
+fi
+
+# -----------------------------------------------------------------------------
+# Correcao imediata do hop limit do IMDS nos nos que ja existem.
+#
+# A correcao permanente e imds_hop_limit no terraform, mas ela exige recriar o
+# node group. Enquanto isso nao acontece, isto resolve em segundos e sem
+# derrubar nada - e precisa ser refeito a cada no novo que o ASG criar.
+# -----------------------------------------------------------------------------
+if [ "$ACAO" = "imds" ]; then
+    IDS=$(eks_instancias_running)
+    [ -n "$IDS" ] || { echo "Nenhuma instancia em execucao no cluster '$CLUSTER_NAME'." >&2; exit 1; }
+
+    MUDOU=0
+    for i in $IDS; do
+        HOP=$(aws ec2 describe-instances --region "$AWS_REGION" --instance-ids "$i" \
+            --query 'Reservations[0].Instances[0].MetadataOptions.HttpPutResponseHopLimit' \
+            --output text 2>/dev/null || echo "?")
+        if [ "$HOP" = "1" ]; then
+            printf '  %s: hop %s -> 2 ... ' "$i" "$HOP"
+            if aws ec2 modify-instance-metadata-options --region "$AWS_REGION" \
+                --instance-id "$i" --http-put-response-hop-limit 2 \
+                --http-endpoint enabled >/dev/null 2>&1; then
+                echo "ok"; MUDOU=1
+            else
+                echo "FALHOU"
+            fi
+        else
+            echo "  $i: hop $HOP (nada a fazer)"
+        fi
+    done
+
+    if [ "$MUDOU" -eq 1 ]; then
+        echo ""
+        echo "Reiniciando o ebs-csi-controller para ele tentar de novo ..."
+        garantir_kubeconfig "$CLUSTER_NAME" "$AWS_REGION" \
+            && kubectl -n kube-system rollout restart deployment/ebs-csi-controller \
+            || echo "(nao foi possivel reiniciar pelo kubectl; o pod se recupera sozinho)"
+        echo ""
+        echo "Acompanhe:  sh ebs_csi.sh --status"
+        echo ""
+        echo "Lembre: isto vale so para os nos atuais. A correcao permanente e"
+        echo "imds_hop_limit = 2 no terraform, que recria o node group."
+    fi
     exit 0
 fi
 

@@ -490,17 +490,13 @@ aplicado por um launch template. Exige recriar o node group.
 **Correcao imediata**, sem recriar nada, nos nos que ja existem:
 
 ```bash
-for i in $(aws ec2 describe-instances --region us-east-1 \
-    --filters "Name=tag:eks:cluster-name,Values=eksfiap" "Name=instance-state-name,Values=running" \
-    --query 'Reservations[].Instances[].InstanceId' --output text); do
-  aws ec2 modify-instance-metadata-options --region us-east-1 \
-      --instance-id "$i" --http-put-response-hop-limit 2 --http-endpoint enabled
-done
+sh ebs_csi.sh --corrigir-imds
 ```
 
-```bash
-kubectl -n kube-system rollout restart deployment/ebs-csi-controller
-```
+Ele ajusta o hop limit de cada no que ainda estiver em 1 e reinicia o
+`ebs-csi-controller`. Vale **apenas para os nos atuais**: cada no novo que o
+ASG criar nasce com o default de novo, ate o node group ser recriado com
+`imds_hop_limit`.
 
 Em conta propria o caminho recomendado pela AWS e IRSA ou EKS Pod Identity
 (`ebs_csi_service_account_role_arn`); no AWS Academy, criar o OIDC provider e
@@ -657,7 +653,7 @@ Terraform faz por baixo. Os dois caminhos usam o nome `eksfiap`, portanto
 | `delete_vpc.sh` | limpeza manual de VPC ([lianghong/delete_vpc](https://github.com/lianghong/delete_vpc)) |
 | `cloud9_kubectl.sh` | configura o `kubectl` local sem abrir shell novo |
 | `diagnostico.sh` | coleta somente-leitura do estado do cluster |
-| `ebs_csi.sh` | diagnostica o driver de disco (`--status`), instala/remove |
+| `ebs_csi.sh` | driver de disco: `--status`, `--corrigir-imds`, `--remover` |
 | `storage.sh` | garante uma StorageClass default (gp3) |
 | `autoscaler.sh` | instala/remove o Cluster Autoscaler |
 | `instalar_kubectl.sh` | (re)instala o `kubectl` na versao do cluster |
