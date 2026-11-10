@@ -48,6 +48,9 @@ fi
 export AWS_PAGER=""
 [ -z "${KUBECONFIG:-}" ] && [ -f "$PWD/files/kube/config" ] && export KUBECONFIG="$PWD/files/kube/config"
 
+# shellcheck source=lib_comum.sh
+. ./lib_comum.sh
+
 eks() { aws eks --region "$AWS_REGION" "$@"; }
 
 estado() {
@@ -66,20 +69,19 @@ detalhar() {
     # Sem esta checagem, um kubectl quebrado ou sem acesso ao cluster faz todas
     # as consultas abaixo falharem em silencio, e o script afirma "nenhum pod"
     # quando na verdade nao conseguiu olhar. Falso negativo e pior que nada.
-    if ! command -v kubectl >/dev/null 2>&1 || ! kubectl version --client >/dev/null 2>&1; then
-        echo ""
-        echo "AVISO: o kubectl desta maquina nao funciona, entao NAO da para"
-        echo "       saber o que esta acontecendo dentro do cluster."
-        echo "       Conserte e rode de novo:  sh instalar_kubectl.sh"
-        return 0
-    fi
-    if ! kubectl get --raw /healthz >/dev/null 2>&1; then
-        echo ""
-        echo "AVISO: o kubectl nao esta falando com o cluster, entao NAO da para"
-        echo "       saber o que esta acontecendo dentro dele."
-        echo "       Configure o acesso:  aws eks --region $AWS_REGION update-kubeconfig --name $CLUSTER_NAME"
-        return 0
-    fi
+    garantir_kubeconfig "$CLUSTER_NAME" "$AWS_REGION"
+    case "$?" in
+        2)  echo ""
+            echo "AVISO: o kubectl desta maquina nao funciona, entao NAO da para"
+            echo "       saber o que esta acontecendo dentro do cluster."
+            echo "       Conserte e rode de novo:  sh instalar_kubectl.sh"
+            return 0 ;;
+        3)  echo ""
+            echo "AVISO: nao foi possivel falar com o cluster '$CLUSTER_NAME',"
+            echo "       nem mesmo apos configurar o kubeconfig. NAO da para"
+            echo "       saber o que esta acontecendo dentro dele."
+            return 0 ;;
+    esac
 
     echo ""
     echo "--- Pods do driver ---"

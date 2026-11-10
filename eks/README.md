@@ -615,7 +615,7 @@ Terraform faz por baixo. Os dois caminhos usam o nome `eksfiap`, portanto
 | `autoscaler.sh` | instala/remove o Cluster Autoscaler |
 | `instalar_kubectl.sh` | (re)instala o `kubectl` na versao do cluster |
 | `build_imagem.sh` | constroi a imagem do `kubectl` localmente |
-| `lib_versao.sh` | resolve a versao do `kubectl` (usado pelos dois acima) |
+| `lib_comum.sh` | funcoes compartilhadas (versao do `kubectl`, kubeconfig) |
 | `files/Dockerfile` | imagem `tonanuvem/kubectl-aws-cli` |
 | `bkp/`, `iam/bkp/`, `eksfiap_ajustar` | versoes antigas, mantidas como referencia |
 

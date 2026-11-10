@@ -30,11 +30,19 @@ esac
 # O diagnostico precisa funcionar com o cluster ainda subindo, sem nos e sem
 # kubectl - que e justamente quando um "terraform apply" trava. Por isso a
 # parte da AWS vem primeiro e o kubectl e opcional.
+# shellcheck source=lib_comum.sh
+. "$(dirname "$0")/lib_comum.sh"
+
 KUBECTL_OK=1
-if ! command -v kubectl >/dev/null 2>&1 || ! kubectl version --client >/dev/null 2>&1; then
-    KUBECTL_OK=0
-    kubectl() { return 1; }   # faz as secoes do Kubernetes caírem no fallback
-fi
+MOTIVO_SEM_KUBECTL=""
+garantir_kubeconfig "$CLUSTER_NAME" "$AWS_REGION"
+case "$?" in
+    2) KUBECTL_OK=0
+       MOTIVO_SEM_KUBECTL="o kubectl desta maquina nao funciona (sh instalar_kubectl.sh)" ;;
+    3) KUBECTL_OK=0
+       MOTIVO_SEM_KUBECTL="o kubectl nao alcanca o cluster '$CLUSTER_NAME'" ;;
+esac
+[ "$KUBECTL_OK" -eq 0 ] && kubectl() { return 1; }   # secoes do k8s caem no fallback
 
 if [ -z "${AWS_ACCESS_KEY_ID:-}" ] && grep -qi aws_access_key_id ./files/credentials 2>/dev/null; then
     export AWS_SHARED_CREDENTIALS_FILE="$PWD/files/credentials"
@@ -315,8 +323,9 @@ else
 fi
 
 if [ "$KUBECTL_OK" -eq 0 ]; then
-    printf '\n\nAVISO: kubectl indisponivel nesta maquina; as secoes do Kubernetes\n'
-    printf '       abaixo ficarao vazias. Para instalar: sh instalar_kubectl.sh\n'
+    printf '\n\nAVISO: %s.\n' "$MOTIVO_SEM_KUBECTL"
+    printf '       As secoes do Kubernetes abaixo ficarao VAZIAS porque nao foi\n'
+    printf '       possivel consultar - nao porque nada exista la.\n'
 fi
 
 secao "1. Nos: capacidade e sistema operacional"

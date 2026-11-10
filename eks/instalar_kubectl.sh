@@ -37,8 +37,8 @@ if [ -z "${KUBECTL_VERSION:-}" ] \
     export AWS_SHARED_CREDENTIALS_FILE="$PWD/files/credentials"
 fi
 
-# shellcheck source=lib_versao.sh
-. ./lib_versao.sh
+# shellcheck source=lib_comum.sh
+. ./lib_comum.sh
 KUBECTL_VERSION=$(resolver_kubectl_version "$CLUSTER_NAME" "$AWS_REGION")
 
 echo "Instalando kubectl $KUBECTL_VERSION em $DESTINO ..."

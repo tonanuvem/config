@@ -1,6 +1,6 @@
 # shellcheck shell=bash
 # =============================================================================
-# Funcao compartilhada por instalar_kubectl.sh e build_imagem.sh.
+# Funcoes compartilhadas pelos scripts do lab.
 # Nao e executavel: use "source ./lib_versao.sh".
 #
 # O kubectl precisa estar a no maximo uma minor de distancia do cluster
@@ -41,4 +41,31 @@ resolver_kubectl_version() {
         return 1
     fi
     printf '%s\n' "$versao"
+}
+
+# =============================================================================
+# garantir_kubeconfig [cluster] [regiao]
+#
+# Deixa o kubectl falando com o cluster, configurando o kubeconfig sozinho se
+# preciso - em vez de pedir ao usuario um comando que o proprio script tem como
+# executar. Escreve em ./files/kube/config, sem tocar no ~/.kube da maquina.
+#
+# Retorno: 0 = fala com o cluster | 2 = kubectl inutilizavel | 3 = sem acesso
+# =============================================================================
+garantir_kubeconfig() {
+    local cluster="${1:-eksfiap}" regiao="${2:-us-east-1}"
+
+    command -v kubectl >/dev/null 2>&1 || return 2
+    kubectl version --client >/dev/null 2>&1 || return 2
+
+    kubectl get --raw /healthz >/dev/null 2>&1 && return 0
+
+    mkdir -p ./files/kube 2>/dev/null && chmod 700 ./files/kube 2>/dev/null
+    export KUBECONFIG="$PWD/files/kube/config"
+    kubectl get --raw /healthz >/dev/null 2>&1 && return 0
+
+    AWS_PAGER="" aws eks update-kubeconfig --name "$cluster" --region "$regiao" \
+        >/dev/null 2>&1 || return 3
+    kubectl get --raw /healthz >/dev/null 2>&1 && return 0
+    return 3
 }
