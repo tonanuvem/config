@@ -459,6 +459,53 @@ node_desired_size = 2
 O terraform desiste em `node_group_timeout` (25 min por default, contra os 60
 do provider).
 
+**`ebs-csi-controller` em `CrashLoopBackOff` com `no EC2 IMDS role found`**
+O controller nao consegue credenciais AWS:
+
+```
+Failed health check (verify network connection and IAM credentials):
+... no EC2 IMDS role found, operation error ec2imds: GetMetadata,
+    context deadline exceeded
+```
+
+O contraste nos pods identifica a causa: o `ebs-csi-node` (DaemonSet, com
+`hostNetwork`) fica `Running`, e so o `ebs-csi-controller` (Deployment, pod
+comum) quebra. Pods comuns rodam em outro network namespace, entao alcancar o
+IMDS do no custa **um salto a mais** - e com `HttpPutResponseHopLimit = 1` o
+pacote e descartado.
+
+Confira o valor nos seus nos (o `sh diagnostico.sh` ja mostra isso na secao 0
+e avisa quando e 1):
+
+```bash
+aws ec2 describe-instances --region us-east-1 \
+    --filters "Name=tag:eks:cluster-name,Values=eksfiap" "Name=instance-state-name,Values=running" \
+    --query 'Reservations[].Instances[].{id:InstanceId,hop:MetadataOptions.HttpPutResponseHopLimit}' \
+    --output table
+```
+
+**Correcao permanente**, ja default neste terraform: `imds_hop_limit = 2`,
+aplicado por um launch template. Exige recriar o node group.
+
+**Correcao imediata**, sem recriar nada, nos nos que ja existem:
+
+```bash
+for i in $(aws ec2 describe-instances --region us-east-1 \
+    --filters "Name=tag:eks:cluster-name,Values=eksfiap" "Name=instance-state-name,Values=running" \
+    --query 'Reservations[].Instances[].InstanceId' --output text); do
+  aws ec2 modify-instance-metadata-options --region us-east-1 \
+      --instance-id "$i" --http-put-response-hop-limit 2 --http-endpoint enabled
+done
+```
+
+```bash
+kubectl -n kube-system rollout restart deployment/ebs-csi-controller
+```
+
+Em conta propria o caminho recomendado pela AWS e IRSA ou EKS Pod Identity
+(`ebs_csi_service_account_role_arn`); no AWS Academy, criar o OIDC provider e
+a role costuma ser negado, e ajustar o hop limit e o que resta.
+
 **O apply falha no `aws_eks_addon.ebs_csi`**
 O addon e o **ultimo** recurso do apply, entao o cluster e os workers ja estao
 prontos quando ele falha - o `iniciar.sh` diz isso explicitamente. O terraform
