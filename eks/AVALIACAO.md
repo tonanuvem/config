@@ -692,11 +692,36 @@ automatizado da conta do AWS Academy que termina a instancia 7 segundos depois
 do lancamento. O ASG relanca, ele mata de novo, e o ciclo se repete a cada
 ~2 minutos ate o EKS desistir.
 
-**Nao ha correcao possivel no Terraform**: e politica da conta. O dado que
-resolve e empirico - 2 x `t3.large` sobe e roda por horas nesta mesma conta;
-3 x `t3.large` e derrubado. Entao `node_desired_size` volta a 2, com a
-justificativa de que 3 seria tecnicamente melhor (item 16) mas nao funciona
-no ambiente alvo.
+**Nao ha correcao possivel no Terraform**: e politica da conta.
+
+E o limite e de **instancias simultaneas na conta inteira**, somando todos os
+labs - nao deste cluster. A listagem fechou a conta exatamente:
+
+| | instancias |
+|---|---|
+| outro lab (`vm_0..3_fiap_vm_k8s`) | 4 |
+| VMs de lab de sessoes anteriores, ainda ligadas | 2 |
+| a VM de lab em uso | 1 |
+| **fora do EKS** | **7** |
+| nos do EKS (`t3.large`, sem tag Name) | 2 |
+| **total** | **9** |
+
+Nove e o limite do AWS Academy Learner Lab. Entao `7 + 2 nos = 9` cabe - e foi
+o cluster que rodou por horas -, enquanto `7 + 3 = 10` estoura. Nao e falha de
+criacao: dois nos ficam de pe, e o terceiro e morto repetidamente, de modo que
+o node group nunca fica completo.
+
+Isso explica o que mais incomodava na investigacao: por que o **mesmo codigo**
+funcionou com 2 nos e falhou com 3. O que mudou nao foi o lab EKS, foi quanto
+os outros labs ja ocupavam.
+
+A correcao de verdade nao e escolher 2 ou 3, e sim **avisar antes**. O
+`preparar.sh` ganhou uma checagem de orcamento na etapa 3: conta as instancias
+em execucao, desconta as deste cluster, soma os nos que serao pedidos e aborta
+em segundos se o total passar de `LIMITE_INSTANCIAS` (default 9), listando o
+que esta ocupando o orcamento e sugerindo quantos nos ainda cabem. O
+`node_desired_size` default volta a 2 por ser o que cabe no cenario tipico,
+mas deixa de ser uma regra: com os outros labs desligados, 3 passam.
 
 ### O que isso ensinou sobre o diagnostico
 

@@ -197,6 +197,13 @@ if [ -n "$RODANDO" ] && [ "$RODANDO" != "None" ]; then
         erro "instancias sobem, sao terminadas segundos depois por um processo"
         erro "da conta, e o node group so falha ~35 minutos adiante."
         erro ""
+        erro ""
+        erro "Ocupando o orcamento agora:"
+        aws ec2 describe-instances \
+            --filters "Name=instance-state-name,Values=running" \
+            --query 'Reservations[].Instances[].[InstanceType,(Tags[?Key==`Name`]|[0].Value)||`(no do EKS)`]' \
+            --output text 2>/dev/null | sed 's/^/         /' >&2 || true
+        erro ""
         erro "Saidas: desligue instancias de outros labs, ou reduza os nos:"
         erro "  NODE_DESIRED_SIZE=$((LIMITE_INSTANCIAS - OUTRAS)) sh iniciar.sh"
         erro ""
