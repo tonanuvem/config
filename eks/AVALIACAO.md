@@ -719,9 +719,20 @@ A correcao de verdade nao e escolher 2 ou 3, e sim **avisar antes**. O
 `preparar.sh` ganhou uma checagem de orcamento na etapa 3: conta as instancias
 em execucao, desconta as deste cluster, soma os nos que serao pedidos e aborta
 em segundos se o total passar de `LIMITE_INSTANCIAS` (default 9), listando o
-que esta ocupando o orcamento e sugerindo quantos nos ainda cabem. O
-`node_desired_size` default volta a 2 por ser o que cabe no cenario tipico,
-mas deixa de ser uma regra: com os outros labs desligados, 3 passam.
+que esta ocupando o orcamento e sugerindo quantos nos ainda cabem.
+
+E, ja que o script consulta o orcamento, ele passou a **escolher sozinho**:
+pede `NODE_SIZE_PREFERIDO` nos (default 3) quando cabem, cai para o que couber
+quando nao cabem, e so aborta quando nem `NODE_SIZE_MINIMO` (default 2) entra.
+O numero escolhido vai ao terraform por `-var`, para nunca divergir do que foi
+validado. Definir `node_desired_size` no `terraform.tfvars` ou
+`NODE_DESIRED_SIZE` no ambiente desliga a escolha automatica.
+
+Vale o contraste com a minha tentativa anterior: eu tinha "resolvido" fixando
+o default em 2, o que funcionava mas jogava fora o terceiro no mesmo quando
+havia espaco para ele - e fixar em 3 quebrava a aula quando nao havia. A
+informacao para decidir ja estava na mao; faltava usa-la. O default do
+`variables.tf` fica em 2 apenas para quem roda `terraform apply` direto.
 
 ### O que isso ensinou sobre o diagnostico
 
