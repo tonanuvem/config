@@ -224,6 +224,52 @@ resource "aws_eks_access_policy_association" "admin" {
 # Workers (managed node group) - ~3 a 5 minutos
 # -----------------------------------------------------------------------------
 
+# -----------------------------------------------------------------------------
+# Launch template dos nos
+#
+# Existe por um motivo so: ajustar o IMDS. Um managed node group sem launch
+# template usa o default da AMI, e com AL2023 esse default bloqueia o acesso de
+# pods comuns ao IMDS do no (ver imds_hop_limit). Sem isso o ebs-csi-controller
+# nao consegue credenciais e fica em CrashLoopBackOff.
+#
+# Ao usar launch template, o EKS nao aceita no node group os argumentos
+# disk_size e remote_access: eles passam a ser definidos aqui.
+# -----------------------------------------------------------------------------
+resource "aws_launch_template" "demo" {
+  name_prefix = "${var.cluster-name}-"
+  description = "Nos do ${var.cluster-name}"
+
+  key_name = var.node_ssh_key_name == "" ? null : var.node_ssh_key_name
+
+  metadata_options {
+    http_endpoint               = "enabled"
+    http_tokens                 = "required"
+    http_put_response_hop_limit = var.imds_hop_limit
+  }
+
+  block_device_mappings {
+    device_name = "/dev/xvda"
+
+    ebs {
+      volume_size           = var.node_disk_size
+      volume_type           = "gp3"
+      delete_on_termination = true
+    }
+  }
+
+  tag_specifications {
+    resource_type = "instance"
+
+    tags = {
+      Name = "${var.cluster-name}-worker"
+    }
+  }
+
+  lifecycle {
+    create_before_destroy = true
+  }
+}
+
 resource "aws_eks_node_group" "demo" {
   cluster_name    = aws_eks_cluster.eksfiap.name
   node_group_name = var.node_group_name
@@ -233,7 +279,13 @@ resource "aws_eks_node_group" "demo" {
   ami_type       = var.node_ami_type
   instance_types = var.node_instance_types
   capacity_type  = var.node_capacity_type
-  disk_size      = var.node_disk_size
+
+  # disk_size e remote_access vivem no launch template (o EKS nao aceita os
+  # dois lugares ao mesmo tempo).
+  launch_template {
+    id      = aws_launch_template.demo.id
+    version = aws_launch_template.demo.latest_version
+  }
 
   scaling_config {
     desired_size = var.node_desired_size
@@ -243,21 +295,6 @@ resource "aws_eks_node_group" "demo" {
 
   update_config {
     max_unavailable = 1
-  }
-
-  # Criado apenas quando ha key pair configurado, para o apply nao falhar em
-  # contas que nao tenham a chave "vockey".
-  dynamic "remote_access" {
-    for_each = var.node_ssh_key_name == "" ? [] : [1]
-
-    content {
-      ec2_ssh_key = var.node_ssh_key_name
-      source_security_group_ids = (
-        length(var.node_ssh_source_security_group_ids) == 0
-        ? null
-        : var.node_ssh_source_security_group_ids
-      )
-    }
   }
 
   tags = {

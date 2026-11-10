@@ -277,6 +277,29 @@ variable "habilitar_autoscaler" {
   default     = false
 }
 
+variable "imds_hop_limit" {
+  description = <<-EOT
+    Limite de saltos do IMDSv2 nos nos (HttpPutResponseHopLimit).
+
+    Pods comuns rodam em outro network namespace, entao alcancar o IMDS do no
+    custa um salto a mais. Com o limite em 1, um pod que nao usa hostNetwork
+    simplesmente nao chega la - e o ebs-csi-controller entra em
+    CrashLoopBackOff com:
+
+      no EC2 IMDS role found ... ec2imds: GetMetadata, context deadline exceeded
+
+    (o ebs-csi-node, que e DaemonSet com hostNetwork, funciona normalmente -
+    esse contraste e o que identifica o problema.)
+
+    2 permite que o controller use as credenciais da role dos nos. Em conta
+    propria, o caminho recomendado pela AWS e IRSA ou EKS Pod Identity, via
+    ebs_csi_service_account_role_arn; no AWS Academy, criar o OIDC provider e
+    a role costuma ser negado, e ajustar o hop limit e o que resta.
+  EOT
+  type        = number
+  default     = 2
+}
+
 variable "node_group_timeout" {
   description = <<-EOT
     Tempo maximo de espera do terraform pelo node group.
@@ -300,15 +323,10 @@ variable "node_ssh_key_name" {
     Use "" para criar o node group sem acesso SSH - o lab funciona sem isso e
     evita o erro de apply quando o key pair nao existe na conta.
 
-    ATENCAO: habilitar SSH sem preencher node_ssh_source_security_group_ids faz
-    o EKS liberar a porta 22 para 0.0.0.0/0.
+    A chave e aplicada pelo launch template (key_name). O acesso na porta 22
+    depende do security group do cluster, nao de uma regra criada pelo EKS.
   EOT
   type        = string
   default     = "vockey"
 }
 
-variable "node_ssh_source_security_group_ids" {
-  description = "Security groups autorizados a abrir SSH nos nos. Vazio = 0.0.0.0/0."
-  type        = list(string)
-  default     = []
-}

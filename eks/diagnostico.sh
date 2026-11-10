@@ -318,6 +318,33 @@ if command -v aws >/dev/null 2>&1; then
         --filters "Name=tag:eks:cluster-name,Values=$CLUSTER_NAME" \
         --query 'Reservations[].Instances[].{id:InstanceId,tipo:InstanceType,estado:State.Name,az:Placement.AvailabilityZone}' \
         --output table 2>/dev/null | head -20 || echo "  (nenhuma)"
+
+    # Hop limit do IMDS: com 1, pods comuns nao alcancam as credenciais do no,
+    # e o ebs-csi-controller entra em CrashLoopBackOff com "no EC2 IMDS role
+    # found". O ebs-csi-node, por ser DaemonSet com hostNetwork, nao sofre -
+    # esse contraste e o que identifica o problema.
+    echo ""
+    echo "--- IMDS dos nos (hop limit) ---"
+    HOPS=$(aws ec2 describe-instances --region "$AWS_REGION" \
+        --filters "Name=tag:eks:cluster-name,Values=$CLUSTER_NAME" \
+                  "Name=instance-state-name,Values=running" \
+        --query 'Reservations[].Instances[].[InstanceId,MetadataOptions.HttpPutResponseHopLimit]' \
+        --output text 2>/dev/null || echo "")
+    if [ -z "$HOPS" ]; then
+        echo "  (nenhuma instancia em execucao)"
+    else
+        printf '%s\n' "$HOPS" | sed 's/^/  /'
+        if printf '%s\n' "$HOPS" | awk '{print $2}' | grep -qx 1; then
+            echo ""
+            echo "  [!] hop limit = 1: pods que nao usam hostNetwork NAO alcancam"
+            echo "      o IMDS, logo nao obtem credenciais da role dos nos."
+            echo "      Correcao permanente: imds_hop_limit = 2 (ja e o default"
+            echo "      deste terraform) - exige recriar o node group."
+            echo "      Correcao imediata, nos nos atuais:"
+            echo "        aws ec2 modify-instance-metadata-options --region $AWS_REGION \\"
+            echo "            --instance-id <id> --http-put-response-hop-limit 2 --http-endpoint enabled"
+        fi
+    fi
 else
     echo "(aws cli nao encontrado)"
 fi
