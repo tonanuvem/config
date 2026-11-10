@@ -95,15 +95,61 @@ detalhar() {
     echo "--- Pods do driver ---"
     kubectl -n kube-system get pods -l app.kubernetes.io/name=aws-ebs-csi-driver -o wide 2>/dev/null \
         | grep . || echo "(nenhum pod; o addon nem chegou a criar os manifestos)"
+    # O controller tem 6 containers (ebs-plugin, provisioner, attacher,
+    # snapshotter, resizer, liveness-probe). Olhar so o ebs-plugin esconde a
+    # falha quando ela esta em outro - foi o que aconteceu depois de corrigir
+    # o IMDS: o ebs-plugin passou a subir e o pod continuou em CrashLoop.
     echo ""
-    echo "--- Por que os pods nao estao prontos ---"
+    echo "--- Containers de cada pod do controller ---"
+    PODS=$(kubectl -n kube-system get pods -l app=ebs-csi-controller \
+        -o jsonpath='{range .items[*]}{.metadata.name}{"\n"}{end}' 2>/dev/null)
+
+    if [ -z "$PODS" ]; then
+        echo "(nenhum pod do controller)"
+        return 0
+    fi
+
+    QUEBRADOS=""
+    while read -r pod; do
+        [ -n "${pod:-}" ] || continue
+        echo "  $pod:"
+        kubectl -n kube-system get pod "$pod" \
+            -o jsonpath='{range .status.containerStatuses[*]}    {.name} ready={.ready} restarts={.restartCount} {.state}{"\n"}{end}' 2>/dev/null
+        # Containers que ainda nao estao prontos entram na lista de logs.
+        NAO_PRONTOS=$(kubectl -n kube-system get pod "$pod" \
+            -o jsonpath='{range .status.containerStatuses[?(@.ready==false)]}{.name}{" "}{end}' 2>/dev/null)
+        for c in $NAO_PRONTOS; do
+            QUEBRADOS="$QUEBRADOS $pod/$c"
+        done
+    done <<< "$PODS"
+
+    echo ""
+    echo "--- Eventos ---"
     kubectl -n kube-system describe pod -l app=ebs-csi-controller 2>/dev/null \
-        | sed -n '/^Events:/,$p' | grep -E 'Warning|Failed|Insufficient|taint|Image' | head -8 \
-        || echo "(sem eventos)"
-    echo ""
-    echo "--- Log do container principal ---"
-    kubectl -n kube-system logs -l app=ebs-csi-controller -c ebs-plugin --tail=15 2>/dev/null \
-        | grep . || echo "(sem logs; o container pode nem ter iniciado)"
+        | sed -n '/^Events:/,$p' \
+        | grep -E 'Warning|Failed|BackOff|Unhealthy|Insufficient|taint|Image|Killing' \
+        | head -10 | sed 's/^/  /' \
+        || echo "  (sem eventos relevantes)"
+
+    if [ -z "$QUEBRADOS" ]; then
+        echo ""
+        echo "--- Todos os containers estao prontos ---"
+        return 0
+    fi
+
+    for item in $QUEBRADOS; do
+        pod="${item%%/*}"; c="${item##*/}"
+        echo ""
+        echo "--- Log de $c (em $pod) ---"
+        kubectl -n kube-system logs "$pod" -c "$c" --tail=20 2>/dev/null | grep . \
+            || echo "  (sem log nesta execucao)"
+        # Em CrashLoopBackOff o log util costuma ser o da execucao anterior.
+        ANTERIOR=$(kubectl -n kube-system logs "$pod" -c "$c" --previous --tail=20 2>/dev/null || true)
+        if [ -n "$ANTERIOR" ]; then
+            echo "  --- execucao anterior (onde o erro costuma estar) ---"
+            printf '%s\n' "$ANTERIOR" | sed 's/^/  /'
+        fi
+    done
 }
 
 # -----------------------------------------------------------------------------
