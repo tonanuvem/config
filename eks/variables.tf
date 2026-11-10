@@ -168,16 +168,23 @@ variable "node_desired_size" {
   description = <<-EOT
     Quantidade desejada de nos workers.
 
-    O default e 2 porque **3 nao funciona no AWS Academy**. Com 3 x t3.large,
-    um processo automatizado da propria conta (que aparece no CloudTrail como
-    um principal "sysNNNNNNN", nem AutoScaling nem EKS) termina cada instancia
-    poucos segundos depois de ela subir. O ASG relanca, o processo mata de
-    novo, e o node group morre com NodeCreationFailure depois de ~35 minutos.
-    Com 2 x t3.large o mesmo codigo sobe normalmente.
+    O default e 2, que e o valor seguro para um "terraform apply" direto. O
+    "sh iniciar.sh" nao usa este default: ele decide pelo orcamento de
+    instancias da conta, pedindo 3 nos quando cabem e caindo para o que couber
+    quando nao cabem (ver NODE_SIZE_PREFERIDO no preparar.sh).
 
-    Tecnicamente 3 seria melhor - com a stack do Dynatrace a CPU chegava a 77%
-    de requests em um dos nos, e um StatefulSet de 3 replicas com anti-afinidade
-    precisa de 3 dominios de falha. Onde a conta permitir, use 3.
+    Por que 3 quando da: com a stack do Dynatrace a CPU chegou a 77% de
+    requests em um dos nos com apenas 2, e um StatefulSet de 3 replicas com
+    anti-afinidade precisa de 3 dominios de falha.
+
+    Por que nem sempre da: no AWS Academy o limite de instancias e da CONTA
+    inteira, somando todos os labs. Estourar nao da erro na hora - as
+    instancias sobem, sao terminadas segundos depois por um processo da conta,
+    e o node group so falha ~35 minutos adiante.
+
+    Definir esta variavel no terraform.tfvars, ou NODE_DESIRED_SIZE no
+    ambiente, desliga a escolha automatica: o valor passa a ser respeitado, e
+    o script apenas valida se cabe.
   EOT
   type        = number
   default     = 2

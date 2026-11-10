@@ -104,12 +104,29 @@ exemplo) e os pods ficam `Pending` com `Insufficient memory`. `t3.large` tem
 Prefira `t3.large` a `t2.large`: mesma CPU e memoria, geracao mais nova,
 melhor baseline de burst e cerca de 10% mais barata.
 
-### Quantos nos: 2 por default
+### Quantos nos: o script decide
 
-Tecnicamente 3 seriam melhores (veja abaixo), mas **3 nao funciona no AWS
-Academy**: um processo de conformidade da conta termina as instancias poucos
-segundos apos o boot. O default e 2, que sobe normalmente. Onde a conta
-permitir, use `node_desired_size = 3`.
+O `sh iniciar.sh` escolhe pelo orcamento de instancias da conta: pede **3 nos
+quando cabem** e cai para o que couber quando nao cabem.
+
+```
+  [ok]   instancias em execucao na conta: 6 (fora deste cluster: 6)
+  [ok]   o orcamento permite 3 nos; usando 3
+```
+
+```
+  [ok]   instancias em execucao na conta: 7 (fora deste cluster: 7)
+  [!]    cabem 2 nos no orcamento da conta; usando 2 em vez de 3
+```
+
+Se nem o minimo de 2 couber, ele aborta e lista o que esta ocupando o
+orcamento, em vez de falhar 35 minutos depois.
+
+Para fixar um numero e desligar a escolha automatica, use
+`node_desired_size` no `terraform.tfvars` ou `NODE_DESIRED_SIZE` no ambiente -
+o script passa a apenas validar se cabe. Os limites tambem sao ajustaveis:
+`NODE_SIZE_PREFERIDO` (default 3), `NODE_SIZE_MINIMO` (default 2) e
+`LIMITE_INSTANCIAS` (default 9).
 
 ### Por que 3 seria melhor
 
@@ -182,7 +199,8 @@ Todas as variaveis estao documentadas em `variables.tf`.
 
 Variaveis de ambiente aceitas pelos scripts: `CLUSTER_NAME`, `AWS_REGION`,
 `SSH_KEY_NAME`, `CLUSTER_ROLE_NAME`, `NODE_ROLE_NAME`, `NODE_DESIRED_SIZE`,
-`LIMITE_INSTANCIAS`, `MODO`, `EKS_IMAGE`, `EKS_BUILD`, `KUBECTL_VERSION`.
+`LIMITE_INSTANCIAS`, `NODE_SIZE_PREFERIDO`, `NODE_SIZE_MINIMO`, `MODO`,
+`EKS_IMAGE`, `EKS_BUILD`, `KUBECTL_VERSION`.
 Quando definidas, elas sao repassadas ao terraform como `-var` e, portanto,
 **tem precedencia sobre o `terraform.tfvars`**. No AWS CloudShell a variavel
 `AWS_REGION` ja vem definida pelo ambiente - exatamente para que a AWS CLI e o

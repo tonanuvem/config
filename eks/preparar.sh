@@ -168,26 +168,55 @@ fi
 # minutos depois. Esta checagem custa um segundo e evita essa espera.
 # -----------------------------------------------------------------------------
 LIMITE_INSTANCIAS="${LIMITE_INSTANCIAS:-9}"
+NODE_SIZE_PREFERIDO="${NODE_SIZE_PREFERIDO:-3}"   # quantos nos o lab gostaria
+NODE_SIZE_MINIMO="${NODE_SIZE_MINIMO:-2}"         # abaixo disso nao vale a pena
 
-# Quantos nos este cluster vai pedir: variavel de ambiente > terraform.tfvars >
-# default do variables.tf.
+# Quantos nos criar. Se o usuario escolheu, respeitamos a escolha dele e
+# apenas validamos. Se nao, o script decide pelo orcamento da conta: pede
+# NODE_SIZE_PREFERIDO quando cabe, e cai para o que couber quando nao cabe.
+AUTO=0
 if [ -n "${NODE_DESIRED_SIZE:-}" ]; then
     DESEJADO="$NODE_DESIRED_SIZE"
-    TF_ARGS+=(-var "node_desired_size=$NODE_DESIRED_SIZE")
 elif [ -f terraform.tfvars ] && grep -qE '^[[:space:]]*node_desired_size' terraform.tfvars; then
-    DESEJADO=$(grep -E '^[[:space:]]*node_desired_size' terraform.tfvars         | head -1 | sed 's/.*=[[:space:]]*//' | tr -dc '0-9')
+    DESEJADO=$(grep -E '^[[:space:]]*node_desired_size' terraform.tfvars \
+        | head -1 | sed 's/.*=[[:space:]]*//' | tr -dc '0-9')
 else
-    DESEJADO=$(sed -n '/variable "node_desired_size"/,/^}/p' variables.tf         | grep -E '^[[:space:]]*default' | head -1 | tr -dc '0-9')
+    AUTO=1
+    DESEJADO="$NODE_SIZE_PREFERIDO"
 fi
-DESEJADO="${DESEJADO:-2}"
+DESEJADO="${DESEJADO:-$NODE_SIZE_MINIMO}"
 
-RODANDO=$(aws ec2 describe-instances     --filters "Name=instance-state-name,Values=running"     --query 'length(Reservations[].Instances[])' --output text 2>/dev/null || echo "")
-DESTE=$(aws ec2 describe-instances     --filters "Name=instance-state-name,Values=running"               "Name=tag:eks:cluster-name,Values=$CLUSTER_NAME"     --query 'length(Reservations[].Instances[])' --output text 2>/dev/null || echo 0)
+RODANDO=$(aws ec2 describe-instances \
+    --filters "Name=instance-state-name,Values=running" \
+    --query 'length(Reservations[].Instances[])' --output text 2>/dev/null || echo "")
+DESTE=$(aws ec2 describe-instances \
+    --filters "Name=instance-state-name,Values=running" \
+              "Name=tag:eks:cluster-name,Values=$CLUSTER_NAME" \
+    --query 'length(Reservations[].Instances[])' --output text 2>/dev/null || echo 0)
+
+listar_ocupacao() {
+    aws ec2 describe-instances \
+        --filters "Name=instance-state-name,Values=running" \
+        --query 'Reservations[].Instances[].[InstanceType,(Tags[?Key==`Name`]|[0].Value)||`(no do EKS)`]' \
+        --output text 2>/dev/null | sed 's/^/         /' || true
+}
 
 if [ -n "$RODANDO" ] && [ "$RODANDO" != "None" ]; then
     OUTRAS=$((RODANDO - ${DESTE:-0}))
-    TOTAL=$((OUTRAS + DESEJADO))
+    CABE=$((LIMITE_INSTANCIAS - OUTRAS))
     ok "instancias em execucao na conta: $RODANDO (fora deste cluster: $OUTRAS)"
+
+    if [ "$AUTO" -eq 1 ] && [ "$CABE" -lt "$DESEJADO" ]; then
+        # Reduz sozinho em vez de falhar: o lab roda com menos nos.
+        if [ "$CABE" -ge "$NODE_SIZE_MINIMO" ]; then
+            aviso "cabem $CABE nos no orcamento da conta; usando $CABE em vez de $DESEJADO"
+            DESEJADO="$CABE"
+        else
+            DESEJADO="$NODE_SIZE_MINIMO"
+        fi
+    fi
+
+    TOTAL=$((OUTRAS + DESEJADO))
 
     if [ "$TOTAL" -gt "$LIMITE_INSTANCIAS" ]; then
         erro "este lab pediria $DESEJADO nos, totalizando $TOTAL instancias na"
@@ -197,20 +226,32 @@ if [ -n "$RODANDO" ] && [ "$RODANDO" != "None" ]; then
         erro "instancias sobem, sao terminadas segundos depois por um processo"
         erro "da conta, e o node group so falha ~35 minutos adiante."
         erro ""
-        erro ""
         erro "Ocupando o orcamento agora:"
-        aws ec2 describe-instances \
-            --filters "Name=instance-state-name,Values=running" \
-            --query 'Reservations[].Instances[].[InstanceType,(Tags[?Key==`Name`]|[0].Value)||`(no do EKS)`]' \
-            --output text 2>/dev/null | sed 's/^/         /' >&2 || true
+        listar_ocupacao >&2
         erro ""
-        erro "Saidas: desligue instancias de outros labs, ou reduza os nos:"
-        erro "  NODE_DESIRED_SIZE=$((LIMITE_INSTANCIAS - OUTRAS)) sh iniciar.sh"
+        if [ "$CABE" -ge "$NODE_SIZE_MINIMO" ]; then
+            erro "Saidas: desligue instancias de outros labs, ou reduza os nos:"
+            erro "  NODE_DESIRED_SIZE=$CABE sh iniciar.sh"
+        else
+            erro "Nem o minimo de $NODE_SIZE_MINIMO nos cabe: so $CABE slot(s) livre(s)."
+            erro "Desligue instancias de outros labs antes de criar o cluster."
+        fi
         erro ""
         erro "Se o limite da sua conta for outro: LIMITE_INSTANCIAS=N sh iniciar.sh"
         exit 1
     fi
+
+    if [ "$AUTO" -eq 1 ] && [ "$DESEJADO" -gt "$NODE_SIZE_MINIMO" ]; then
+        ok "o orcamento permite $DESEJADO nos; usando $DESEJADO"
+    fi
     ok "apos criar os $DESEJADO nos: $TOTAL de $LIMITE_INSTANCIAS instancias"
+fi
+
+# O numero escolhido precisa chegar ao terraform, senao ele usaria o default.
+if [ "$AUTO" -eq 1 ] || [ -n "${NODE_DESIRED_SIZE:-}" ]; then
+    TF_ARGS+=(-var "node_desired_size=$DESEJADO")
+    # min_size nao pode ser maior que o desejado.
+    [ "$DESEJADO" -lt "$NODE_SIZE_MINIMO" ] && TF_ARGS+=(-var "node_min_size=$DESEJADO")
 fi
 
 # main.tf alterado por versoes antigas do script (o antigo "sed -i").
