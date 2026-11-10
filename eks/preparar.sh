@@ -158,6 +158,54 @@ if aws eks describe-cluster --name "$CLUSTER_NAME" >/dev/null 2>&1; then
     fi
 fi
 
+# -----------------------------------------------------------------------------
+# Orcamento de instancias da conta.
+#
+# Contas de laboratorio (AWS Academy) limitam quantas instancias podem rodar ao
+# mesmo tempo - e o limite e da CONTA, somando todos os labs, nao deste cluster.
+# Ao estourar, um processo automatizado termina as instancias poucos segundos
+# depois de elas subirem, e o node group morre com NodeCreationFailure ~35
+# minutos depois. Esta checagem custa um segundo e evita essa espera.
+# -----------------------------------------------------------------------------
+LIMITE_INSTANCIAS="${LIMITE_INSTANCIAS:-9}"
+
+# Quantos nos este cluster vai pedir: variavel de ambiente > terraform.tfvars >
+# default do variables.tf.
+if [ -n "${NODE_DESIRED_SIZE:-}" ]; then
+    DESEJADO="$NODE_DESIRED_SIZE"
+    TF_ARGS+=(-var "node_desired_size=$NODE_DESIRED_SIZE")
+elif [ -f terraform.tfvars ] && grep -qE '^[[:space:]]*node_desired_size' terraform.tfvars; then
+    DESEJADO=$(grep -E '^[[:space:]]*node_desired_size' terraform.tfvars         | head -1 | sed 's/.*=[[:space:]]*//' | tr -dc '0-9')
+else
+    DESEJADO=$(sed -n '/variable "node_desired_size"/,/^}/p' variables.tf         | grep -E '^[[:space:]]*default' | head -1 | tr -dc '0-9')
+fi
+DESEJADO="${DESEJADO:-2}"
+
+RODANDO=$(aws ec2 describe-instances     --filters "Name=instance-state-name,Values=running"     --query 'length(Reservations[].Instances[])' --output text 2>/dev/null || echo "")
+DESTE=$(aws ec2 describe-instances     --filters "Name=instance-state-name,Values=running"               "Name=tag:eks:cluster-name,Values=$CLUSTER_NAME"     --query 'length(Reservations[].Instances[])' --output text 2>/dev/null || echo 0)
+
+if [ -n "$RODANDO" ] && [ "$RODANDO" != "None" ]; then
+    OUTRAS=$((RODANDO - ${DESTE:-0}))
+    TOTAL=$((OUTRAS + DESEJADO))
+    ok "instancias em execucao na conta: $RODANDO (fora deste cluster: $OUTRAS)"
+
+    if [ "$TOTAL" -gt "$LIMITE_INSTANCIAS" ]; then
+        erro "este lab pediria $DESEJADO nos, totalizando $TOTAL instancias na"
+        erro "conta - acima do limite de $LIMITE_INSTANCIAS."
+        erro ""
+        erro "Em conta de laboratorio, passar do limite nao da erro na hora: as"
+        erro "instancias sobem, sao terminadas segundos depois por um processo"
+        erro "da conta, e o node group so falha ~35 minutos adiante."
+        erro ""
+        erro "Saidas: desligue instancias de outros labs, ou reduza os nos:"
+        erro "  NODE_DESIRED_SIZE=$((LIMITE_INSTANCIAS - OUTRAS)) sh iniciar.sh"
+        erro ""
+        erro "Se o limite da sua conta for outro: LIMITE_INSTANCIAS=N sh iniciar.sh"
+        exit 1
+    fi
+    ok "apos criar os $DESEJADO nos: $TOTAL de $LIMITE_INSTANCIAS instancias"
+fi
+
 # main.tf alterado por versoes antigas do script (o antigo "sed -i").
 if command -v git >/dev/null 2>&1 && git rev-parse --git-dir >/dev/null 2>&1; then
     if ! git diff --quiet -- main.tf 2>/dev/null; then

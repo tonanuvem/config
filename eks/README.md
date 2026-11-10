@@ -181,8 +181,8 @@ CLUSTER_NAME=meucluster AWS_REGION=us-east-2 sh iniciar.sh
 Todas as variaveis estao documentadas em `variables.tf`.
 
 Variaveis de ambiente aceitas pelos scripts: `CLUSTER_NAME`, `AWS_REGION`,
-`SSH_KEY_NAME`, `CLUSTER_ROLE_NAME`, `NODE_ROLE_NAME`, `MODO`, `EKS_IMAGE`,
-`EKS_BUILD`, `KUBECTL_VERSION`.
+`SSH_KEY_NAME`, `CLUSTER_ROLE_NAME`, `NODE_ROLE_NAME`, `NODE_DESIRED_SIZE`,
+`LIMITE_INSTANCIAS`, `MODO`, `EKS_IMAGE`, `EKS_BUILD`, `KUBECTL_VERSION`.
 Quando definidas, elas sao repassadas ao terraform como `-var` e, portanto,
 **tem precedencia sobre o `terraform.tfvars`**. No AWS CloudShell a variavel
 `AWS_REGION` ja vem definida pelo ambiente - exatamente para que a AWS CLI e o
@@ -377,9 +377,30 @@ padrao no CloudTrail e inconfundivel:
 ```
 
 O ciclo se repete a cada ~2 minutos ate o EKS desistir com
-`NodeCreationFailure`. Medido nesta conta: **2 x `t3.large` sobe normalmente,
-3 x `t3.large` e derrubado**. Nao adianta mexer no Terraform do cluster - e
-politica da conta. Reduza `node_desired_size`.
+`NodeCreationFailure`. Nao adianta mexer no Terraform do cluster - e politica
+da conta.
+
+A causa mais comum e o **limite de instancias simultaneas**, que vale para a
+conta inteira, somando todos os labs - nao so este cluster. O
+`sh iniciar.sh` confere isso antes de criar qualquer coisa e aborta em
+segundos em vez de falhar 35 minutos depois:
+
+```
+  [ok]   instancias em execucao na conta: 7 (fora deste cluster: 7)
+  [ERRO] este lab pediria 3 nos, totalizando 10 instancias na conta -
+         acima do limite de 9.
+```
+
+Para ver o que esta ocupando o orcamento:
+
+```bash
+aws ec2 describe-instances --region us-east-1 \
+    --filters "Name=instance-state-name,Values=running" \
+    --query 'Reservations[].Instances[].{id:InstanceId,tipo:InstanceType,nome:Tags[?Key==`Name`]|[0].Value}' \
+    --output table
+```
+
+Se o limite da sua conta nao for 9, ajuste: `LIMITE_INSTANCIAS=N sh iniciar.sh`.
 
 No ultimo caso nao adianta mexer no Terraform do cluster: reduza o consumo
 (`node_desired_size`) ou use um tipo de instancia permitido pela conta.
