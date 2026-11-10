@@ -63,6 +63,24 @@ problemas() {
 }
 
 detalhar() {
+    # Sem esta checagem, um kubectl quebrado ou sem acesso ao cluster faz todas
+    # as consultas abaixo falharem em silencio, e o script afirma "nenhum pod"
+    # quando na verdade nao conseguiu olhar. Falso negativo e pior que nada.
+    if ! command -v kubectl >/dev/null 2>&1 || ! kubectl version --client >/dev/null 2>&1; then
+        echo ""
+        echo "AVISO: o kubectl desta maquina nao funciona, entao NAO da para"
+        echo "       saber o que esta acontecendo dentro do cluster."
+        echo "       Conserte e rode de novo:  sh instalar_kubectl.sh"
+        return 0
+    fi
+    if ! kubectl get --raw /healthz >/dev/null 2>&1; then
+        echo ""
+        echo "AVISO: o kubectl nao esta falando com o cluster, entao NAO da para"
+        echo "       saber o que esta acontecendo dentro dele."
+        echo "       Configure o acesso:  aws eks --region $AWS_REGION update-kubeconfig --name $CLUSTER_NAME"
+        return 0
+    fi
+
     echo ""
     echo "--- Pods do driver ---"
     kubectl -n kube-system get pods -l app.kubernetes.io/name=aws-ebs-csi-driver -o wide 2>/dev/null \
