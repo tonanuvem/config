@@ -135,16 +135,74 @@
           become: yes
           when: ansible_os_family == "Debian"
           
+# https://docs.docker.com/compose/install/linux/#install-the-plugin-manually
 # https://github.com/docker/compose/issues/7472#issuecomment-749993557
-# https://stackoverflow.com/a/65612078/2378095
-  - name: Instalar o docker-compose
+#
+# O binario ficava em /usr/local/bin/docker-compose, o que atende apenas
+# "docker-compose" (com hifen). "docker compose" (com espaco) e um plugin da
+# CLI do docker, e so existe se o binario estiver num diretorio de
+# cli-plugins. No Ubuntu o "docker-compose-plugin" do repo docker-ce supria
+# isso; no Amazon Linux o pacote "docker" nao traz plugin nenhum, e o
+# "docker compose" simplesmente nao existia.
+#
+# Instalamos o plugin pinado em todas as distros, e nao so onde falta, para
+# que todos os labs fiquem na mesma versao. A precedencia e deterministica:
+# defaultSystemPluginDirs (docker/cli, cli-plugins/manager/manager_unix.go)
+# busca nesta ordem --
+#
+#   1. ~/.docker/cli-plugins
+#   2. /usr/local/lib/docker/cli-plugins    <- onde gravamos
+#   3. /usr/local/libexec/docker/cli-plugins
+#   4. /usr/lib/docker/cli-plugins
+#   5. /usr/libexec/docker/cli-plugins      <- onde o apt do docker-ce grava
+#
+# ou seja, o nosso vence o do pacote apt no Ubuntu.
+  - name: Instalar o Docker Compose
     hosts: all
     become: yes
+    vars:
+      # Releases em https://github.com/docker/compose/releases
+      # Ao trocar a versao, atualizar o checksum publicado ao lado do binario:
+      #   curl -sL https://github.com/docker/compose/releases/download/<v>/docker-compose-linux-x86_64.sha256
+      compose_version: "v5.6.1"
+      compose_sha256: "47737f4236e6d3ccea7291995203f8f018058783b4c3a9469119811a0b5db8c0"
+      compose_plugin_dir: /usr/local/lib/docker/cli-plugins
     tasks:
-        - name: download docker-compose
-          shell: |
-            #sudo curl -L "https://github.com/docker/compose/releases/download/v2.35.1/docker-compose-linux-x86_64" -o /usr/local/bin/docker-compose
-            sudo curl -L "https://github.com/docker/compose/releases/download/v5.6.1/docker-compose-linux-x86_64" -o /usr/local/bin/docker-compose
-            sudo chmod +x /usr/local/bin/docker-compose
-          args:
-            executable: /bin/bash
+        - name: Criar o diretorio de cli-plugins do docker
+          ansible.builtin.file:
+            path: "{{ compose_plugin_dir }}"
+            state: directory
+            mode: '0755'
+
+        - name: Instalar o plugin do docker compose
+          # get_url no lugar de "curl -L": e idempotente (nao rebaixa 32 MB a
+          # cada run do ajustar.sh) e falha alto. O curl sem --fail gravava a
+          # pagina de erro como se fosse o binario e dava chmod +x nela -- o
+          # mesmo problema que ja apareceu no kubectl da VM do lab.
+          ansible.builtin.get_url:
+            url: "https://github.com/docker/compose/releases/download/{{ compose_version }}/docker-compose-linux-x86_64"
+            dest: "{{ compose_plugin_dir }}/docker-compose"
+            checksum: "sha256:{{ compose_sha256 }}"
+            mode: '0755'
+
+        - name: Manter o atalho docker-compose que os scripts do lab esperam
+          # cluster/config-node*.sh, shift/config/*.sh e verificar.sh checam
+          # /usr/local/bin/docker-compose. Mesmo wrapper que o
+          # ansible_docker_latest.yml ja usa.
+          ansible.builtin.copy:
+            dest: /usr/local/bin/docker-compose
+            mode: '0755'
+            content: |
+              #!/bin/sh
+              exec docker compose "$@"
+
+        - name: Verificar o docker compose
+          # Nao fala com o daemon: e o plugin reportando a propria versao.
+          # Serve para a etapa acusar a falta em vez de deixar passar.
+          ansible.builtin.command: docker compose version
+          register: compose_check
+          changed_when: false
+
+        - name: Mostrar a versao do docker compose
+          ansible.builtin.debug:
+            msg: "{{ compose_check.stdout }}"
