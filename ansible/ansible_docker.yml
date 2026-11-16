@@ -157,20 +157,26 @@
 #   5. /usr/libexec/docker/cli-plugins      <- onde o apt do docker-ce grava
 #
 # ou seja, o nosso vence o do pacote apt no Ubuntu.
-  - name: Instalar o Docker Compose
+  - name: Instalar os plugins da CLI do docker (compose e buildx)
     hosts: all
     become: yes
     vars:
+      docker_plugin_dir: /usr/local/lib/docker/cli-plugins
       # Releases em https://github.com/docker/compose/releases
       # Ao trocar a versao, atualizar o checksum publicado ao lado do binario:
       #   curl -sL https://github.com/docker/compose/releases/download/<v>/docker-compose-linux-x86_64.sha256
       compose_version: "v5.6.1"
       compose_sha256: "47737f4236e6d3ccea7291995203f8f018058783b4c3a9469119811a0b5db8c0"
-      compose_plugin_dir: /usr/local/lib/docker/cli-plugins
+      # Releases em https://github.com/docker/buildx/releases
+      # O "docker compose build" exige buildx >= 0.17.0. O checksum sai do
+      # checksums.txt da release:
+      #   curl -sL https://github.com/docker/buildx/releases/download/<v>/checksums.txt | grep linux-amd64
+      buildx_version: "v0.38.2"
+      buildx_sha256: "7992ec09413b80ff57ba4e081f56fc833d7bac1d5e71143c6c809e7e6065f6d6"
     tasks:
         - name: Criar o diretorio de cli-plugins do docker
           ansible.builtin.file:
-            path: "{{ compose_plugin_dir }}"
+            path: "{{ docker_plugin_dir }}"
             state: directory
             mode: '0755'
 
@@ -181,7 +187,7 @@
           # mesmo problema que ja apareceu no kubectl da VM do lab.
           ansible.builtin.get_url:
             url: "https://github.com/docker/compose/releases/download/{{ compose_version }}/docker-compose-linux-x86_64"
-            dest: "{{ compose_plugin_dir }}/docker-compose"
+            dest: "{{ docker_plugin_dir }}/docker-compose"
             checksum: "sha256:{{ compose_sha256 }}"
             mode: '0755'
 
@@ -206,3 +212,25 @@
         - name: Mostrar a versao do docker compose
           ansible.builtin.debug:
             msg: "{{ compose_check.stdout }}"
+
+        # O "docker compose build" delega o build ao buildx e aborta com
+        # "compose build requires buildx 0.17.0 or later" se o plugin faltar.
+        # No Ubuntu o docker-buildx-plugin vem do repo docker-ce; no Amazon
+        # Linux o pacote "docker" nao traz plugin nenhum, mesma lacuna que o
+        # compose tinha. Instalado aqui pelo mesmo caminho, para todas as
+        # distros ficarem na mesma versao.
+        - name: Instalar o plugin do docker buildx
+          ansible.builtin.get_url:
+            url: "https://github.com/docker/buildx/releases/download/{{ buildx_version }}/buildx-{{ buildx_version }}.linux-amd64"
+            dest: "{{ docker_plugin_dir }}/docker-buildx"
+            checksum: "sha256:{{ buildx_sha256 }}"
+            mode: '0755'
+
+        - name: Verificar o docker buildx
+          ansible.builtin.command: docker buildx version
+          register: buildx_check
+          changed_when: false
+
+        - name: Mostrar a versao do docker buildx
+          ansible.builtin.debug:
+            msg: "{{ buildx_check.stdout }}"
