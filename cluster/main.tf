@@ -61,9 +61,14 @@ resource "aws_security_group" "default" {
 }
 
 # Para verificar o resultado do script: cat /var/log/cloud-init-output.log
-data "template_file" "init" {
-  template = file("${path.module}/../preparar.sh")
-}
+# preparar.sh e o script de setup da VM do lab (Cloud9 / ubuntu-vm), nao dos
+# nodes: ele procura ~/environment/labsuser.pem, redimensiona o disco e mexe no
+# security group do cloud9, dando "exit" logo no inicio quando roda via
+# cloud-init num node. Alem disso, "template_file" depende do provider
+# hashicorp/template, que esta arquivado. Mantido comentado, como no shift/.
+#data "template_file" "init" {
+#  template = file("${path.module}/../preparar.sh")
+#}
 /*
 data "template_file" "master" {
   template = file("${path.module}/config-node1.sh")
@@ -131,7 +136,7 @@ resource "aws_instance" "node1" {
   # Define o script de inicialização do EC2:
   # user_data = data.template_file.init.rendered
   #user_data = data.template_cloudinit_config.config_master.rendered
-  user_data = data.template_file.init.rendered
+  #user_data = data.template_file.init.rendered
   
   # Define a chave
   key_name  = var.key_name
@@ -159,7 +164,7 @@ resource "aws_instance" "node1" {
 resource "aws_instance" "node2" {  
   # Define o script de inicialização do EC2:
   #user_data = data.template_cloudinit_config.config_node1.rendered
-  user_data = data.template_file.init.rendered
+  #user_data = data.template_file.init.rendered
   
   # Define a chave
   key_name  = var.key_name
@@ -186,7 +191,7 @@ resource "aws_instance" "node2" {
 
 resource "aws_instance" "node3" {  
   # Define o script de inicialização do EC2:
-  user_data = data.template_file.init.rendered
+  #user_data = data.template_file.init.rendered
   
   # Define a chave
   key_name  = var.key_name
