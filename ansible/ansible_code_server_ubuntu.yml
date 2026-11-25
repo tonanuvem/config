@@ -106,6 +106,20 @@
         group: "{{ code_server_user }}"
         mode: "0755"
 
+    # O comando era "echo Terminal iniciado": imprimia, terminava, e
+    # deixava o painel de task morto com "press any key to close it" --
+    # o aluno precisava fechar aquilo antes de abrir um terminal de
+    # verdade. Isso so apareceu quando o runOn foi movido para dentro do
+    # runOptions: no formato anterior ele ficava no nivel raiz da task,
+    # que o VS Code ignora, entao a task nunca chegava a rodar.
+    #
+    # Agora o comando e um shell de login, que fica vivo e utilizavel. O
+    # -l importa: sem ele o bash nao le /etc/profile.d, onde estao
+    # JAVA_HOME e o PATH do Maven/Node.
+    #
+    # echo:false tira a linha "Executing task:" e showReuseMessage:false
+    # tira o "press any key to close it" -- a janela vira um terminal
+    # limpo, sem a moldura de task.
     - name: Criar tasks.json para abrir terminal automaticamente
       copy:
         dest: "{{ workspace_dir }}/.vscode/tasks.json"
@@ -119,14 +133,16 @@
               {
                 "label": "Abrir terminal",
                 "type": "shell",
-                "command": "echo Terminal iniciado",
+                "command": "exec bash -l",
                 "runOptions": {
                   "runOn": "folderOpen"
                 },
                 "presentation": {
                   "reveal": "always",
                   "panel": "dedicated",
-                  "focus": true
+                  "focus": true,
+                  "echo": false,
+                  "showReuseMessage": false
                 },
                 "problemMatcher": []
               }
