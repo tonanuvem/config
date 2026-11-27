@@ -34,6 +34,13 @@ variable "tamanho_disco" {
 # em vez do arquivo ~/.aws/credentials copiado do CloudShell -- que e
 # temporario (tem session_token) e expira no meio da aula.
 #
+# Mesmo arranjo que o cluster genai/ ja usa em producao: confirmado numa
+# VM viva em 2026-11-27, onde "aws sts get-caller-identity" devolveu
+# assumed-role/LabRole/i-0d9f5d97e12920558 sem nenhum arquivo de
+# credencial na maquina. Isso tambem encerra a duvida de paridade de
+# permissoes: a LabRole sustenta os labs de S3 e EKS do genai, cujos
+# documentos de politica a conta nao deixa ler.
+#
 # Deixe "" para voltar ao comportamento antigo, sem perfil.
 variable "instance_profile" {
   type        = string
