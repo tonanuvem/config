@@ -21,7 +21,22 @@ echo "Aguardando instalação do KUBEADM."
 
 echo "kubeadm version" >> master.sh
 echo "sudo kubeadm config images pull" >> master.sh
-echo "sudo kubeadm init --control-plane-endpoint \$(curl checkip.amazonaws.com):6443" >> master.sh
+# O endpoint do control plane vai no IP PRIVADO, nao no publico.
+#
+# Com $(curl checkip.amazonaws.com) o endpoint ficava gravado no IP publico, e
+# aqui isso e pior que na AWS: o azurerm_public_ip esta com
+# allocation_method = "Dynamic", entao o IP e LIBERADO quando a VM e
+# desalocada e volta outro no start -- nao e "provavelmente muda", muda.
+# Quando isso acontece, o endpoint gravado no kubeconfig e nos SANs do
+# certificado do apiserver nao batem mais com a maquina e o cluster nao volta:
+# o unico caminho e refazer o kubeadm init.
+#
+# O IP privado, mesmo declarado como Dynamic, e mantido pelo Azure durante
+# toda a vida da NIC, inclusive atraves de desalocacao. Todos os scripts daqui
+# rodam kubectl via "ssh ... bash -s < script" ou "ssh ... kubectl", isto e, de
+# dentro do master e da vnet, entao um endpoint privado atende. Quem quiser
+# kubectl de fora usa "ssh -L 6443:localhost:6443".
+echo "sudo kubeadm init --control-plane-endpoint \$(hostname -I | awk '{print \$1}'):6443" >> master.sh
 
 ### INICIANDO O MASTER via SSH
 ssh -oStrictHostKeyChecking=no -i ~/environment/labsuser.pem ubuntu@$MASTER 'bash -s' < master.sh
