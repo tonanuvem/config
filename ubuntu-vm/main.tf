@@ -96,6 +96,11 @@ resource "aws_instance" "web" {
   
   # Define a chave
   key_name  = var.key_name
+
+  # Credencial da VM vem daqui, nao de arquivo copiado. Ver o comentario
+  # de var.instance_profile. Anexar nao recria a instancia: a AWS permite
+  # associar o perfil a uma instancia ja em execucao.
+  iam_instance_profile = var.instance_profile != "" ? var.instance_profile : null
   
   # Define o nome da VM : "${format("%s_%d_%s", "aluno", count.index, var.ec2_name)}"
   tags = {

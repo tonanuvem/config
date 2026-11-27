@@ -132,15 +132,14 @@ echo ""
 
 SSH_OPTS=(-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o ConnectTimeout=10 -o LogLevel=error)
 CHAVE="$HOME/environment/labsuser.pem"
-CREDENCIAIS="$HOME/environment/credenciais/credentials"
+
+# A credencial da VM passa a vir do instance profile (ver
+# var.instance_profile no terraform), entao o arquivo do CloudShell nao e
+# mais copiado nem exigido aqui.
+REGIAO="${AWS_DEFAULT_REGION:-${AWS_REGION:-us-east-1}}"
 
 if [ ! -f "$CHAVE" ]; then
     echo "❌ Chave SSH não encontrada: $CHAVE"
-    exit 1
-fi
-
-if [ ! -f "$CREDENCIAIS" ]; then
-    echo "❌ Credenciais AWS não encontradas: $CREDENCIAIS"
     exit 1
 fi
 
@@ -371,16 +370,15 @@ REMOTO
          fi" \
         || falhar "Não foi possível sincronizar o repositório config em $NODE."
 
-    scp -q "${SSH_OPTS[@]}" -i "$CHAVE" \
-        "$CREDENCIAIS" \
-        ubuntu@"$NODE":/home/ubuntu/.aws/credentials \
-        || falhar "Não foi possível copiar as credenciais AWS para $NODE."
+    # So a regiao: a credencial vem do instance profile, via IMDS. Sem
+    # este arquivo o CLI exigiria --region em todo comando, porque antes
+    # quem o escrevia era o passo de credenciais do CloudShell.
+    printf '[default]\nregion = %s\noutput = json\n' "$REGIAO" \
+        | ssh "${SSH_OPTS[@]}" -i "$CHAVE" ubuntu@"$NODE" \
+            "cat > /home/ubuntu/.aws/config && chmod 600 /home/ubuntu/.aws/config" \
+        || falhar "Não foi possível configurar a região AWS em $NODE."
 
-    ssh "${SSH_OPTS[@]}" -i "$CHAVE" ubuntu@"$NODE" \
-        "chmod 600 /home/ubuntu/.aws/credentials" \
-        || falhar "Não foi possível proteger as credenciais em $NODE."
-
-    echo "✅ Repositório e credenciais atualizados em $NODE"
+    echo "✅ Repositório e região AWS ($REGIAO) configurados em $NODE"
     echo ""
 
     echo "Copiando labsuser.pem para $NODE..."
@@ -551,6 +549,24 @@ for I in "${!PLAYBOOKS[@]}"; do
 
     echo ""
 done
+
+# Na cadeia de resolucao do AWS SDK, o arquivo ~/.aws/credentials vem
+# ANTES do IMDS. Qualquer arquivo ali -- inclusive o vazio que a etapa
+# "utils" cria com touch -- pode mascarar o instance profile, e o sintoma
+# seria o lab seguir com credencial que expira, como se nada tivesse
+# mudado. Roda depois do loop justamente porque a etapa utils o recria.
+if [ -n "${IPS[0]:-}" ]; then
+
+    echo ""
+    echo "Garantindo que nada sombreie o instance profile..."
+
+    for N in $(seq 0 "$WORKER_NODES"); do
+        ssh "${SSH_OPTS[@]}" -i "$CHAVE" ubuntu@"${IPS[$N]}" \
+            "rm -f /home/ubuntu/.aws/credentials" 2>/dev/null \
+            && echo "   ✅ ${IPS[$N]}: credencial estatica removida" \
+            || echo "   ⚠️  ${IPS[$N]}: nao foi possivel remover (verifique manualmente)"
+    done
+fi
 
 resumo_tempos
 

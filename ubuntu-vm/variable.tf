@@ -26,6 +26,21 @@ variable "tamanho_disco" {
   }
 }
 
+# Perfil IAM anexado a VM. O AWS Academy ja fornece o LabInstanceProfile
+# (que carrega a LabRole) em toda conta de laboratorio -- verificado nesta
+# conta, e a trust policy da role inclui ec2.amazonaws.com.
+#
+# Com ele a VM recebe credenciais pelo IMDS, renovadas pela propria AWS,
+# em vez do arquivo ~/.aws/credentials copiado do CloudShell -- que e
+# temporario (tem session_token) e expira no meio da aula.
+#
+# Deixe "" para voltar ao comportamento antigo, sem perfil.
+variable "instance_profile" {
+  type        = string
+  default     = "LabInstanceProfile"
+  description = "Instance profile IAM anexado a VM. Vazio desativa."
+}
+
 variable "prefix_name" {
   type        = string
   default     = "fiaplab"
