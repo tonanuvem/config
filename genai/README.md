@@ -66,6 +66,32 @@ Validados por `dry-run` na conta; detalhes em
 - O lab **não é efêmero**: instâncias são paradas e reiniciadas, e o EBS
   sobrevive. Quem apaga os modelos é o `destruir.sh`.
 
+## Retomando depois que a sessão do lab encerra
+
+O Learner Lab **para** as instâncias no fim da sessão e as **reinicia** na
+seguinte. O EBS sobrevive — inclusive os modelos em `/models` — mas **todo IP
+público muda**, porque não há Elastic IP. Ao voltar:
+
+```bash
+cd ~/environment/config/genai
+terraform refresh      # state ainda tem os IPs antigos
+sh conectar.sh         # já usa o IP novo
+```
+
+O cluster em si volta inteiro, porque o `k8s_create_cluster.sh` fixa o
+`--control-plane-endpoint` no **IP privado**, que é preservado no stop/start.
+Essa é uma diferença deliberada em relação ao `shift/`, que usa
+`$(curl checkip.amazonaws.com)` — o IP público — e por isso perde o cluster a
+cada encerramento de sessão: o endpoint gravado no kubeconfig e nos SANs do
+certificado do apiserver deixa de bater com a máquina, e só um `kubeadm init`
+novo resolve.
+
+Para usar `kubectl` de fora do VPC, com o endpoint privado:
+
+```bash
+ssh -L 6443:localhost:6443 -i ~/environment/labsuser.pem ec2-user@<ip-publico-do-master>
+```
+
 ## Ainda em aberto
 
 - O nó de GPU (`g6f.large`, 1/8 de L4) **cabe nesta subnet**, porque a AZ está
