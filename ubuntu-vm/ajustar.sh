@@ -560,11 +560,33 @@ if [ -n "${IPS[0]:-}" ]; then
     echo ""
     echo "Garantindo que nada sombreie o instance profile..."
 
+    # Remover o arquivo SO SE o IMDS tiver uma role para substitui-lo.
+    # Numa VM criada antes desta mudanca -- ou com instance_profile = "" --
+    # nao ha perfil anexado, e remover a credencial estatica deixaria a VM
+    # sem credencial nenhuma: o sintoma e "NoCredentials" no primeiro
+    # comando da aws. Perder o acesso e pior que ter credencial que expira,
+    # entao nesse caso o arquivo fica e o script avisa o que fazer.
     for N in $(seq 0 "$WORKER_NODES"); do
-        ssh "${SSH_OPTS[@]}" -i "$CHAVE" ubuntu@"${IPS[$N]}" \
-            "rm -f /home/ubuntu/.aws/credentials" 2>/dev/null \
-            && echo "   ✅ ${IPS[$N]}: credencial estatica removida" \
-            || echo "   ⚠️  ${IPS[$N]}: nao foi possivel remover (verifique manualmente)"
+        ROLE=$(ssh "${SSH_OPTS[@]}" -i "$CHAVE" ubuntu@"${IPS[$N]}" 'bash -s' 2>/dev/null <<'EOF'
+TOKEN=$(curl -s -m 5 -X PUT http://169.254.169.254/latest/api/token \
+    -H "X-aws-ec2-metadata-token-ttl-seconds: 60" 2>/dev/null) || true
+curl -s -m 5 -f -H "X-aws-ec2-metadata-token: $TOKEN" \
+    http://169.254.169.254/latest/meta-data/iam/security-credentials/ 2>/dev/null || true
+EOF
+        )
+
+        if [ -n "$ROLE" ]; then
+            ssh "${SSH_OPTS[@]}" -i "$CHAVE" ubuntu@"${IPS[$N]}" \
+                "rm -f /home/ubuntu/.aws/credentials" 2>/dev/null \
+                && echo "   ✅ ${IPS[$N]}: usando o perfil $ROLE pelo IMDS; credencial estatica removida" \
+                || echo "   ⚠️  ${IPS[$N]}: nao foi possivel remover (verifique manualmente)"
+        else
+            echo "   ⚠️  ${IPS[$N]}: sem instance profile anexado -- credencial estatica MANTIDA"
+            echo "      (a VM continua funcionando, mas a credencial expira na sessao do lab)"
+            echo "      Para anexar o perfil nesta VM, sem recriar:"
+            echo "         aws ec2 associate-iam-instance-profile \\"
+            echo "           --instance-id <id> --iam-instance-profile Name=LabInstanceProfile"
+        fi
     done
 fi
 
