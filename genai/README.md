@@ -23,7 +23,7 @@ sh destruir.sh             # terraform destroy
 | :--- | :--- | :--- | :--- |
 | Tipo | `t2.large` | **`r5.large`** | t2 é burstável: ~40 min de CPU plena e cai para 60% de baseline, o que destrói a reprodutibilidade. r5.large tem **16 GiB** — o dobro de RAM pelo mesmo nº de vCPU, e RAM é o gargalo aqui. |
 | Nós | 4 (1+3) | **6 (1+5)** | 4 workers viram ranks (4 = 2², exigência do `distributed-llama`) e 1 hospeda n8n/LangGraph/Prometheus, fora dos ranks para não contaminar a medição. |
-| Disco | 50 GB raiz + 50 GB **não montado** | 40 GB raiz + **/models** | O `xvdb` do shift nunca é formatado nem montado: 50 GB ociosos por nó. Aqui ele vira `/models`, grande (80 GB) só no nó 0, que é onde o arquivo do modelo vive. |
+| Disco | 50 GB raiz + 50 GB **não montado** | 40 GB raiz + **/models** | O `xvdb` do shift nunca é formatado nem montado: 50 GB ociosos por nó. Aqui ele vira `/models`, grande (80 GB) só no `node5`, que é onde o arquivo do modelo vive — o nó de aplicação, fora dos 4 ranks medidos. |
 | IAM | nenhum | **`LabInstanceProfile`** | Dá acesso a S3 para cachear os GGUF entre sessões, e credenciais que se renovam sozinhas — as copiadas à mão expiram no meio do trabalho. |
 | `user_data` | `../preparar.sh` | nenhum | Aquele script configura a VM do lab, não os nós: só dá `exit` no cloud-init. Some junto a última referência ao provider `hashicorp/template`, arquivado. |
 | ICMP | fechado | **aberto no VPC** | Sem ele não dá para usar `ping` entre nós — justamente o diagnóstico da rede, que é o gargalo do projeto. |

@@ -39,12 +39,16 @@ variable "tamanho_disco" {
   default = 40
 }
 
-# Volume de modelos (/dev/xvdb), so no no 0.
+# Volume de modelos (/dev/xvdb), so no ULTIMO no (node5).
 #
-# Em llama.cpp RPC e em distributed-llama o arquivo do modelo vive no no raiz;
-# os workers recebem os tensores pela rede. Entao nao faz sentido pagar disco
-# grande em todos. 80 GB acomodam o maior modelo do plano, gpt-oss-120b
-# (63,4 GB em MXFP4), e ficam abaixo do teto de 100 GB por volume do lab.
+# Em llama.cpp RPC, distributed-llama e prima.cpp o arquivo do modelo vive no
+# no raiz; os workers recebem os tensores pela rede. Entao nao faz sentido
+# pagar disco grande em todos. O raiz e o node5 -- o no de aplicacao, fora dos
+# 4 ranks medidos -- e nao o no 0, que e o master e fica com o taint de
+# control-plane. Ver o comentario do ebs_block_device no main.tf.
+#
+# 80 GB acomodam o maior modelo do plano, gpt-oss-120b (63,4 GB em MXFP4), e
+# ficam abaixo do teto de 100 GB por volume do lab.
 variable "tamanho_disco_modelos" {
   type    = number
   default = 80

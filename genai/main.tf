@@ -92,13 +92,31 @@ resource "aws_instance" "web" {
     volume_type = "gp3"
   }
 
-  # Disco de modelos so no no 0, que e o raiz da inferencia (em llama.cpp RPC
-  # e em distributed-llama o arquivo do modelo vive nele; os workers recebem
-  # os tensores pela rede). Os demais levam so rascunho, para nao pagar EBS
-  # ocioso em 5 nos -- lembrando que EBS de instancia parada continua faturando.
+  # Disco de modelos no ULTIMO no (node5), nao no no 0.
+  #
+  # Nos tres engines que entraram no plano (llama.cpp RPC, distributed-llama,
+  # prima.cpp) e o no RAIZ que carrega o arquivo do modelo; os workers recebem
+  # os tensores pela rede e quase nao usam disco. Ate ai a versao anterior
+  # estava certa -- o erro era onde: o indice 0 e o MASTER, que fica com o
+  # taint de control-plane e portanto nunca roda o pod coordenador. O disco
+  # estava no unico no que nao podia usa-lo.
+  #
+  # O node5 (indice quantidade-1) e o no de aplicacao do plano, de proposito
+  # fora dos 4 ranks de inferencia (node1..node4) para que n8n e LangGraph nao
+  # contaminem a medicao. Pelo mesmo motivo ele e o lugar do coordenador: o I/O
+  # de disco, a tokenizacao e o sampling do raiz ficam fora dos nos medidos.
+  # E n8n/LangGraph precisam de volume persistente de qualquer forma, que cai
+  # neste mesmo disco em vez de pedir outro.
+  #
+  # Assim nao e preciso NFS: o llama-server roda no node5 com os GGUF locais e
+  # aponta --rpc para node1..node4. NFS fica em reserva para o caso do
+  # prima.cpp exigir o arquivo em cada no -- e ai exporta deste disco.
+  #
+  # Os demais levam so rascunho, para nao pagar EBS ocioso em 5 nos --
+  # lembrando que EBS de instancia parada continua faturando.
   ebs_block_device {
     device_name = "/dev/xvdb"
-    volume_size = count.index == 0 ? var.tamanho_disco_modelos : var.tamanho_disco_scratch
+    volume_size = count.index == var.quantidade - 1 ? var.tamanho_disco_modelos : var.tamanho_disco_scratch
     volume_type = "gp3"
   }
 }
