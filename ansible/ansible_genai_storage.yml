@@ -1,0 +1,98 @@
+---
+# Especifico do lab genai (inferencia distribuida de LLM em CPU).
+#
+# Os cinco playbooks de base -- hostname, hosts, utils, docker, k8s -- sao
+# reaproveitados sem mudanca. Este cobre as duas coisas que nenhum deles faz:
+#
+#   1. montar o volume de modelos em /models, que no genai/main.tf existe
+#      grande no no 0 (80 GB para o gpt-oss-120b) e pequeno nos demais;
+#   2. tirar o TCP do caminho, ja que a rede entre nos e o gargalo medido
+#      (285 Mbit/s pod-a-pod, RTT 1,10 ms).
+
+  - name: Preparar o volume de modelos e a rede para inferencia distribuida
+    hosts: all
+    become: yes
+    vars:
+      ponto_montagem: /models
+    tasks:
+
+      # O nome do dispositivo MUDA conforme a familia da instancia: em Xen
+      # (t2) o EBS aparece como /dev/xvdb; em Nitro (r5, m6i, c5n, m5...) vira
+      # /dev/nvme1n1. Como o genai usa r5.large por padrao mas o tipo e
+      # variavel, detectamos em vez de chutar.
+      - name: Descobrir o dispositivo do volume de modelos
+        ansible.builtin.set_fact:
+          disco_modelos: >-
+            {{ (ansible_devices.keys() | select('match', '^(nvme[1-9]n1|xvdb)$') | list | sort | first)
+               | default('', true) }}
+
+      - name: Avisar quando nao ha volume extra
+        ansible.builtin.debug:
+          msg: "Nenhum volume extra encontrado neste no; /models nao sera montado."
+        when: disco_modelos == ''
+
+      # O modulo filesystem e idempotente: com force desligado (padrao) ele
+      # NAO recria um sistema de arquivos que ja exista. Isso importa muito
+      # aqui -- um mkfs a mais apagaria dezenas de GB de GGUF ja baixados.
+      - name: Criar o sistema de arquivos (so se ainda nao houver)
+        community.general.filesystem:
+          fstype: xfs
+          dev: "/dev/{{ disco_modelos }}"
+        when: disco_modelos != ''
+
+      - name: Montar em {{ ponto_montagem }} e persistir no fstab
+        ansible.posix.mount:
+          path: "{{ ponto_montagem }}"
+          src: "/dev/{{ disco_modelos }}"
+          fstype: xfs
+          opts: defaults,nofail
+          state: mounted
+        when: disco_modelos != ''
+
+      - name: Dar o ponto de montagem ao ec2-user
+        ansible.builtin.file:
+          path: "{{ ponto_montagem }}"
+          state: directory
+          owner: ec2-user
+          group: ec2-user
+          mode: '0755'
+        when: disco_modelos != ''
+
+      # Ajuste de rede honesto sobre o que resolve e o que nao resolve.
+      #
+      # tcp_slow_start_after_idle=0 e o que vale aqui: a inferencia distribuida
+      # manda rajadas por camada com intervalos ociosos entre elas, e por
+      # padrao o kernel joga a janela de congestionamento de volta ao inicio
+      # depois de cada ociosidade -- ou seja, cada rajada recomeca devagar.
+      #
+      # Os buffers maiores sao quase irrelevantes neste cenario: com RTT de
+      # 1,10 ms e 285 Mbit/s o produto banda-atraso da ~40 KB, bem abaixo do
+      # padrao. Ficam porque nao custam nada e ajudam se a instancia mudar.
+      #
+      # O que realmente move o ponteiro nao esta aqui: e o MTU do weave
+      # (1376 contra 9001 do host, ver genai/k8s_config_network_weave.sh) e o
+      # tipo de instancia (c5n.large tem ate 25 Gbps contra "Low to Moderate"
+      # do t2.large).
+      - name: Ajustar sysctl de rede para trafego em rajadas
+        ansible.posix.sysctl:
+          name: "{{ item.name }}"
+          value: "{{ item.value }}"
+          sysctl_file: /etc/sysctl.d/90-genai.conf
+          reload: yes
+        loop:
+          - { name: net.ipv4.tcp_slow_start_after_idle, value: '0' }
+          - { name: net.core.rmem_max,                  value: '16777216' }
+          - { name: net.core.wmem_max,                  value: '16777216' }
+
+      - name: Mostrar o resultado
+        ansible.builtin.shell: |
+          echo "disco: {{ disco_modelos | default('nenhum') }}"
+          df -h {{ ponto_montagem }} 2>/dev/null | tail -1 || echo "sem {{ ponto_montagem }}"
+        args:
+          executable: /bin/bash
+        register: resultado
+        changed_when: false
+
+      - name: Resumo
+        ansible.builtin.debug:
+          msg: "{{ resultado.stdout_lines }}"
