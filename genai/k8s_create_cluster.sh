@@ -22,12 +22,13 @@ echo "kubeadm version" >> master.sh
 echo "sudo kubeadm config images pull" >> master.sh
 # O endpoint do control plane vai no IP PRIVADO, nao no publico.
 #
-# O shift usa $(curl checkip.amazonaws.com), ou seja o IP publico, e isso
-# custa o cluster inteiro toda vez que o lab encerra a sessao: o Learner Lab
-# para as instancias e as reinicia na sessao seguinte, e sem Elastic IP o IP
-# publico vem outro. Ai o endpoint gravado no kubeconfig e nos SANs do
-# certificado do apiserver nao batem mais com a maquina, e o unico caminho e
-# refazer o kubeadm init.
+# Com $(curl checkip.amazonaws.com) -- como era aqui e no shift -- o endpoint
+# ficava gravado no IP publico, e isso custa o cluster inteiro toda vez que o
+# lab encerra a sessao: o Learner Lab para as instancias e as reinicia na
+# sessao seguinte, e sem Elastic IP o IP publico vem outro. Ai o endpoint
+# gravado no kubeconfig e nos SANs do certificado do apiserver nao batem mais
+# com a maquina, e o unico caminho e refazer o kubeadm init. O shift ja esta
+# corrigido do mesmo jeito.
 #
 # O IP privado primario, ao contrario, e preservado atraves de stop/start
 # enquanto a instancia existir. Como o fluxo deste lab e "ssh no master e

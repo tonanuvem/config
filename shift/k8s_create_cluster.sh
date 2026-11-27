@@ -20,7 +20,21 @@ echo "Aguardando instalação do KUBEADM."
 
 echo "kubeadm version" >> master.sh
 echo "sudo kubeadm config images pull" >> master.sh
-echo "sudo kubeadm init --control-plane-endpoint \$(curl checkip.amazonaws.com):6443" >> master.sh
+# O endpoint do control plane vai no IP PRIVADO, nao no publico.
+#
+# Com $(curl checkip.amazonaws.com) o endpoint ficava gravado no IP publico, e
+# isso custava o cluster inteiro toda vez que o lab encerrava a sessao: o
+# Learner Lab para as instancias e as reinicia na sessao seguinte, e sem
+# Elastic IP o IP publico vem outro. Ai o endpoint no kubeconfig e nos SANs do
+# certificado do apiserver nao batiam mais com a maquina, e o unico caminho era
+# refazer o kubeadm init -- perdendo o cluster e tudo que estava nele.
+#
+# O IP privado primario, ao contrario, e preservado atraves de stop/start
+# enquanto a instancia existir. Todos os scripts daqui rodam kubectl via
+# "ssh ... bash -s < script", isto e, dentro do master e dentro do VPC, entao
+# um endpoint privado atende. Quem quiser kubectl de fora usa
+# "ssh -L 6443:localhost:6443".
+echo "sudo kubeadm init --control-plane-endpoint \$(hostname -I | awk '{print \$1}'):6443" >> master.sh
 
 ### INICIANDO O MASTER via SSH
 ssh -oStrictHostKeyChecking=no -i ~/environment/labsuser.pem ec2-user@$MASTER 'bash -s' < master.sh

@@ -80,11 +80,11 @@ sh conectar.sh         # já usa o IP novo
 
 O cluster em si volta inteiro, porque o `k8s_create_cluster.sh` fixa o
 `--control-plane-endpoint` no **IP privado**, que é preservado no stop/start.
-Essa é uma diferença deliberada em relação ao `shift/`, que usa
-`$(curl checkip.amazonaws.com)` — o IP público — e por isso perde o cluster a
-cada encerramento de sessão: o endpoint gravado no kubeconfig e nos SANs do
-certificado do apiserver deixa de bater com a máquina, e só um `kubeadm init`
-novo resolve.
+Antes a linha usava `$(curl checkip.amazonaws.com)` — o IP público — e com isso
+o cluster se perdia a cada encerramento de sessão: o endpoint gravado no
+kubeconfig e nos SANs do certificado do apiserver deixava de bater com a
+máquina, e só um `kubeadm init` novo resolvia. O `shift/` tinha o mesmo defeito
+e **já está corrigido da mesma forma**.
 
 Para usar `kubectl` de fora do VPC, com o endpoint privado:
 
