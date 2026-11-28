@@ -92,31 +92,24 @@ resource "aws_instance" "web" {
     volume_type = "gp3"
   }
 
-  # Disco de modelos no ULTIMO no (node5), nao no no 0.
+  # Disco de modelos nos indices listados em var.indices_disco_modelos. Os
+  # demais levam so rascunho, para nao pagar EBS ocioso -- lembrando que EBS
+  # de instancia PARADA continua faturando.
   #
-  # Nos tres engines que entraram no plano (llama.cpp RPC, distributed-llama,
-  # prima.cpp) e o no RAIZ que carrega o arquivo do modelo; os workers recebem
-  # os tensores pela rede e quase nao usam disco. Ate ai a versao anterior
-  # estava certa -- o erro era onde: o indice 0 e o MASTER, que fica com o
-  # taint de control-plane e portanto nunca roda o pod coordenador. O disco
-  # estava no unico no que nao podia usa-lo.
+  # ARMADILHA, e a razao de ser uma LISTA e nao "o ultimo no":
   #
-  # O node5 (indice quantidade-1) e o no de aplicacao do plano, de proposito
-  # fora dos 4 ranks de inferencia (node1..node4) para que n8n e LangGraph nao
-  # contaminem a medicao. Pelo mesmo motivo ele e o lugar do coordenador: o I/O
-  # de disco, a tokenizacao e o sampling do raiz ficam fora dos nos medidos.
-  # E n8n/LangGraph precisam de volume persistente de qualquer forma, que cai
-  # neste mesmo disco em vez de pedir outro.
+  # a versao anterior dizia "count.index == var.quantidade - 1", isto e, o
+  # disco grande ia para o ULTIMO no. Parece elegante e e uma bomba: subir
+  # "quantidade" de 6 para 7 move o disco grande do indice 5 para o 6, e mudar
+  # volume_size de um ebs_block_device FORCA RECRIACAO DA INSTANCIA. Ou seja,
+  # acrescentar um no destruiria o node5 -- que e exatamente onde moram os
+  # GGUF baixados (dezenas de GB) e o banco do n8n.
   #
-  # Assim nao e preciso NFS: o llama-server roda no node5 com os GGUF locais e
-  # aponta --rpc para node1..node4. NFS fica em reserva para o caso do
-  # prima.cpp exigir o arquivo em cada no -- e ai exporta deste disco.
-  #
-  # Os demais levam so rascunho, para nao pagar EBS ocioso em 5 nos --
-  # lembrando que EBS de instancia parada continua faturando.
+  # Com lista, acrescentar no e aditivo: para dar disco grande ao novo no
+  # tambem, basta indices_disco_modelos = [5, 6]. O indice 5 nao e tocado.
   ebs_block_device {
     device_name = "/dev/xvdb"
-    volume_size = count.index == var.quantidade - 1 ? var.tamanho_disco_modelos : var.tamanho_disco_scratch
+    volume_size = contains(var.indices_disco_modelos, count.index) ? var.tamanho_disco_modelos : var.tamanho_disco_scratch
     volume_type = "gp3"
   }
 }

@@ -39,7 +39,7 @@ variable "tamanho_disco" {
   default = 40
 }
 
-# Volume de modelos (/dev/xvdb), so no ULTIMO no (node5).
+# Tamanho do volume de modelos (/dev/xvdb).
 #
 # Em llama.cpp RPC, distributed-llama e prima.cpp o arquivo do modelo vive no
 # no raiz; os workers recebem os tensores pela rede. Entao nao faz sentido
@@ -47,11 +47,29 @@ variable "tamanho_disco" {
 # 4 ranks medidos -- e nao o no 0, que e o master e fica com o taint de
 # control-plane. Ver o comentario do ebs_block_device no main.tf.
 #
-# 80 GB acomodam o maior modelo do plano, gpt-oss-120b (63,4 GB em MXFP4), e
-# ficam abaixo do teto de 100 GB por volume do lab.
+# 80 GB acomodam o maior modelo do plano, gpt-oss-120b (conferido no HF:
+# 63.387.346.208 bytes = 59,03 GiB), e ficam abaixo do teto de 100 GB por
+# volume do lab.
+#
+# Mas 80 GB NAO acomodam o gpt-oss junto com os demais: o node5 ja guarda
+# ~47 GB entre os GGUF do Qwen3-30B-A3B, Qwen3-8B, gemma-4-12B e o .m do
+# distributed-llama. Dai a opcao de dar disco proprio a um no novo, via
+# indices_disco_modelos, em vez de apagar o que ja foi medido.
 variable "tamanho_disco_modelos" {
   type    = number
   default = 80
+}
+
+# Quais nos levam o volume de modelos. LISTA, nao "o ultimo no" -- ver a
+# armadilha documentada no main.tf: com "o ultimo", acrescentar um no moveria
+# o disco grande e FORCARIA RECRIACAO do no que guarda os GGUF baixados.
+#
+# [5] = so o node5, que e o no de aplicacao (n8n, LangGraph, coordenador).
+# Para o gpt-oss-120b (59,03 GiB), que precisa de 5 ranks mais um coordenador
+# com disco proprio, subir quantidade para 7 e usar [5, 6].
+variable "indices_disco_modelos" {
+  type    = list(number)
+  default = [5]
 }
 
 # Volume de rascunho dos demais nos.
