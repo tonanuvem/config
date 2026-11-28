@@ -27,9 +27,26 @@ $SSH 'mkdir -p ~/fila/logs ~/fila/estado; chmod +x ~/fila/*.sh ~/fila/consolidar
 echo "   fila/ copiada"
 
 # Os harnesses de medicao e os manifests das fases vivem no OUTRO
-# repositorio (k8s-exemplos). Copia se estiver presente na VM; senao avisa,
-# em vez de falhar -- a fila funciona com qualquer comando.
-EX=~/environment/k8s-exemplos/llm
+# repositorio (k8s-exemplos). A VM do lab e recriada a cada reinicio, entao
+# contar com um clone feito a mao nao funciona: busca sozinho.
+#
+# Quando ja existe, atualiza -- um checkout velho enviaria manifests antigos
+# para o master, e a medicao sairia de uma fase que nao e a do repositorio.
+# Se o git falhar (sem rede, repositorio privado), avisa em vez de abortar:
+# a fila roda qualquer comando, e as fases podem ser copiadas a mao.
+REPO=~/environment/k8s-exemplos
+EX=$REPO/llm
+if [ -d "$REPO/.git" ]; then
+  git -C "$REPO" pull --ff-only -q 2>/dev/null \
+    && echo "   k8s-exemplos atualizado" \
+    || echo "   AVISO: git pull de $REPO falhou; usando o que ja esta na VM"
+else
+  echo "   clonando k8s-exemplos..."
+  git clone -q --depth 1 https://github.com/tonanuvem/k8s-exemplos.git "$REPO" 2>/dev/null \
+    && echo "   k8s-exemplos clonado" \
+    || echo "   AVISO: clone de k8s-exemplos falhou"
+fi
+
 if [ -d "$EX" ]; then
   for F in medir.sh rede.sh concorrencia.sh; do
     [ -f "$EX/$F" ] && scp -q -o LogLevel=error -oStrictHostKeyChecking=no \
@@ -40,10 +57,10 @@ if [ -d "$EX" ]; then
       -i "$PEM" -r "$D" ec2-user@$MASTER:~/ && echo "   $(basename "$D")/ copiado"
   done
 else
-  echo "   AVISO: $EX nao existe nesta VM."
+  echo "   AVISO: $EX nao existe nesta VM e o git nao conseguiu trazer."
   echo "          Os harnesses (medir.sh, rede.sh, concorrencia.sh) e os"
   echo "          manifests das fases vem do repositorio k8s-exemplos:"
-  echo "            git clone https://github.com/tonanuvem/k8s-exemplos.git ~/environment/k8s-exemplos"
+  echo "            git clone https://github.com/tonanuvem/k8s-exemplos.git $REPO"
   echo "          Depois rodar este script de novo."
 fi
 
