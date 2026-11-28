@@ -25,10 +25,17 @@ variable "instance_type" {
 # ranks para nao contaminar a medicao.
 #
 # O limite da conta e 9 instancias somando TODOS os labs, e a VM do code-server
-# ja ocupa 1. Com 6 aqui, o total fica em 7 e sobra folga.
+# ja ocupa 1. Com 7 aqui, o total fica em 8 e ainda cabe.
+#
+# Por que 7 e nao 6: a ultima fase do plano e o gpt-oss-120b (59,03 GiB em
+# MXFP4), que precisa de 5 ranks de inferencia. Os 4 ranks medidos ficam em
+# node1..node4 e o node5 e o no de aplicacao, com os modelos -- entao o
+# quinto rank exige um no novo. Acrescentar no e aditivo: ver
+# indices_disco_modelos e o genai/no_extra.sh, que junta o no ao cluster que
+# ja esta no ar sem passar pelo kubeadm init.
 variable "quantidade" {
   type    = number
-  default = 6
+  default = 7
 }
 
 # Disco raiz: SO, kubelet, containerd e imagens.
@@ -65,12 +72,13 @@ variable "tamanho_disco_modelos" {
 # manifests das fases fixam node5 -- ver o comentario do ebs_block_device no
 # main.tf, que tambem registra o que foi medido sobre redimensionar volume.
 #
-# [5] = so o node5, que e o no de aplicacao (n8n, LangGraph, coordenador).
-# Para o gpt-oss-120b (59,03 GiB), que precisa de 5 ranks mais um coordenador
-# com disco proprio, subir quantidade para 7 e usar [5, 6].
+# [5] e o node5, o no de aplicacao (n8n, LangGraph, coordenador), com os
+# modelos ja medidos. [5, 6] acrescenta o node6, que entrou para o
+# gpt-oss-120b: os 80 GB do node5 nao acomodam 59,03 GiB junto com os ~47 GB
+# que ja estao la, e apagar o que foi medido seria pior que pagar um volume.
 variable "indices_disco_modelos" {
   type    = list(number)
-  default = [5]
+  default = [5, 6]
 }
 
 # Volume de rascunho dos demais nos.
