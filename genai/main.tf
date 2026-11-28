@@ -96,17 +96,30 @@ resource "aws_instance" "web" {
   # demais levam so rascunho, para nao pagar EBS ocioso -- lembrando que EBS
   # de instancia PARADA continua faturando.
   #
-  # ARMADILHA, e a razao de ser uma LISTA e nao "o ultimo no":
+  # Por que LISTA e nao "o ultimo no":
   #
   # a versao anterior dizia "count.index == var.quantidade - 1", isto e, o
-  # disco grande ia para o ULTIMO no. Parece elegante e e uma bomba: subir
-  # "quantidade" de 6 para 7 move o disco grande do indice 5 para o 6, e mudar
-  # volume_size de um ebs_block_device FORCA RECRIACAO DA INSTANCIA. Ou seja,
-  # acrescentar um no destruiria o node5 -- que e exatamente onde moram os
-  # GGUF baixados (dezenas de GB) e o banco do n8n.
+  # disco grande ia para o ULTIMO no. Subir "quantidade" de 6 para 7 move o
+  # disco grande do indice 5 para o 6 -- e TODO manifest das fases fixa
+  # "nodeSelector: node5" com hostPath /models. Num cluster criado de zero
+  # com 7 nos, os GGUF cairiam num disco de rascunho de 10 GB e o download
+  # falharia. Com lista, acrescentar no e aditivo: indices_disco_modelos
+  # = [5, 6] da disco proprio ao novo sem mexer no 5.
   #
-  # Com lista, acrescentar no e aditivo: para dar disco grande ao novo no
-  # tambem, basta indices_disco_modelos = [5, 6]. O indice 5 nao e tocado.
+  # O QUE ESTE COMENTARIO DIZIA ERRADO ANTES: que mudar volume_size aqui
+  # forcaria recriacao da instancia, e portanto que acrescentar um no
+  # destruiria os modelos do node5. Conferido contra o estado real com
+  # Terraform v1.16.0 e provider aws v6.74.0: NAO forca. Um plan com o
+  # indice do disco grande trocado de [5] para [0] -- 10 -> 80 GB num no e
+  # 80 -> 10 no outro -- devolve "No changes. Your infrastructure matches
+  # the configuration". O provider trata ebs_block_device como computado e
+  # ignora divergencia depois que a instancia existe (o bloco esta
+  # deprecado na v6 em favor de aws_ebs_volume + aws_volume_attachment).
+  #
+  # A consequencia pratica inverte o alerta: estes volumes sao de CRIACAO.
+  # Nao da para redimensionar o disco de modelos por aqui -- plan nao ve
+  # diferenca. Para crescer, ou se usa aws_ebs_volume, ou se recria a
+  # instancia de proposito (perdendo o conteudo), ou se da disco a um no novo.
   ebs_block_device {
     device_name = "/dev/xvdb"
     volume_size = contains(var.indices_disco_modelos, count.index) ? var.tamanho_disco_modelos : var.tamanho_disco_scratch

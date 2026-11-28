@@ -60,9 +60,10 @@ variable "tamanho_disco_modelos" {
   default = 80
 }
 
-# Quais nos levam o volume de modelos. LISTA, nao "o ultimo no" -- ver a
-# armadilha documentada no main.tf: com "o ultimo", acrescentar um no moveria
-# o disco grande e FORCARIA RECRIACAO do no que guarda os GGUF baixados.
+# Quais nos levam o volume de modelos. LISTA, nao "o ultimo no": com "o
+# ultimo", subir quantidade moveria o disco grande para o no novo, e os
+# manifests das fases fixam node5 -- ver o comentario do ebs_block_device no
+# main.tf, que tambem registra o que foi medido sobre redimensionar volume.
 #
 # [5] = so o node5, que e o no de aplicacao (n8n, LangGraph, coordenador).
 # Para o gpt-oss-120b (59,03 GiB), que precisa de 5 ranks mais um coordenador
