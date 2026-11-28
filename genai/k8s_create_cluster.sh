@@ -92,6 +92,10 @@ echo ""
 echo "   Instalando metrics-server:"
 ssh -oStrictHostKeyChecking=no -i ~/environment/labsuser.pem ec2-user@$MASTER 'bash -s' < k8s_config_metrics.sh
 
+echo ""
+echo "   Instalando a fila de testes (instala, nao dispara):"
+sh "$(dirname "$0")/k8s_config_fila.sh"
+
 printf "\n\n"
 echo "   CONFIGURAÇÕES REALIZADAS. FIM."
 ssh -oStrictHostKeyChecking=no -i ~/environment/labsuser.pem ec2-user@$MASTER 'kubectl get nodes -o wide'

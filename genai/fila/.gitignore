@@ -1,0 +1,5 @@
+# A fila produz estado e logs na VM; o repositorio guarda so a ferramenta.
+logs/
+estado/
+resultados.csv
+resultados.md

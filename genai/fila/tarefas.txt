@@ -1,0 +1,17 @@
+# Fila de testes. Formato:  <id>|<comando>
+#
+# Este arquivo e o MODELO que vai para o master. Editar aqui, ou direto em
+# ~/fila/tarefas.txt no master -- o executor rele a cada volta, entao da para
+# acrescentar tarefa com ele rodando.
+#
+# Linhas em branco e comecando com # sao ignoradas. Uma tarefa por vez, de
+# proposito: duas baterias simultaneas contaminam as duas.
+#
+# Comeca vazio porque as tarefas dependem de quais fases existem no
+# k8s-exemplos. Exemplos reais usados neste projeto:
+#
+# 10-medir-curto|sh ~/medir.sh
+# 20-medir-longo|N=2 TOKENS=2000 sh ~/medir.sh
+# 30-concorrencia|sh ~/concorrencia.sh
+# 40-rede|sh ~/rede.sh
+# 50-fase-c|sh ~/faseC/aplicar.sh
