@@ -21,6 +21,14 @@
         content: |
           curl -s https://raw.githubusercontent.com/tonanuvem/config/main/dns.sh | bash
 
+    # VS Code no navegador (vscode.dev). Os argumentos passam adiante:
+    # "bash vscode.sh status", "bash vscode.sh nome", ...
+    - name: Criar o arquivo ~/vscode.sh
+      ansible.builtin.copy:
+        dest: "~/vscode.sh"
+        content: |
+          curl -fsSL https://raw.githubusercontent.com/tonanuvem/config/main/vscode.sh | bash -s -- "$@"
+
     # - name: Desabilitar GPGCheck certs em amzn2-core.repo
     #   become: yes
     #   # yum repo configuration file, the line gpgcheck=1 indicates that GPG checking should be done for all packages in this repository

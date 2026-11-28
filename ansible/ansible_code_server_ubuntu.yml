@@ -57,10 +57,40 @@
           auth: password
           password: "{{ code_server_password }}"
           cert: false
+          # Aceita o editor aberto por outro endereco (ex.: a porta 8099
+          # encaminhada pelo Codespace, *.app.github.dev). Sem isso o
+          # code-server recusa o WebSocket porque a Origin da pagina nao
+          # bate com o Host que chega pelo tunel, e o navegador mostra
+          # "WebSocket close with status code 1006" logo depois da senha.
+          # A senha continua exigida.
+          trusted-origins: ["*"]
         owner: "{{ code_server_user }}"
         group: "{{ code_server_user }}"
         mode: "0600"
       notify: Reiniciar code-server
+
+    # VS Code CLI ("code"): alternativa ao code-server para redes que
+    # bloqueiam o IP da AWS. A VM abre um tunel de saida e o aluno usa
+    # https://vscode.dev/tunnel/<nome>. Aqui so instala o binario; o
+    # login no GitHub e o servico sao por aluno, feitos pelo vscode.sh
+    # (repo config) ou pela opcao do menu fiaplab no CloudShell.
+    # O code-server nao traz um comando "code", entao nao ha conflito.
+    - name: Baixar o VS Code CLI
+      get_url:
+        url: "https://code.visualstudio.com/sha/download?build=stable&os=cli-alpine-x64"
+        dest: "/tmp/vscode_cli.tar.gz"
+        mode: "0644"
+        timeout: 120
+
+    - name: Instalar o VS Code CLI em /usr/local/bin/code
+      unarchive:
+        src: "/tmp/vscode_cli.tar.gz"
+        dest: "/usr/local/bin"
+        remote_src: yes
+        creates: "/usr/local/bin/code"
+        owner: root
+        group: root
+        mode: "0755"
 
     - name: Criar diretório para (settings.json)
       file:
