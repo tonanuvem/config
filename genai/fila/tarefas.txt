@@ -15,3 +15,10 @@
 # 30-concorrencia|sh ~/concorrencia.sh
 # 40-rede|sh ~/rede.sh
 # 50-fase-c|sh ~/faseC/aplicar.sh
+# 60-fase-f|sh ~/faseF/aplicar.sh
+#
+# Na bateria de 28/11 as tarefas nao chamaram o aplicar.sh de cada fase: elas
+# trazem o kubectl scale inteiro na propria linha. A razao e que o aplicar.sh
+# mede os DOIS lados de uma fase numa tirada so, e a fila precisa poder parar
+# entre eles -- se o lab expira no meio, um .ok por lado nao refaz o lado que
+# ja terminou. Para rodar a mao, o aplicar.sh continua sendo o caminho curto.
